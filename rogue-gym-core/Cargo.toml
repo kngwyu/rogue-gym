@@ -1,0 +1,26 @@
+[package]
+name = "rogue-gym-core"
+version = "0.0.1"
+authors = ["kngwyu <yuji.kngw.80s.revive@gmail.com>"]
+
+[dependencies]
+bitflags = "1.0"
+derive_more = "0.10"
+tuple-map = "0.3"
+serde = "1.0.38"
+serde_derive = "1.0.38"
+serde_json = "1.0.14"
+error-chain-mini = "0.0.1"
+error-chain-mini-derive = "0.0.1"
+num-traits = "0.2"
+serde_yaml = "0.7.3"
+log = "0.4.1"
+fern = "0.5.5"
+
+[dependencies.rand]
+features = ["serde1"]
+git = "https://github.com/rust-lang-nursery/rand.git"
+
+[dependencies.rect-iter]
+version = "0.0.2"
+default-features = false

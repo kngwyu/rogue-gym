@@ -1,0 +1,9 @@
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+lto = true
+
+[workspace]
+members = ["rogue-gym-core", "rogue-gym-cli"]
