@@ -2,41 +2,51 @@ use super::field::Field;
 use super::{Coord, X, Y};
 use common::{Rng, RngHandle};
 use item::NumberedItem;
-use rect_iter::{Get2D, GetMut2D, RectRange};
-use std::collections::BTreeMap;
+use rect_iter::{Get2D, GetMut2D, IntoTuple2, RectRange};
+use std::cell::RefCell;
+use std::collections::{BTreeMap, HashSet};
 use std::iter;
 use std::ops::Range;
-use Drawable;
+use std::rc::Rc;
+use tuple_map::TupleMap2;
+use {ConfigInner as GlobalConfig, Drawable, RunTime};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
-    pub seed: u64,
-    pub width: i32,
-    pub height: i32,
-    pub room_num_x: i32,
-    pub room_num_y: i32,
+    pub room_num_x: X,
+    pub room_num_y: Y,
+    pub min_size: Coord,
     pub enable_trap: bool,
-    pub max_gold_per_room: u8,
-    pub max_empty_rooms: u8,
-    pub max_level: u8,
-    pub maze_rate_inv: u8,
+    pub max_gold_per_room: u32,
+    pub max_empty_rooms: u32,
+    pub max_level: u32,
+    pub maze_rate_inv: u32,
+    /// if the rooms is dark or not is judged by rand[0..dark_levl) < level - 1
+    pub dark_level: u32,
 }
 
 impl Default for Config {
     fn default() -> Config {
         Config {
-            seed: 0,
-            width: 80,
-            height: 22,
-            room_num_x: 3,
-            room_num_y: 3,
+            room_num_x: X(3),
+            room_num_y: Y(3),
+            min_size: Coord::new(4, 4),
             enable_trap: true,
             max_gold_per_room: 1,
-            maze_rate_inv: 15,
             max_empty_rooms: 4,
             max_level: 25,
+            maze_rate_inv: 15,
+            dark_level: 10,
         }
     }
+}
+
+use serde_json::to_string;
+#[test]
+fn config_serialize() {
+    let d = Config::default();
+    let s = to_string(&d).unwrap();
+    println!("{}", s);
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -72,37 +82,39 @@ impl Default for Surface {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct RoomId(usize);
-
-impl RoomId {
-    fn value(&self) -> usize {
-        self.0
-    }
-}
-
 /// type of room
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum RoomKind {
     /// normal room
-    Normal,
+    Normal { size: RectRange<i32> },
     /// maze room
-    Maze,
+    Maze { size: RectRange<i32> },
     /// passage only(gone room)
-    Empty,
+    Empty { up_left: Coord },
 }
 
 #[derive(Clone, Debug)]
 pub struct Room {
-    /// room range
-    size: RectRange<i32>,
     /// room kind
     kind: RoomKind,
+    /// if the room is dark or not
+    is_dark: bool,
     /// id for room
     /// it's unique in same floor
-    id: RoomId,
+    id: usize,
     /// items
     item_map: BTreeMap<Coord, NumberedItem>,
+}
+
+impl Room {
+    fn new(kind: RoomKind, is_dark: bool, id: usize) -> Self {
+        Room {
+            kind,
+            is_dark,
+            id,
+            item_map: BTreeMap::new(),
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -113,42 +125,77 @@ pub struct Floor {
 pub struct Dungeon {
     past_floors: Vec<Floor>,
     current_floor: Option<Floor>,
+    /// configurations are constant
+    /// dungeon specific configuration
     config: Config,
+    /// global configuration
+    confing_global: GlobalConfig,
+    /// runtime
+    runtime: Rc<RefCell<RunTime>>,
     rng: RngHandle,
 }
 
 impl Dungeon {
     fn gen_floor(&mut self) {
-        let level = self.past_floors.len();
+        let level = self.past_floors.len() as u32;
         let (rn_x, rn_y) = (self.config.room_num_x, self.config.room_num_y);
-        let room_num = (rn_x * rn_y) as usize;
-        let room_size = Coord::new(self.config.width / rn_x, self.config.height / rn_y);
-        let is_empty_room = {
+        let room_num = (rn_x.0 * rn_y.0) as usize;
+        // Be aware that it's **screen** size!
+        let (width, height) = (self.confing_global.width, self.confing_global.height);
+        let room_size = Coord::new(width / rn_x.0, height / rn_y.0);
+        let empty_rooms: HashSet<_> = {
             let empty_num = self.rng.gen_range(1, self.config.max_empty_rooms + 1);
-            (0..empty_num).fold(vec![false; room_num], |mut set, _| {
-                let success = (0..100).any(|_| {
-                    let r = self.rng.gen_range(0, room_num);
-                    if set[r] {
-                        false
-                    } else {
-                        set[r] = true;
-                        true
-                    }
-                });
-                if !success {
-                    warn!("set empty room failed");
-                }
-                set
-            })
+            self.rng
+                .select(0..room_num)
+                .take(empty_num as usize)
+                .collect()
         };
-        RectRange::zero_start(rn_x, rn_y)
+        RectRange::zero_start(rn_x.0, rn_y.0)
             .unwrap()
             .into_iter()
             .enumerate()
             .map(|(i, (x, y))| {
-                let up_left = room_size.scale(x, y);
-                let range = RectRange::from_point(room_size).unwrap().slide(up_left);
-                if is_empty_room[i] {}
+                let mut room_size = room_size;
+                let top = if y == 0 {
+                    let res = room_size.scale(x, y).slide_y(1);
+                    room_size.y -= Y(1);
+                    res
+                } else {
+                    room_size.scale(x, y)
+                };
+                if empty_rooms.contains(&i) {
+                    let (x, y) = (room_size.x.0, room_size.y.0)
+                        .map(|size| self.rng.gen_range(1, size - 1))
+                        .add(top.into_tuple2());
+                    let kind = RoomKind::Empty {
+                        up_left: Coord::new(x, y),
+                    };
+                    // return Room::new(kind, i);
+                }
+                if top.y + room_size.y == self.confing_global.height {
+                    room_size.y -= Y(1);
+                }
+                // set room type
+                let is_dark = self.rng.gen_range(0, self.config.dark_level) + 1 < level;
+                let kind = if is_dark && self.rng.gen_range(0, self.config.maze_rate_inv) == 0 {
+                    RoomKind::Maze {
+                        size: RectRange::from_corners(top, top + room_size).unwrap(),
+                    }
+                } else {
+                    let (xsize, ysize) = {
+                        let (xmin, ymin) = self.config.min_size.into_tuple2();
+                        ((room_size.x.0, xmin), (room_size.y.0, ymin))
+                            .map(|(max, min)| self.rng.gen_range(min, max))
+                    };
+                    RoomKind::Normal {
+                        size: RectRange::from_corners(top, top + Coord::new(xsize, ysize)).unwrap(),
+                    }
+                };
+                let is_cleared = self.runtime.as_ref().borrow().is_cleared;
+                if !is_cleared || level >= self.config.max_level {
+                    let gold_num = self.rng.gen_range(0, self.config.max_gold_per_room + 1);
+                    (0..gold_num).for_each(|_| {});
+                }
             });
     }
 }
