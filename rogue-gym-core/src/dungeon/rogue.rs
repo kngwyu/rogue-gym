@@ -13,11 +13,14 @@ use {ConfigInner as GlobalConfig, Drawable, RunTime};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
+    /// room number in X-axis direction
     pub room_num_x: X,
+    /// room number in X-axis direction
     pub room_num_y: Y,
-    pub min_size: Coord,
+    /// minimum size of a room
+    pub min_room_size: Coord,
+    /// enables trap or not
     pub enable_trap: bool,
-    pub max_gold_per_room: u32,
     pub max_empty_rooms: u32,
     pub max_level: u32,
     pub maze_rate_inv: u32,
@@ -30,23 +33,14 @@ impl Default for Config {
         Config {
             room_num_x: X(3),
             room_num_y: Y(3),
-            min_size: Coord::new(4, 4),
+            min_room_size: Coord::new(4, 4),
             enable_trap: true,
-            max_gold_per_room: 1,
             max_empty_rooms: 4,
             max_level: 25,
             maze_rate_inv: 15,
             dark_level: 10,
         }
     }
-}
-
-use serde_json::to_string;
-#[test]
-fn config_serialize() {
-    let d = Config::default();
-    let s = to_string(&d).unwrap();
-    println!("{}", s);
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -83,7 +77,7 @@ impl Default for Surface {
 }
 
 /// type of room
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum RoomKind {
     /// normal room
     Normal { size: RectRange<i32> },
@@ -93,7 +87,7 @@ pub enum RoomKind {
     Empty { up_left: Coord },
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Room {
     /// room kind
     kind: RoomKind,
@@ -117,11 +111,12 @@ impl Room {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Floor {
     rooms: Vec<Room>,
 }
 
+#[derive(Clone)]
 pub struct Dungeon {
     past_floors: Vec<Floor>,
     current_floor: Option<Floor>,
@@ -183,7 +178,7 @@ impl Dungeon {
                     }
                 } else {
                     let (xsize, ysize) = {
-                        let (xmin, ymin) = self.config.min_size.into_tuple2();
+                        let (xmin, ymin) = self.config.min_room_size.into_tuple2();
                         ((room_size.x.0, xmin), (room_size.y.0, ymin))
                             .map(|(max, min)| self.rng.gen_range(min, max))
                     };
@@ -193,8 +188,8 @@ impl Dungeon {
                 };
                 let is_cleared = self.runtime.as_ref().borrow().is_cleared;
                 if !is_cleared || level >= self.config.max_level {
-                    let gold_num = self.rng.gen_range(0, self.config.max_gold_per_room + 1);
-                    (0..gold_num).for_each(|_| {});
+                    // let gold_num = self.rng.gen_range(0, self.config.max_gold_per_room + 1);
+                    // (0..gold_num).for_each(|_| {});
                 }
             });
     }

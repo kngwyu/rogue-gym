@@ -13,3 +13,12 @@ pub enum DungeonStyle {
     /// not implemented now
     Cataclysm,
 }
+
+#[derive(Clone)]
+pub enum Dungeon {
+    Rogue(rogue::Dungeon),
+    /// not implemented now
+    NetHack,
+    /// not implemented now
+    Cataclysm,
+}

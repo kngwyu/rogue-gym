@@ -6,20 +6,20 @@ authors = ["kngwyu <yuji.kngw.80s.revive@gmail.com>"]
 [dependencies]
 bitflags = "1.0"
 derive_more = "0.10"
-tuple-map = "0.3"
-serde = "1.0.38"
-serde_derive = "1.0.38"
-serde_json = "1.0.14"
-error-chain-mini = "0.0.1"
-error-chain-mini-derive = "0.0.1"
+error-chain-mini = "0.0.2"
+error-chain-mini-derive = "0.0.2"
+log = "0.4"
 num-traits = "0.2"
-serde_yaml = "0.7.3"
-log = "0.4.1"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+tuple-map = "0.3"
 
 [dependencies.rand]
 features = ["serde1"]
-git = "https://github.com/rust-lang-nursery/rand.git"
+version = "0.5.0-pre.1"
 
 [dependencies.rect-iter]
 version = "0.0.2"
+features = ["serde"]
 default-features = false

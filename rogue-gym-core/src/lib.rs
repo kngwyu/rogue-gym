@@ -8,7 +8,6 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
-extern crate serde_yaml;
 extern crate tuple_map;
 #[macro_use]
 extern crate error_chain_mini_derive;
@@ -17,13 +16,15 @@ extern crate num_traits;
 #[macro_use]
 extern crate log;
 
+#[macro_use]
 mod common;
-mod dungeon;
-mod item;
+pub mod dungeon;
+pub mod item;
 
 pub use common::ErrorId;
 use common::RngHandle;
-use dungeon::{X, Y};
+use dungeon::{Dungeon, X, Y};
+use item::ItemHandler;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct ConfigInner {
@@ -35,9 +36,11 @@ pub(crate) struct ConfigInner {
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Color(pub u8);
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone)]
 pub struct RunTime {
     is_cleared: bool,
+    dungeon: Dungeon,
+    item: ItemHandler,
 }
 
 pub trait Drawable {

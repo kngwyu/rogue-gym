@@ -1,23 +1,32 @@
 //! module for item implementation
 use std::collections::HashMap;
 
-use common::{Object, ObjectPath, Rng, RngHandle};
+use common::{Object, ObjectPath, Path, Rng, RngHandle};
 use dungeon::Coord;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use Drawable;
 
-#[derive(Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum Item {
-    Gold,
+    Money,
     Weapon,
     Custom,
+}
+
+impl Item {
+    fn capacity(&self) -> ItemNum {
+        match *self {
+            Item::Money => ItemNum::max(),
+            _ => unimplemented!(),
+        }
+    }
 }
 
 impl Object for Item {
     fn path(&self) -> ObjectPath {
         match *self {
-            Item::Gold => ObjectPath::from_str("gold"),
+            Item::Money => ObjectPath::from_str("gold"),
             // STUB!!!
             Item::Weapon => ObjectPath::from_str("weapon"),
             Item::Custom => ObjectPath::from_str("custom"),
@@ -28,10 +37,10 @@ impl Object for Item {
 impl Drawable for Item {
     fn byte(&self) -> u8 {
         match *self {
-            Item::Gold => b'*',
+            Item::Money => b'*',
             // STUB!!!
             Item::Weapon => b')',
-            Item::Custom => unimplemented!(""),
+            Item::Custom => unimplemented!(),
         }
     }
 }
@@ -40,7 +49,13 @@ impl Drawable for Item {
          AddAssign, SubAssign, MulAssign, DivAssign, From, Into, Serialize, Deserialize)]
 pub struct ItemNum(pub u32);
 
-#[derive(Clone, Debug)]
+impl ItemNum {
+    fn max() -> Self {
+        ItemNum(u32::max_value())
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct NumberedItem {
     pub item: Item,
     pub number: ItemNum,
@@ -53,9 +68,15 @@ pub struct ItemStore {
 }
 
 /// generate and management all items
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct ItemHandler {
+    floor_item: HashMap<Coord, NumberedItem>,
+    config: ItemConfig,
     rng: RngHandle,
 }
 
-pub struct ItemConfig {}
+/// Item configuration
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ItemConfig {
+    pub max_gold_per_room: u32,
+}
