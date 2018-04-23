@@ -1,8 +1,8 @@
 use super::field::Field;
 use super::{Coord, X, Y};
-use common::{Rng, RngHandle};
 use item::NumberedItem;
 use rect_iter::{Get2D, GetMut2D, IntoTuple2, RectRange};
+use rng::{Rng, RngHandle};
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashSet};
 use std::iter;

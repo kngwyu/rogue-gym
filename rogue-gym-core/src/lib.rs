@@ -16,15 +16,17 @@ extern crate num_traits;
 #[macro_use]
 extern crate log;
 
-#[macro_use]
-mod common;
 pub mod dungeon;
+mod error;
 pub mod item;
+mod object;
+mod path;
+mod rng;
 
-pub use common::ErrorId;
-use common::RngHandle;
 use dungeon::{Dungeon, X, Y};
+pub use error::ErrorId;
 use item::ItemHandler;
+use rng::RngHandle;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct ConfigInner {

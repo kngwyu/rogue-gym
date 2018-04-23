@@ -1,8 +1,10 @@
 //! module for item implementation
 use std::collections::HashMap;
 
-use common::{Object, ObjectPath, Path, Rng, RngHandle};
 use dungeon::Coord;
+use object::Object;
+use path::{ObjectPath, Path};
+use rng::{Rng, RngHandle};
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use Drawable;
