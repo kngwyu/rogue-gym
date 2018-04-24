@@ -2,8 +2,7 @@
 use std::collections::HashMap;
 
 use dungeon::Coord;
-use object::Object;
-use path::{ObjectPath, Path};
+use path::ObjectPath;
 use rng::{Rng, RngHandle};
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
@@ -21,17 +20,6 @@ impl Item {
         match *self {
             Item::Money => ItemNum::max(),
             _ => unimplemented!(),
-        }
-    }
-}
-
-impl Object for Item {
-    fn path(&self) -> ObjectPath {
-        match *self {
-            Item::Money => ObjectPath::from_str("gold"),
-            // STUB!!!
-            Item::Weapon => ObjectPath::from_str("weapon"),
-            Item::Custom => ObjectPath::from_str("custom"),
         }
     }
 }
@@ -72,7 +60,7 @@ pub struct ItemStore {
 /// generate and management all items
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ItemHandler {
-    floor_item: HashMap<Coord, NumberedItem>,
+    infield_items: HashMap<Coord, NumberedItem>,
     config: ItemConfig,
     rng: RngHandle,
 }

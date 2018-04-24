@@ -1,6 +1,6 @@
-use super::field::Field;
-use super::{Coord, X, Y};
-use item::NumberedItem;
+use super::{field::Field, Coord, X, Y};
+use fixedbitset::FixedBitSet;
+use item::{ItemHandler, NumberedItem};
 use rect_iter::{Get2D, GetMut2D, IntoTuple2, RectRange};
 use rng::{Rng, RngHandle};
 use std::cell::RefCell;
@@ -9,7 +9,7 @@ use std::iter;
 use std::ops::Range;
 use std::rc::Rc;
 use tuple_map::TupleMap2;
-use {ConfigInner as GlobalConfig, Drawable, RunTime};
+use {ConfigInner as GlobalConfig, Drawable, GameInfo};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
@@ -123,10 +123,12 @@ pub struct Dungeon {
     /// configurations are constant
     /// dungeon specific configuration
     config: Config,
-    /// global configuration
-    confing_global: GlobalConfig,
-    /// runtime
-    runtime: Rc<RefCell<RunTime>>,
+    /// global configuration(constant)
+    confing_global: Rc<GlobalConfig>,
+    /// item handle
+    item_handle: Rc<RefCell<ItemHandler>>,
+    /// global game information
+    game_info: Rc<RefCell<GameInfo>>,
     rng: RngHandle,
 }
 
@@ -138,7 +140,7 @@ impl Dungeon {
         // Be aware that it's **screen** size!
         let (width, height) = (self.confing_global.width, self.confing_global.height);
         let room_size = Coord::new(width / rn_x.0, height / rn_y.0);
-        let empty_rooms: HashSet<_> = {
+        let empty_rooms: FixedBitSet = {
             let empty_num = self.rng.gen_range(1, self.config.max_empty_rooms + 1);
             self.rng
                 .select(0..room_num)
@@ -158,7 +160,7 @@ impl Dungeon {
                 } else {
                     room_size.scale(x, y)
                 };
-                if empty_rooms.contains(&i) {
+                if empty_rooms.contains(i) {
                     let (x, y) = (room_size.x.0, room_size.y.0)
                         .map(|size| self.rng.gen_range(1, size - 1))
                         .add(top.into_tuple2());
@@ -186,7 +188,7 @@ impl Dungeon {
                         size: RectRange::from_corners(top, top + Coord::new(xsize, ysize)).unwrap(),
                     }
                 };
-                let is_cleared = self.runtime.as_ref().borrow().is_cleared;
+                let is_cleared = self.game_info.as_ref().borrow().is_cleared;
                 if !is_cleared || level >= self.config.max_level {
                     // let gold_num = self.rng.gen_range(0, self.config.max_gold_per_room + 1);
                     // (0..gold_num).for_each(|_| {});
