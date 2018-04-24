@@ -6,7 +6,7 @@ use std::convert;
 use std::ops::Range;
 /// wrapper of XorShiftRng
 #[derive(Clone, Serialize, Deserialize)]
-pub(crate) struct RngHandle(XorShiftRng);
+pub struct RngHandle(XorShiftRng);
 
 impl RngHandle {
     fn gen_seed(seed: u64) -> [u8; 16] {
@@ -20,17 +20,17 @@ impl RngHandle {
         seed_bytes
     }
     /// create new Rng by specified seed
-    pub(crate) fn from_seed(seed: u64) -> Self {
+    pub fn from_seed(seed: u64) -> Self {
         let seed = Self::gen_seed(seed);
         RngHandle(XorShiftRng::from_seed(seed))
     }
     /// create new Rng by random seed
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         let seed: [u8; 16] = thread_rng().gen();
         RngHandle(XorShiftRng::from_seed(seed))
     }
     /// select some values randomly from given range
-    pub(crate) fn select<T: PrimInt>(&mut self, range: Range<T>) -> RngSelect<T> {
+    pub fn select<T: PrimInt>(&mut self, range: Range<T>) -> RngSelect<T> {
         let width = range.end - range.start;
         let width = width.to_u64().expect("[RngHandle::select] NumCast error");
         if width > 10_000_000 {
@@ -42,6 +42,10 @@ impl RngHandle {
             selected: (0..width).collect(),
             rng: self,
         }
+    }
+    /// judge an event with happenig probability 1 / p_inv happens or not
+    pub fn does_happen(&mut self, p_inv: u32) -> bool {
+        self.gen_range(0, p_inv) == 0
     }
 }
 
@@ -65,7 +69,7 @@ impl RngCore for RngHandle {
 }
 
 /// Iterator for RngHandle::select
-pub(crate) struct RngSelect<'a, T: PrimInt> {
+pub struct RngSelect<'a, T: PrimInt> {
     current: u64,
     offset: T,
     selected: BTreeSet<u64>,

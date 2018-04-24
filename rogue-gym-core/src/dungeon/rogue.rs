@@ -1,6 +1,7 @@
 use super::{field::Field, Coord, X, Y};
 use fixedbitset::FixedBitSet;
 use item::{ItemHandler, NumberedItem};
+use path::ObjectPath;
 use rect_iter::{Get2D, GetMut2D, IntoTuple2, RectRange};
 use rng::{Rng, RngHandle};
 use std::cell::RefCell;
@@ -23,6 +24,7 @@ pub struct Config {
     pub enable_trap: bool,
     pub max_empty_rooms: u32,
     pub max_level: u32,
+    /// a room changes to maze with a probability of 1 / maze_rate_inv
     pub maze_rate_inv: u32,
     /// if the rooms is dark or not is judged by rand[0..dark_levl) < level - 1
     pub dark_level: u32,
@@ -116,6 +118,13 @@ pub struct Floor {
     rooms: Vec<Room>,
 }
 
+// in rogue, we can use simple reperesentation for address
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct Address {
+    level: u32,
+    coord: Coord,
+}
+
 #[derive(Clone)]
 pub struct Dungeon {
     past_floors: Vec<Floor>,
@@ -174,7 +183,7 @@ impl Dungeon {
                 }
                 // set room type
                 let is_dark = self.rng.gen_range(0, self.config.dark_level) + 1 < level;
-                let kind = if is_dark && self.rng.gen_range(0, self.config.maze_rate_inv) == 0 {
+                let kind = if is_dark && self.rng.does_happen(self.config.maze_rate_inv) {
                     RoomKind::Maze {
                         size: RectRange::from_corners(top, top + room_size).unwrap(),
                     }
@@ -188,11 +197,6 @@ impl Dungeon {
                         size: RectRange::from_corners(top, top + Coord::new(xsize, ysize)).unwrap(),
                     }
                 };
-                let is_cleared = self.game_info.as_ref().borrow().is_cleared;
-                if !is_cleared || level >= self.config.max_level {
-                    // let gold_num = self.rng.gen_range(0, self.config.max_gold_per_room + 1);
-                    // (0..gold_num).for_each(|_| {});
-                }
             });
     }
 }
