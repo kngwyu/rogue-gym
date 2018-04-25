@@ -3,6 +3,7 @@ pub(crate) use rand::Rng;
 use rand::{thread_rng, Error as RndError, RngCore, SeedableRng, XorShiftRng};
 use std::collections::BTreeSet;
 use std::convert;
+use std::iter::FromIterator;
 use std::ops::Range;
 /// wrapper of XorShiftRng
 #[derive(Clone, Serialize, Deserialize)]
@@ -30,13 +31,13 @@ impl RngHandle {
         RngHandle(XorShiftRng::from_seed(seed))
     }
     /// select some values randomly from given range
-    pub fn select<T: PrimInt>(&mut self, range: Range<T>) -> RngSelect<T> {
+    pub fn select<T: PrimInt>(&mut self, range: Range<T>) -> RandomSelecter<T> {
         let width = range.end - range.start;
         let width = width.to_u64().expect("[RngHandle::select] NumCast error");
         if width > 10_000_000 {
             panic!("[RngHandle::select] too large range");
         }
-        RngSelect {
+        RandomSelecter {
             current: width,
             offset: range.start,
             selected: (0..width).collect(),
@@ -69,14 +70,14 @@ impl RngCore for RngHandle {
 }
 
 /// Iterator for RngHandle::select
-pub struct RngSelect<'a, T: PrimInt> {
+pub struct RandomSelecter<'a, T: PrimInt> {
     current: u64,
     offset: T,
     selected: BTreeSet<u64>,
     rng: &'a mut RngHandle,
 }
 
-impl<'a, T: PrimInt> Iterator for RngSelect<'a, T> {
+impl<'a, T: PrimInt> Iterator for RandomSelecter<'a, T> {
     type Item = T;
     fn next(&mut self) -> Option<T> {
         if self.current == 0 {
@@ -92,6 +93,33 @@ impl<'a, T: PrimInt> Iterator for RngSelect<'a, T> {
         self.current -= 1;
         let res = T::from(res).expect("[RngSelect::Iterator::next] NumCast error") + self.offset;
         Some(res)
+    }
+}
+
+impl<'a, T: PrimInt> RandomSelecter<'a, T> {
+    fn reserve(self) -> ReservedSelecter<T> {
+        ReservedSelecter {
+            current: self.current,
+            offset: self.offset,
+            selected: self.selected,
+        }
+    }
+}
+
+pub struct ReservedSelecter<T: PrimInt> {
+    current: u64,
+    offset: T,
+    selected: BTreeSet<u64>,
+}
+
+impl<T: PrimInt> ReservedSelecter<T> {
+    pub fn into_selecter<'a>(self, rng: &'a mut RngHandle) -> RandomSelecter<'a, T> {
+        RandomSelecter {
+            current: self.current,
+            offset: self.offset,
+            selected: self.selected,
+            rng: rng,
+        }
     }
 }
 

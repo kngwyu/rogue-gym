@@ -1,8 +1,10 @@
 //! module for item
+use dungeon::Coord;
 use path::ObjectPath;
+use rect_iter::RectRange;
 use rng::{Rng, RngHandle};
-use std::collections::{BTreeMap, HashMap};
 use std::cell::RefCell;
+use std::collections::{BTreeMap, HashMap};
 use std::rc::{Rc, Weak};
 use {Drawable, GameInfo};
 
@@ -22,7 +24,7 @@ impl ItemKind {
         };
         Item {
             kind: self,
-            number: num,
+            how_many: num,
             attr,
         }
     }
@@ -53,8 +55,12 @@ impl ItemNum {
 bitflags!{
     #[derive(Serialize, Deserialize)]
     pub struct ItemAttr: u32 {
+        /// the item is cursed or not
         const IS_CURSED = 0b00000001;
+        /// we can throw that item or not
         const CAN_THROW = 0b00000010;
+        /// we can merge 2 sets of the item or not
+        const IS_MANY   = 0b00000100;
     }
 }
 
@@ -70,21 +76,42 @@ impl ItemId {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Item {
     pub kind: ItemKind,
-    pub number: ItemNum,
+    pub how_many: ItemNum,
     pub attr: ItemAttr,
 }
 
+impl Item {
+    fn merge<F>(self, other: Self, attr_merger: Option<F>) -> Self
+    where
+        F: FnOnce(ItemAttr, ItemAttr) -> ItemAttr,
+    {
+        let attr = match attr_merger {
+            Some(f) => f(self.attr, other.attr),
+            None => self.attr | other.attr,
+        };
+        Item {
+            kind: self.kind,
+            how_many: self.how_many + other.how_many,
+            attr,
+        }
+    }
+    fn many(mut self) -> Self {
+        self.attr |= ItemAttr::IS_MANY;
+        self
+    }
+}
+
 #[derive(Clone, Debug)]
-pub struct ItemPtr {
+pub struct ItemRc {
     pub id: ItemId,
-    item: Weak<RefCell<Item>>,
+    item: Rc<RefCell<Item>>,
 }
 
 /// generate and management all items
 #[derive(Clone)]
 pub struct ItemHandler {
     /// stores all items in the game
-    items: BTreeMap<ItemId, Rc<RefCell<Item>>>,
+    items: BTreeMap<ItemId, Weak<RefCell<Item>>>,
     config: ItemConfig,
     /// global game information    
     game_info: Rc<RefCell<GameInfo>>,
@@ -93,44 +120,34 @@ pub struct ItemHandler {
 }
 
 impl ItemHandler {
-    pub fn gen_item<F>(&mut self, itemgen: F) -> ItemPtr
+    /// generate and register an item
+    pub fn gen_item<F>(&mut self, itemgen: F) -> ItemRc
     where
         F: FnOnce() -> Item,
     {
-        // add an item into btreemap
         let item = itemgen();
         let id = self.next_id.clone();
         let item = Rc::new(RefCell::new(item));
-        let res = {
-            // prepare return value
-            let weak = Rc::downgrade(&item);
-            ItemPtr {
-                id: id.clone(),
-                item: weak,
-            }
-        };
-        self.items.insert(id, item);
+        let weak_item = Rc::downgrade(&item);
+        // register the generated item
+        self.items.insert(id.clone(), weak_item);
         self.next_id.increment();
-        res
+        ItemRc { id, item }
     }
     /// setup itmes for Rogue
-    pub fn setup_for_room<F>(&mut self, level: u32, cell_num: usize, mut gen_path: F)
+    pub fn setup_for_room<F>(&mut self, range: RectRange<i32>, level: u32, mut register: F)
     where
-        F: FnMut(usize) -> ObjectPath,
+        F: FnMut(ItemRc),
     {
-        let gold = self.setup_gold(level);
-        let mut select_iter = self.rng.select(0..cell_num);
-        if let Some(num) = gold {
-            let cell = select_iter
-                .next()
-                .expect("[ItemHandler::setup_for_room] no empty cell");
-            let path = gen_path(cell);
-            //            self.infield_items.insert(path, ItemKind::Gold.numberd(num));
+        let len = range.len();
+        if let Some(num) = self.setup_gold(level) {
+            let item_rc = self.gen_item(|| ItemKind::Gold.numbered(num).many());
+            register(item_rc);
         }
     }
+    /// setup gold for 1 room
     fn setup_gold(&mut self, level: u32) -> Option<ItemNum> {
-        let is_cleared = self.game_info.as_ref().borrow().is_cleared;
-        if is_cleared || !self.rng.does_happen(self.config.gold_per_level) {
+        if !self.rng.does_happen(self.config.gold_rate_inv) {
             return None;
         }
         let val = self.rng.gen_range(

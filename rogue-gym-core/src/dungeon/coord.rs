@@ -57,3 +57,15 @@ impl IntoTuple2<i32> for Coord {
         (self.x.0, self.y.0)
     }
 }
+
+impl Into<(i32, i32)> for Coord {
+    fn into(self) -> (i32, i32) {
+        (self.x.0, self.y.0)
+    }
+}
+
+impl From<(i32, i32)> for Coord {
+    fn from(t: (i32, i32)) -> Coord {
+        Coord::new(t.0, t.1)
+    }
+}
