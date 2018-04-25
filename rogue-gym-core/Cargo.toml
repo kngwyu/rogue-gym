@@ -2,10 +2,10 @@
 authors = ["kngwyu <yuji.kngw.80s.revive@gmail.com>"]
 name = "rogue-gym-core"
 version = "0.0.1"
-
 [dependencies]
 bitflags = "1.0"
 derive_more = "0.10"
+enum-iterator-derive = "*"
 error-chain-mini = "0.0.2"
 error-chain-mini-derive = "0.0.2"
 fixedbitset = "0.1.9"

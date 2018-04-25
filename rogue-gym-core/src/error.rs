@@ -1,6 +1,5 @@
 use dungeon::{X, Y};
 use rect_iter::IndexError;
-// crate local re-exports
 
 /// Our own ErrorKind type
 #[derive(Clone, Debug, ErrorKind)]

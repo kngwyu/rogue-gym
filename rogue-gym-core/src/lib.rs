@@ -3,6 +3,8 @@ extern crate bitflags;
 #[macro_use]
 extern crate derive_more;
 #[macro_use]
+extern crate enum_iterator_derive;
+#[macro_use]
 extern crate error_chain_mini_derive;
 extern crate error_chain_mini;
 extern crate fixedbitset;
@@ -22,13 +24,15 @@ mod error;
 pub mod item;
 mod path;
 mod rng;
+pub mod input;
 
 use dungeon::{Dungeon, X, Y};
 pub use error::ErrorId;
 use item::ItemHandler;
 use rng::RngHandle;
 use std::cell::RefCell;
-use std::rc::Rc;
+use std::rc::{Rc, Weak};
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct ConfigInner {
     pub width: X,
@@ -41,10 +45,11 @@ pub struct Color(pub u8);
 
 #[derive(Clone)]
 pub struct RunTime {
-    global_info: Rc<RefCell<GameInfo>>,
+    global_info: Weak<RefCell<GameInfo>>,
     config: ConfigInner,
     dungeon: Dungeon,
     item: ItemHandler,
+    rng: Weak<RefCell<GameInfo>>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -53,6 +58,7 @@ pub struct GameInfo {
 }
 
 pub trait Drawable {
+    const NONE: u8 = b' ';
     fn byte(&self) -> u8;
     fn color(&self) -> Color {
         Color(0)

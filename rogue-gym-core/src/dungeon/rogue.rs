@@ -1,4 +1,4 @@
-use super::{field::Field, Coord, X, Y};
+use super::{Coord, field::Field, X, Y};
 use fixedbitset::FixedBitSet;
 use item::{ItemHandler, ItemRc};
 use path::ObjectPath;
@@ -45,7 +45,7 @@ impl Default for Config {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Surface {
     Road,
     Floor,

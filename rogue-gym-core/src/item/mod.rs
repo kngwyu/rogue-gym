@@ -1,10 +1,9 @@
 //! module for item
-use dungeon::Coord;
 use path::ObjectPath;
 use rect_iter::RectRange;
 use rng::{Rng, RngHandle};
 use std::cell::RefCell;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::rc::{Rc, Weak};
 use {Drawable, GameInfo};
 

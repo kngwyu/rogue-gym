@@ -69,3 +69,17 @@ impl From<(i32, i32)> for Coord {
         Coord::new(t.0, t.1)
     }
 }
+
+#[derive(Clone, Copy, Debug, Hash, PartialEq, PartialOrd, Ord, Eq, Serialize, Deserialize,
+         EnumIterator)]
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+    LeftUp,
+    RightUp,
+    LeftDown,
+    RightDown,
+    Stay,
+}
