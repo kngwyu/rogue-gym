@@ -1,11 +1,11 @@
-use super::{field::Field, Coord, X, Y};
+use super::{Coord, field::Field, X, Y};
 use fixedbitset::FixedBitSet;
-use item::{ItemHandler, NumberedItem};
+use item::{ItemHandler, ItemPtr};
 use path::ObjectPath;
 use rect_iter::{Get2D, GetMut2D, IntoTuple2, RectRange};
 use rng::{Rng, RngHandle};
 use std::cell::RefCell;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashMap};
 use std::iter;
 use std::ops::Range;
 use std::rc::Rc;
@@ -98,24 +98,19 @@ pub struct Room {
     /// id for room
     /// it's unique in same floor
     id: usize,
-    /// items
-    item_map: BTreeMap<Coord, NumberedItem>,
 }
 
 impl Room {
     fn new(kind: RoomKind, is_dark: bool, id: usize) -> Self {
-        Room {
-            kind,
-            is_dark,
-            id,
-            item_map: BTreeMap::new(),
-        }
+        Room { kind, is_dark, id }
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug)]
 pub struct Floor {
     rooms: Vec<Room>,
+    /// items
+    item_map: BTreeMap<Coord, ItemPtr>,
 }
 
 // in rogue, we can use simple reperesentation for address
@@ -149,6 +144,7 @@ impl Dungeon {
         // Be aware that it's **screen** size!
         let (width, height) = (self.confing_global.width, self.confing_global.height);
         let room_size = Coord::new(width / rn_x.0, height / rn_y.0);
+        // set empty rooms
         let empty_rooms: FixedBitSet = {
             let empty_num = self.rng.gen_range(1, self.config.max_empty_rooms + 1);
             self.rng
@@ -178,16 +174,19 @@ impl Dungeon {
                     };
                     // return Room::new(kind, i);
                 }
+                // modify room size if the bottom overlaps comment area
                 if top.y + room_size.y == self.confing_global.height {
                     room_size.y -= Y(1);
                 }
                 // set room type
                 let is_dark = self.rng.gen_range(0, self.config.dark_level) + 1 < level;
                 let kind = if is_dark && self.rng.does_happen(self.config.maze_rate_inv) {
+                    // maze
                     RoomKind::Maze {
                         size: RectRange::from_corners(top, top + room_size).unwrap(),
                     }
                 } else {
+                    // normal
                     let (xsize, ysize) = {
                         let (xmin, ymin) = self.config.min_room_size.into_tuple2();
                         ((room_size.x.0, xmin), (room_size.y.0, ymin))

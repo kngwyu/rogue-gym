@@ -1,44 +1,40 @@
-//! module for item implementation
-use std::collections::HashMap;
-
-use dungeon::Coord;
+//! module for item
 use path::ObjectPath;
 use rng::{Rng, RngHandle};
-use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, HashMap};
 use std::cell::RefCell;
-use std::fmt::Debug;
-use std::rc::Rc;
+use std::rc::{Rc, Weak};
 use {Drawable, GameInfo};
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
-pub enum Item {
+pub enum ItemKind {
     Gold,
     Weapon,
     Custom,
 }
 
-impl Item {
-    pub fn capacity(&self) -> ItemNum {
-        match *self {
-            Item::Gold => ItemNum::max(),
+impl ItemKind {
+    /// construct item from ItemNum & default attribute setting
+    pub fn numbered(self, num: ItemNum) -> Item {
+        let attr = match self {
+            ItemKind::Gold => ItemAttr::empty(),
             _ => unimplemented!(),
-        }
-    }
-    pub fn numberd(self, num: ItemNum) -> NumberedItem {
-        NumberedItem {
-            item: self,
+        };
+        Item {
+            kind: self,
             number: num,
+            attr,
         }
     }
 }
 
-impl Drawable for Item {
+impl Drawable for ItemKind {
     fn byte(&self) -> u8 {
         match *self {
-            Item::Gold => b'*',
+            ItemKind::Gold => b'*',
             // STUB!!!
-            Item::Weapon => b')',
-            Item::Custom => unimplemented!(),
+            ItemKind::Weapon => b')',
+            ItemKind::Custom => unimplemented!(),
         }
     }
 }
@@ -53,30 +49,70 @@ impl ItemNum {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct NumberedItem {
-    pub item: Item,
-    pub number: ItemNum,
+// TODO: add more attribute
+bitflags!{
+    #[derive(Serialize, Deserialize)]
+    pub struct ItemAttr: u32 {
+        const IS_CURSED = 0b00000001;
+        const CAN_THROW = 0b00000010;
+    }
 }
 
-pub struct ItemStore {
-    /// key: Object path
-    /// value: Information of this item
-    items: HashMap<ObjectPath, NumberedItem>,
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
+pub struct ItemId(u32);
+
+impl ItemId {
+    fn increment(&mut self) {
+        self.0 += 1;
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Item {
+    pub kind: ItemKind,
+    pub number: ItemNum,
+    pub attr: ItemAttr,
+}
+
+#[derive(Clone, Debug)]
+pub struct ItemPtr {
+    pub id: ItemId,
+    item: Weak<RefCell<Item>>,
 }
 
 /// generate and management all items
 #[derive(Clone)]
 pub struct ItemHandler {
-    infield_items: HashMap<ObjectPath, NumberedItem>,
-    item_stack: Vec<Rc<RefCell<Item>>>,
+    /// stores all items in the game
+    items: BTreeMap<ItemId, Rc<RefCell<Item>>>,
     config: ItemConfig,
     /// global game information    
     game_info: Rc<RefCell<GameInfo>>,
     rng: RngHandle,
+    next_id: ItemId,
 }
 
 impl ItemHandler {
+    pub fn gen_item<F>(&mut self, itemgen: F) -> ItemPtr
+    where
+        F: FnOnce() -> Item,
+    {
+        // add an item into btreemap
+        let item = itemgen();
+        let id = self.next_id.clone();
+        let item = Rc::new(RefCell::new(item));
+        let res = {
+            // prepare return value
+            let weak = Rc::downgrade(&item);
+            ItemPtr {
+                id: id.clone(),
+                item: weak,
+            }
+        };
+        self.items.insert(id, item);
+        self.next_id.increment();
+        res
+    }
     /// setup itmes for Rogue
     pub fn setup_for_room<F>(&mut self, level: u32, cell_num: usize, mut gen_path: F)
     where
@@ -89,7 +125,7 @@ impl ItemHandler {
                 .next()
                 .expect("[ItemHandler::setup_for_room] no empty cell");
             let path = gen_path(cell);
-            self.infield_items.insert(path, Item::Gold.numberd(num));
+            //            self.infield_items.insert(path, ItemKind::Gold.numberd(num));
         }
     }
     fn setup_gold(&mut self, level: u32) -> Option<ItemNum> {

@@ -3,22 +3,25 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt;
+
+type Symbol = u16;
+
 /// In the game, we identify all objects by 'path', for dara driven architecture
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct ObjectPath {
-    inner: Vec<u32>,
+    inner: Vec<Symbol>,
 }
 
 impl ObjectPath {
     /// construct single path from string
     pub fn from_str<S: AsRef<str>>(s: S) -> Self {
-        let id = intern(s.as_ref());
-        ObjectPath { inner: vec![id] }
+        let sym = intern(s.as_ref());
+        ObjectPath { inner: vec![sym] }
     }
     /// take 'string' and make self 'path::another_path::string'
     pub fn push<S: AsRef<str>>(&mut self, s: S) {
-        let id = intern(s.as_ref());
-        self.inner.push(id)
+        let sym = intern(s.as_ref());
+        self.inner.push(sym)
     }
     /// concat 2 paths
     pub fn append(&mut self, mut other: Self) {
@@ -67,10 +70,10 @@ impl OwnedPath {
 impl fmt::Display for ObjectPath {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         INTERNER.with(|interner| {
-            for &id in &self.inner {
-                write!(f, "::{}", interner.borrow().get(id).unwrap())?;
+            for &sym in &self.inner {
+                write!(f, "::{}", interner.borrow().get(sym).unwrap())?;
             }
-            writeln!(f, "")
+            Ok(())
         })
     }
 }
@@ -79,17 +82,17 @@ thread_local! {
     static INTERNER: RefCell<Interner> = RefCell::new(Interner::new());
 }
 
-fn intern(string: &str) -> u32 {
+fn intern(string: &str) -> Symbol {
     INTERNER.with(|interner| interner.borrow_mut().intern(string))
 }
 
-fn get_owned(id: u32) -> Option<String> {
-    INTERNER.with(|interner| interner.borrow().get(id).map(|s| s.to_owned()))
+fn get_owned(sym: Symbol) -> Option<String> {
+    INTERNER.with(|interner| interner.borrow().get(sym).map(|s| s.to_owned()))
 }
 
 #[derive(Default)]
 struct Interner {
-    ids: HashMap<Box<str>, u32>,
+    ids: HashMap<Box<str>, Symbol>,
     strings: Vec<Box<str>>,
 }
 
@@ -97,18 +100,18 @@ impl Interner {
     fn new() -> Self {
         Self::default()
     }
-    fn intern(&mut self, string: &str) -> u32 {
-        if let Some(&id) = self.ids.get(string) {
-            return id;
+    fn intern(&mut self, string: &str) -> Symbol {
+        if let Some(&sym) = self.ids.get(string) {
+            return sym;
         }
-        let id = self.strings.len() as u32;
+        let sym = self.strings.len() as Symbol;
         let string = string.to_string().into_boxed_str();
         self.strings.push(string.clone());
-        self.ids.insert(string, id);
-        id
+        self.ids.insert(string, sym);
+        sym
     }
-    fn get(&self, id: u32) -> Option<&str> {
-        match self.strings.get(id as usize) {
+    fn get(&self, sym: Symbol) -> Option<&str> {
+        match self.strings.get(sym as usize) {
             Some(ref s) => Some(s),
             None => None,
         }
