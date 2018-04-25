@@ -1,14 +1,14 @@
 //! General field representation
 use num_traits::ToPrimitive;
 use rect_iter::{Get2D, GetMut2D};
-use serde::{Serialize, de::DeserializeOwned};
 use std::fmt::Debug;
 use Drawable;
 
 /// Surface trait(just alias)
-pub trait Surface: Clone + Debug + Serialize + DeserializeOwned + Debug + Drawable {}
+pub trait Surface: Clone + Debug + Drawable {}
 
 /// Generic Cell trait
+#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
 pub struct Cell<S: Surface> {
     pub surface: S,
     pub attr: CellAttr,
@@ -32,7 +32,7 @@ impl<S: Surface> Drawable for Cell<S> {
 }
 
 bitflags! {
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, Default)]
     pub struct CellAttr: u32 {
         /// the player has visited the cell
         const IS_VISITED = 0b00000001;
@@ -46,6 +46,7 @@ bitflags! {
     }
 }
 
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Field<S: Surface> {
     inner: Vec<Vec<Cell<S>>>,
 }

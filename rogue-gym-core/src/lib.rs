@@ -19,17 +19,20 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate tuple_map;
 
+#[cfg(feature = "termion")]
+extern crate termion;
+
+mod character;
 pub mod dungeon;
 mod error;
+pub mod input;
 pub mod item;
 mod path;
 mod rng;
-pub mod input;
 
 use dungeon::{Dungeon, X, Y};
 pub use error::ErrorId;
 use item::ItemHandler;
-use rng::RngHandle;
 use std::cell::RefCell;
 use std::rc::{Rc, Weak};
 
@@ -49,7 +52,6 @@ pub struct RunTime {
     config: ConfigInner,
     dungeon: Dungeon,
     item: ItemHandler,
-    rng: Weak<RefCell<GameInfo>>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

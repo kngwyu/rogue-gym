@@ -1,11 +1,14 @@
 use dungeon::{X, Y};
+use error_chain_mini::ChainedError;
+use input::Key;
 use rect_iter::IndexError;
-
 /// Our own ErrorKind type
 #[derive(Clone, Debug, ErrorKind)]
 pub enum ErrorId {
     #[msg(short = "Invalid index access", detailed = "x: {:?}, y: {:?}", x, y)]
     Index { x: Option<X>, y: Option<Y> },
+    #[msg(short = "Invalid Input", detailed = "key: {:?}", _0)]
+    Input(Key),
 }
 
 impl From<IndexError> for ErrorId {
@@ -16,3 +19,7 @@ impl From<IndexError> for ErrorId {
         }
     }
 }
+
+pub type GameError = ChainedError<ErrorId>;
+
+pub type GameResult<T> = Result<T, GameError>;

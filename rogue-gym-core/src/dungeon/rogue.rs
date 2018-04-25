@@ -1,4 +1,4 @@
-use super::{Coord, field::Field, X, Y};
+use super::{field::Field, Coord, X, Y};
 use fixedbitset::FixedBitSet;
 use item::{ItemHandler, ItemRc};
 use path::ObjectPath;
@@ -134,7 +134,7 @@ pub struct Dungeon {
     /// global game information
     game_info: Rc<RefCell<GameInfo>>,
     /// random number generator
-    rng: Rc<RefCell<RngHandle>>,
+    rng: RefCell<RngHandle>,
 }
 
 impl Dungeon {
