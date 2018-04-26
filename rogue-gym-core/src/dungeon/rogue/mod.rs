@@ -1,4 +1,4 @@
-use super::{field::Field, Coord, X, Y};
+use super::{Coord, field::Field, X, Y};
 use fixedbitset::FixedBitSet;
 use item::{ItemHandler, ItemRc};
 use path::ObjectPath;
@@ -174,10 +174,13 @@ impl Dungeon {
                     let (x, y) = (room_size.x.0, room_size.y.0)
                         .map(|size| self.rng.borrow_mut().gen_range(1, size - 1))
                         .add(top.into_tuple2());
-                    let kind = RoomKind::Empty {
-                        up_left: Coord::new(x, y),
-                    };
-                    return Room::new(kind, true, i);
+                    return Room::new(
+                        RoomKind::Empty {
+                            up_left: Coord::new(x, y),
+                        },
+                        true,
+                        i,
+                    );
                 }
                 // modify room size if the bottom overlaps comment area
                 if top.y + room_size.y == self.confing_global.height {
