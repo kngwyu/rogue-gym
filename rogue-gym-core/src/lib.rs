@@ -49,7 +49,7 @@ pub struct Color(pub u8);
 #[derive(Clone)]
 pub struct RunTime {
     global_info: Weak<RefCell<GameInfo>>,
-    config: ConfigInner,
+    config: Weak<ConfigInner>,
     dungeon: Dungeon,
     item: ItemHandler,
 }
