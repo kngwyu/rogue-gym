@@ -46,7 +46,6 @@ pub(crate) struct ConfigInner {
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Color(pub u8);
 
-#[derive(Clone)]
 pub struct RunTime {
     global_info: Weak<RefCell<GameInfo>>,
     config: Weak<ConfigInner>,

@@ -1,10 +1,13 @@
 use num_traits::PrimInt;
 pub(crate) use rand::Rng;
-use rand::{thread_rng, Error as RndError, RngCore, SeedableRng, XorShiftRng};
+use rand::{distributions::uniform::SampleUniform, thread_rng, Error as RndError, RngCore,
+           SeedableRng, XorShiftRng};
+use std::cell::UnsafeCell;
 use std::collections::BTreeSet;
 use std::convert;
 use std::iter::FromIterator;
 use std::ops::Range;
+
 /// wrapper of XorShiftRng
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RngHandle(XorShiftRng);
@@ -43,6 +46,13 @@ impl RngHandle {
             selected: (0..width).collect(),
             rng: self,
         }
+    }
+    /// wrapper of gen_range which takes Range
+    pub fn range<T>(&mut self, range: Range<T>) -> T
+    where
+        T: Clone + PartialOrd + SampleUniform,
+    {
+        self.0.gen_range(range.start.clone(), range.end.clone())
     }
     /// judge an event with happenig probability 1 / p_inv happens or not
     pub fn does_happen(&mut self, p_inv: u32) -> bool {

@@ -1,16 +1,19 @@
-use super::{Coord, field::Field, X, Y};
+use super::{field::{Field, Surface as SurfaceT},
+            Coord,
+            X,
+            Y};
 use fixedbitset::FixedBitSet;
 use item::{ItemHandler, ItemRc};
 use path::ObjectPath;
 use rect_iter::{Get2D, GetMut2D, IntoTuple2, RectRange};
-use rng::{Rng, RngHandle};
+use rng::RngHandle;
 use std::cell::RefCell;
-use std::collections::{BTreeMap, HashMap};
-use std::iter;
-use std::ops::Range;
+use std::collections::BTreeMap;
 use std::rc::Rc;
 use tuple_map::TupleMap2;
 use {ConfigInner as GlobalConfig, Drawable, GameInfo};
+
+pub mod maze;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
@@ -78,6 +81,8 @@ impl Default for Surface {
     }
 }
 
+impl SurfaceT for Surface {}
+
 /// type of room
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum RoomKind {
@@ -106,23 +111,31 @@ impl Room {
     }
 }
 
+/// representation of 'floor'
 #[derive(Clone, Debug)]
 pub struct Floor {
+    /// rooms
     rooms: Vec<Room>,
     /// items
     item_map: BTreeMap<Coord, ItemRc>,
+    /// field (level map)
+    field: Field<Surface>,
 }
 
-// in rogue, we can use simple reperesentation for address
+/// Address in the dungeon.
+/// It's quite simple in rogue.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 struct Address {
+    /// level
     level: u32,
+    /// coordinate
     coord: Coord,
 }
 
-#[derive(Clone)]
 pub struct Dungeon {
-    past_floors: Vec<Floor>,
+    /// current level
+    level: u32,
+    /// current floor
     current_floor: Option<Floor>,
     /// configurations are constant
     /// dungeon specific configuration
@@ -139,7 +152,8 @@ pub struct Dungeon {
 
 impl Dungeon {
     fn gen_floor(&mut self) {
-        let level = self.past_floors.len() as u32;
+        self.level += 1;
+        let level = self.level;
         let (rn_x, rn_y) = (self.config.room_num_x, self.config.room_num_y);
         let room_num = (rn_x.0 * rn_y.0) as usize;
         // Be aware that it's **screen** size!
@@ -147,11 +161,9 @@ impl Dungeon {
         let room_size = Coord::new(width / rn_x.0, height / rn_y.0);
         // set empty rooms
         let empty_rooms: FixedBitSet = {
-            let empty_num = self.rng
-                .borrow_mut()
-                .gen_range(1, self.config.max_empty_rooms + 1);
+            let empty_num = self.rng.get_mut().range(0..self.config.max_empty_rooms) + 1;
             self.rng
-                .borrow_mut()
+                .get_mut()
                 .select(0..room_num)
                 .take(empty_num as usize)
                 .collect()
@@ -172,7 +184,7 @@ impl Dungeon {
                 };
                 if empty_rooms.contains(i) {
                     let (x, y) = (room_size.x.0, room_size.y.0)
-                        .map(|size| self.rng.borrow_mut().gen_range(1, size - 1))
+                        .map(|size| self.rng.get_mut().range(1..size - 1))
                         .add(top.into_tuple2());
                     return Room::new(
                         RoomKind::Empty {
@@ -187,50 +199,50 @@ impl Dungeon {
                     room_size.y -= Y(1);
                 }
                 // set room type
-                let is_dark =
-                    self.rng.borrow_mut().gen_range(0, self.config.dark_level) + 1 < level;
-                let kind =
-                    if is_dark && self.rng.borrow_mut().does_happen(self.config.maze_rate_inv) {
-                        // maze
-                        RoomKind::Maze {
-                            range: RectRange::from_corners(top, top + room_size).unwrap(),
-                        }
-                    } else {
-                        // normal
-                        let (xsize, ysize) = {
-                            let (xmin, ymin) = self.config.min_room_size.into_tuple2();
-                            ((room_size.x.0, xmin), (room_size.y.0, ymin))
-                                .map(|(max, min)| self.rng.borrow_mut().gen_range(min, max))
-                        };
-                        // setup gold
-                        let room_range =
-                            RectRange::from_corners(top, top + Coord::new(xsize, ysize)).unwrap();
-                        // floor_range = room_range - wall_range
-                        let floor_range = room_range.clone().slide_start((1, 1)).slide_end((1, 1));
-                        let floor_num = floor_range.len() as usize;
-                        let cleared = self.game_info.borrow().is_cleared;
-                        if !cleared || level >= self.config.amulet_level {
-                            self.item_handle.borrow_mut().setup_for_room(
-                                floor_range.clone(),
-                                level,
-                                |item_rc| {
-                                    let selected = self.rng.borrow_mut().gen_range(0, floor_num);
-                                    let coord = floor_range
-                                        .nth(selected)
-                                        .expect("[Dungeon::gen_floor] Invalid floor_num")
-                                        .into();
-                                    item_map.insert(coord, item_rc);
-                                },
-                            );
-                        }
-                        RoomKind::Normal { range: room_range }
+                let is_dark = self.rng.get_mut().range(0..self.config.dark_level) + 1 < level;
+                let kind = if is_dark && self.rng.get_mut().does_happen(self.config.maze_rate_inv) {
+                    // maze
+                    RoomKind::Maze {
+                        range: RectRange::from_corners(top, top + room_size).unwrap(),
+                    }
+                } else {
+                    // normal
+                    let (xsize, ysize) = {
+                        let (xmin, ymin) = self.config.min_room_size.into_tuple2();
+                        ((room_size.x.0, xmin), (room_size.y.0, ymin))
+                            .map(|(max, min)| self.rng.get_mut().range(min..max))
                     };
+                    // setup gold
+                    let room_range =
+                        RectRange::from_corners(top, top + Coord::new(xsize, ysize)).unwrap();
+                    // floor_range = room_range - wall_range
+                    let floor_range = room_range.clone().slide_start((1, 1)).slide_end((1, 1));
+                    let floor_num = floor_range.len() as usize;
+                    let cleared = self.game_info.borrow().is_cleared;
+                    if !cleared || level >= self.config.amulet_level {
+                        self.item_handle.borrow_mut().setup_for_room(
+                            floor_range.clone(),
+                            level,
+                            |item_rc| {
+                                let selected = self.rng.borrow_mut().range(0..floor_num);
+                                let coord = floor_range
+                                    .nth(selected)
+                                    .expect("[Dungeon::gen_floor] Invalid floor_num")
+                                    .into();
+                                item_map.insert(coord, item_rc);
+                            },
+                        );
+                    }
+                    RoomKind::Normal { range: room_range }
+                };
                 Room::new(kind, is_dark, i)
             })
             .collect();
         let floor = Floor {
             rooms: rooms,
             item_map,
+            field: Field::default(),
         };
+        self.current_floor = Some(floor);
     }
 }

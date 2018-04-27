@@ -1,6 +1,6 @@
 //! General field representation
 use num_traits::ToPrimitive;
-use rect_iter::{Get2D, GetMut2D};
+use rect_iter::{Get2D, GetMut2D, IndexError};
 use std::fmt::Debug;
 use Drawable;
 
@@ -35,14 +35,16 @@ bitflags! {
     #[derive(Serialize, Deserialize, Default)]
     pub struct CellAttr: u32 {
         /// the player has visited the cell
-        const IS_VISITED = 0b00000001;
+        const IS_VISITED  = 0b00000001;
         /// the cell is hidden and the player needs to 's'
-        const IS_HIDDEN  = 0b00000010;
+        const IS_HIDDEN   = 0b00000010;
         /// the cell is visible or not
-        const IS_VISIBLE = 0b00000100;
+        const IS_VISIBLE  = 0b00000100;
         /// In many rogue like, draw status can be changed by the cell has been drawn or not.
         /// So to record the cell has been drawn or not is very important.
-        const IS_DRAWN   = 0b00001000;
+        const IS_DRAWN    = 0b00001000;
+        /// if the cell is 'blocking' cell
+        const IS_BLCOKING = 0b00010000;
     }
 }
 
@@ -53,14 +55,17 @@ pub struct Field<S: Surface> {
 
 impl<S: Surface> Get2D for Field<S> {
     type Item = Cell<S>;
-    fn get_xy<T: ToPrimitive>(&self, x: T, y: T) -> Option<&Self::Item> {
-        self.inner.get_xy(x, y)
+    fn try_get_xy<T: ToPrimitive>(&self, x: T, y: T) -> Result<&Self::Item, IndexError> {
+        self.inner.try_get_xy(x, y)
     }
 }
 
 impl<S: Surface> GetMut2D for Field<S> {
-    type Item = Cell<S>;
-    fn get_mut_xy<T: ToPrimitive>(&mut self, x: T, y: T) -> Option<&mut Self::Item> {
-        self.inner.get_mut_xy(x, y)
+    fn try_get_mut_xy<T: ToPrimitive>(
+        &mut self,
+        x: T,
+        y: T,
+    ) -> Result<&mut Self::Item, IndexError> {
+        self.inner.try_get_mut_xy(x, y)
     }
 }

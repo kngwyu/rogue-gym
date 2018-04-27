@@ -23,7 +23,7 @@ impl Coord {
             y: y.into(),
         }
     }
-    pub fn euc_dist(&self, other: &Coord) -> f64 {
+    pub fn euc_dist(self, other: Coord) -> f64 {
         let (x, y) = ((self.x - other.x).0, (self.y - other.y).0);
         let f: f64 = (x, y).map(|i| i * i).sum().into();
         f.sqrt()
@@ -43,6 +43,9 @@ impl Coord {
     pub fn slide_y<T: Into<Y>>(mut self, y: T) -> Self {
         self.y += y.into();
         self
+    }
+    pub fn endless_iter(self, dir: Direction) -> DirectionIterEndless {
+        DirectionIterEndless { cur: self, dir }
     }
 }
 
@@ -82,4 +85,57 @@ pub enum Direction {
     LeftDown,
     RightDown,
     Stay,
+}
+
+impl Direction {
+    pub fn to_cd(&self) -> Coord {
+        use self::Direction::*;
+        match *self {
+            Up => Coord::new(0, -1),
+            Down => Coord::new(0, 1),
+            Left => Coord::new(-1, 0),
+            Right => Coord::new(1, 0),
+            LeftUp => Coord::new(-1, -1),
+            RightUp => Coord::new(1, -1),
+            LeftDown => Coord::new(-1, 1),
+            RightDown => Coord::new(1, 1),
+            Stay => Coord::new(0, 0),
+        }
+    }
+}
+
+pub struct DirectionIter<F> {
+    cur: Coord,
+    dir: Direction,
+    end_condition: Box<F>,
+}
+
+impl<F> Iterator for DirectionIter<F>
+where
+    F: FnMut(Coord) -> bool,
+{
+    type Item = Coord;
+    fn next(&mut self) -> Option<Coord> {
+        let f = &self.end_condition;
+        if f(self.cur) {
+            return None;
+        }
+        let cur = self.cur;
+        self.cur += self.dir.to_cd();
+        Some(cur)
+    }
+}
+
+pub struct DirectionIterEndless {
+    cur: Coord,
+    dir: Direction,
+}
+
+impl Iterator for DirectionIterEndless {
+    type Item = Coord;
+    fn next(&mut self) -> Option<Coord> {
+        let cur = self.cur;
+        self.cur += self.dir.to_cd();
+        Some(cur)
+    }
 }

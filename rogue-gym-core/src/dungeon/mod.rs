@@ -2,7 +2,6 @@
 mod coord;
 mod field;
 mod rogue;
-mod maze;
 pub use self::coord::{Coord, Direction, X, Y};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -15,7 +14,6 @@ pub enum DungeonStyle {
     Cataclysm,
 }
 
-#[derive(Clone)]
 pub enum Dungeon {
     Rogue(rogue::Dungeon),
     /// not implemented now
