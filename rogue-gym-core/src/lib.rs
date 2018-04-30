@@ -1,3 +1,6 @@
+#![feature(try_from)]
+#![feature(dyn_trait)]
+
 #[macro_use]
 extern crate bitflags;
 #[macro_use]

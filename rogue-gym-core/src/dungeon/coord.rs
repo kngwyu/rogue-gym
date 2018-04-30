@@ -44,8 +44,15 @@ impl Coord {
         self.y += y.into();
         self
     }
-    pub fn endless_iter(self, dir: Direction) -> DirectionIterEndless {
-        DirectionIterEndless { cur: self, dir }
+    pub fn dir_iter<F>(self, dir: Direction, end_condition: F) -> DirectionIter<F>
+    where
+        F: FnMut(Coord) -> bool,
+    {
+        DirectionIter {
+            cur: self,
+            dir,
+            end_condition: end_condition,
+        }
     }
 }
 
@@ -107,7 +114,7 @@ impl Direction {
 pub struct DirectionIter<F> {
     cur: Coord,
     dir: Direction,
-    end_condition: Box<F>,
+    end_condition: F,
 }
 
 impl<F> Iterator for DirectionIter<F>
@@ -116,24 +123,10 @@ where
 {
     type Item = Coord;
     fn next(&mut self) -> Option<Coord> {
-        let f = &self.end_condition;
+        let f = &mut self.end_condition;
         if f(self.cur) {
             return None;
         }
-        let cur = self.cur;
-        self.cur += self.dir.to_cd();
-        Some(cur)
-    }
-}
-
-pub struct DirectionIterEndless {
-    cur: Coord,
-    dir: Direction,
-}
-
-impl Iterator for DirectionIterEndless {
-    type Item = Coord;
-    fn next(&mut self) -> Option<Coord> {
         let cur = self.cur;
         self.cur += self.dir.to_cd();
         Some(cur)
