@@ -16,15 +16,16 @@ pub(super) fn dig_maze<F>(
 where
     F: FnMut(Coord) -> GameResult<()>,
 {
-    let mut used = HashSet::new();
     let start: Coord = range.upper_left().into();
     register(start).chain_err("[dungeon::rogue::maze::dig_maze]")?;
+    let mut used = HashSet::new();
     used.insert(start);
     dig_impl(range, rng, &mut register, &mut used, start)
-        .map_err(|e| e.chain("[dungeon::rogue::maze::dig_maze]"))
+        .chain_err("[dungeon::rogue::maze::dig_maze]")
 }
 
 /// implementatiog maze digging as DFS
+// in this function we don't chain error, because this is sub function of dig_maze
 fn dig_impl<F>(
     range: RectRange<i32>,
     rng: &mut RngHandle,
@@ -53,7 +54,7 @@ where
         };
         for cd in current_cd.dir_iter(dig_dir, |_| false).skip(1).take(2) {
             if used.insert(cd) {
-                register(cd).chain_err("[dungeon::rogue::maze::dig_impl]")?;
+                register(cd)?;
             }
         }
         let next = current_cd + dig_dir.to_cd().scale(2, 2);

@@ -1,11 +1,8 @@
-use super::{field::{Field, Surface as SurfaceT},
-            Coord,
-            X,
-            Y};
+use super::{Coord, field::{Field, Surface as SurfaceT}, X, Y};
 use fixedbitset::FixedBitSet;
 use item::{ItemHandler, ItemRc};
 use path::ObjectPath;
-use rect_iter::{Get2D, GetMut2D, IntoTuple2, RectRange};
+use rect_iter::{IntoTuple2, RectRange};
 use rng::RngHandle;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
@@ -14,6 +11,8 @@ use tuple_map::TupleMap2;
 use {ConfigInner as GlobalConfig, Drawable, GameInfo};
 
 pub mod maze;
+pub mod passages;
+pub mod rooms;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
@@ -168,79 +167,38 @@ impl Dungeon {
                 .take(empty_num as usize)
                 .collect()
         };
-        let mut item_map = BTreeMap::new();
         let rooms = RectRange::zero_start(rn_x.0, rn_y.0)
             .unwrap()
             .into_iter()
             .enumerate()
             .map(|(i, (x, y))| {
                 let mut room_size = room_size;
-                let top = if y == 0 {
+                let upper_left = if y == 0 {
                     let res = room_size.scale(x, y).slide_y(1);
                     room_size.y -= Y(1);
                     res
                 } else {
                     room_size.scale(x, y)
                 };
-                if empty_rooms.contains(i) {
-                    let (x, y) = (room_size.x.0, room_size.y.0)
-                        .map(|size| self.rng.get_mut().range(1..size - 1))
-                        .add(top.into_tuple2());
-                    return Room::new(
-                        RoomKind::Empty {
-                            up_left: Coord::new(x, y),
-                        },
-                        true,
-                        i,
-                    );
-                }
                 // modify room size if the bottom overlaps comment area
-                if top.y + room_size.y == self.confing_global.height {
+                if upper_left.y + room_size.y == self.confing_global.height {
                     room_size.y -= Y(1);
                 }
-                // set room type
-                let is_dark = self.rng.get_mut().range(0..self.config.dark_level) + 1 < level;
-                let kind = if is_dark && self.rng.get_mut().does_happen(self.config.maze_rate_inv) {
-                    // maze
-                    RoomKind::Maze {
-                        range: RectRange::from_corners(top, top + room_size).unwrap(),
-                    }
-                } else {
-                    // normal
-                    let (xsize, ysize) = {
-                        let (xmin, ymin) = self.config.min_room_size.into_tuple2();
-                        ((room_size.x.0, xmin), (room_size.y.0, ymin))
-                            .map(|(max, min)| self.rng.get_mut().range(min..max))
-                    };
-                    // setup gold
-                    let room_range =
-                        RectRange::from_corners(top, top + Coord::new(xsize, ysize)).unwrap();
-                    // floor_range = room_range - wall_range
-                    let floor_range = room_range.clone().slide_start((1, 1)).slide_end((1, 1));
-                    let floor_num = floor_range.len() as usize;
-                    let cleared = self.game_info.borrow().is_cleared;
-                    if !cleared || level >= self.config.amulet_level {
-                        self.item_handle.borrow_mut().setup_for_room(
-                            floor_range.clone(),
-                            level,
-                            |item_rc| {
-                                let selected = self.rng.borrow_mut().range(0..floor_num);
-                                let coord = floor_range
-                                    .nth(selected)
-                                    .expect("[Dungeon::gen_floor] Invalid floor_num")
-                                    .into();
-                                item_map.insert(coord, item_rc);
-                            },
-                        );
-                    }
-                    RoomKind::Normal { range: room_range }
-                };
-                Room::new(kind, is_dark, i)
+                let is_empty = empty_rooms.contains(i);
+                rooms::make_room(
+                    is_empty,
+                    room_size,
+                    upper_left,
+                    i,
+                    &self.config,
+                    level,
+                    &mut self.rng.borrow_mut(),
+                )
             })
             .collect();
         let floor = Floor {
             rooms: rooms,
-            item_map,
+            item_map: BTreeMap::new(),
             field: Field::default(),
         };
         self.current_floor = Some(floor);
