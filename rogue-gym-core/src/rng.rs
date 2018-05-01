@@ -2,10 +2,7 @@ use num_traits::PrimInt;
 pub(crate) use rand::Rng;
 use rand::{distributions::uniform::SampleUniform, thread_rng, Error as RndError, RngCore,
            SeedableRng, XorShiftRng};
-use std::cell::UnsafeCell;
-use std::collections::BTreeSet;
 use std::convert;
-use std::iter::FromIterator;
 use std::ops::Range;
 
 /// wrapper of XorShiftRng
@@ -40,12 +37,13 @@ impl RngHandle {
         if width > 10_000_000 {
             panic!("[RngHandle::select] too large range");
         }
-        let mut fenwick = FenwickTree::new(width);
-        (0..width).for_each(|i| fenwick.add(i, 1));
+        let mut set = FenwickSet::new(width);
+        (0..width).for_each(|i| {
+            set.insert(i);
+        });
         RandomSelecter {
-            current: width,
             offset: range.start,
-            selected: fenwick,
+            selected: set,
             rng: self,
         }
     }
@@ -83,62 +81,65 @@ impl RngCore for RngHandle {
 
 /// Iterator for RngHandle::select
 pub struct RandomSelecter<'a, T: PrimInt> {
-    current: usize,
     offset: T,
-    selected: FenwickTree,
+    selected: FenwickSet,
     rng: &'a mut RngHandle,
 }
 
 impl<'a, T: PrimInt> Iterator for RandomSelecter<'a, T> {
     type Item = T;
     fn next(&mut self) -> Option<T> {
-        if self.current == 0 {
+        let num_rests = self.selected.len();
+        if num_rests == 0 {
             return None;
         }
-        let r = self.rng.gen_range(0, self.current) + 1;
-        let res = self.selected.lower_bound(r as i64);
-        self.selected.add(res, -1);
-        self.current -= 1;
+        let n = self.rng.gen_range(0, num_rests);
+        let res = self.selected.nth(n);
+        self.selected.remove(res);
         let res = T::from(res).expect("[RngSelect::Iterator::next] NumCast error") + self.offset;
         Some(res)
     }
 }
 
-impl<'a, T: PrimInt> RandomSelecter<'a, T> {
-    pub fn reserve(self) -> ReservedSelecter<T> {
-        ReservedSelecter {
-            current: self.current,
-            offset: self.offset,
-            selected: self.selected,
-        }
-    }
+/// set implementation using Fenwick Tree
+pub struct FenwickSet {
+    inner: FenwickTree,
+    num_elements: usize,
 }
 
-pub struct ReservedSelecter<T: PrimInt> {
-    current: usize,
-    offset: T,
-    selected: FenwickTree,
-}
-
-impl<T: PrimInt> ReservedSelecter<T> {
-    pub fn into_selecter<'a>(self, rng: &'a mut RngHandle) -> RandomSelecter<'a, T> {
-        RandomSelecter {
-            current: self.current,
-            offset: self.offset,
-            selected: self.selected,
-            rng: rng,
+impl FenwickSet {
+    pub fn new(length: usize) -> Self {
+        FenwickSet {
+            inner: FenwickTree::new(length),
+            num_elements: 0,
         }
     }
-    pub fn select_once(&mut self, rng: &mut RngHandle) -> Option<T> {
-        if self.current == 0 {
-            return None;
+    pub fn insert(&mut self, id: usize) -> bool {
+        if self.contains(id) {
+            false
+        } else {
+            self.inner.add(id, 1);
+            self.num_elements += 1;
+            true
         }
-        let r = rng.gen_range(0, self.current) + 1;
-        let res = self.selected.lower_bound(r as i64);
-        self.selected.add(res, -1);
-        self.current -= 1;
-        let res = T::from(res).expect("[RngSelect::Iterator::next] NumCast error") + self.offset;
-        Some(res)
+    }
+    pub fn remove(&mut self, id: usize) -> bool {
+        if self.contains(id) {
+            self.inner.add(id, -1);
+            self.num_elements -= 1;
+            true
+        } else {
+            false
+        }
+    }
+    pub fn contains(&self, id: usize) -> bool {
+        self.inner.sum_range(id..id + 1) == 1
+    }
+    pub fn nth(&self, n: usize) -> usize {
+        self.inner.lower_bound(n as i64 + 1)
+    }
+    pub fn len(&self) -> usize {
+        self.num_elements
     }
 }
 
@@ -151,7 +152,7 @@ struct FenwickTree {
 impl FenwickTree {
     fn new(length: usize) -> Self {
         FenwickTree {
-            inner: vec![0; length + 1],
+            inner: vec![0; length + 10],
             len: length as isize,
         }
     }
@@ -179,7 +180,7 @@ impl FenwickTree {
         if range.start == 0 {
             return sum1;
         } else {
-            let sum2 = self.sum(range.start - 1);
+            let sum2 = self.sum(range.start);
             sum1 - sum2
         }
     }
@@ -241,14 +242,13 @@ mod fenwick_test {
             sum += x as i64;
             assert_eq!(fenwick.lower_bound(sum), x);
         }
+        assert_eq!(fenwick.lower_bound(sum + 10), max);
     }
 }
 
 #[cfg(test)]
 mod rng_test {
     use super::*;
-    use fixedbitset::FixedBitSet;
-    use test::Bencher;
     /// seed encoding test
     #[test]
     fn gen_seed() {
@@ -264,8 +264,16 @@ mod rng_test {
             });
         assert_eq!(seed, decoded);
     }
+
+}
+
+#[cfg(test)]
+mod selecter_test {
+    use super::*;
+    use fixedbitset::FixedBitSet;
+    use test::Bencher;
     #[test]
-    fn rng_select() {
+    fn rng_select_normal() {
         let mut rng = RngHandle::new();
         let max = 100;
         let bs: FixedBitSet = rng.select(0..max).take(max).collect();
@@ -274,7 +282,7 @@ mod rng_test {
         });
     }
     #[test]
-    fn rng_select2() {
+    fn rng_select_advanced() {
         let mut rng = RngHandle::new();
         let (l, r) = (300, 2400);
         let bs: FixedBitSet = rng.select(l..r).take(1000).collect();
