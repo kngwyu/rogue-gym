@@ -24,7 +24,7 @@ where
         .chain_err("[dungeon::rogue::maze::dig_maze]")
 }
 
-/// implementatiog maze digging as DFS
+/// implementatiog maze digging by DFS
 // in this function we don't chain error, because this is sub function of dig_maze
 fn dig_impl<F>(
     range: RectRange<i32>,

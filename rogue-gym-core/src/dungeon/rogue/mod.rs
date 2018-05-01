@@ -1,8 +1,11 @@
-use super::{Coord, field::{Field, Surface as SurfaceT}, X, Y};
+use super::{field::{Field, Surface as SurfaceT},
+            Coord,
+            X,
+            Y};
 use fixedbitset::FixedBitSet;
 use item::{ItemHandler, ItemRc};
 use path::ObjectPath;
-use rect_iter::{IntoTuple2, RectRange};
+use rect_iter::RectRange;
 use rng::RngHandle;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
@@ -150,7 +153,7 @@ pub struct Dungeon {
 }
 
 impl Dungeon {
-    fn gen_floor(&mut self) {
+    fn gen_rooms(&mut self) -> Vec<Room> {
         self.level += 1;
         let level = self.level;
         let (rn_x, rn_y) = (self.config.room_num_x, self.config.room_num_y);
@@ -167,12 +170,13 @@ impl Dungeon {
                 .take(empty_num as usize)
                 .collect()
         };
-        let rooms = RectRange::zero_start(rn_x.0, rn_y.0)
+        RectRange::zero_start(rn_x.0, rn_y.0)
             .unwrap()
             .into_iter()
             .enumerate()
             .map(|(i, (x, y))| {
                 let mut room_size = room_size;
+                // adjust room positions so as not to hit the comment area
                 let upper_left = if y == 0 {
                     let res = room_size.scale(x, y).slide_y(1);
                     room_size.y -= Y(1);
@@ -180,7 +184,6 @@ impl Dungeon {
                 } else {
                     room_size.scale(x, y)
                 };
-                // modify room size if the bottom overlaps comment area
                 if upper_left.y + room_size.y == self.confing_global.height {
                     room_size.y -= Y(1);
                 }
@@ -195,12 +198,6 @@ impl Dungeon {
                     &mut self.rng.borrow_mut(),
                 )
             })
-            .collect();
-        let floor = Floor {
-            rooms: rooms,
-            item_map: BTreeMap::new(),
-            field: Field::default(),
-        };
-        self.current_floor = Some(floor);
+            .collect()
     }
 }

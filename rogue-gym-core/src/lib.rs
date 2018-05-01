@@ -1,5 +1,7 @@
+#![allow(stable_features)]
 #![feature(try_from)]
 #![feature(dyn_trait)]
+#![cfg_attr(test, feature(test))]
 
 #[macro_use]
 extern crate bitflags;
@@ -7,9 +9,9 @@ extern crate bitflags;
 extern crate derive_more;
 #[macro_use]
 extern crate enum_iterator_derive;
+extern crate error_chain_mini;
 #[macro_use]
 extern crate error_chain_mini_derive;
-extern crate error_chain_mini;
 extern crate fixedbitset;
 #[macro_use]
 extern crate log;
@@ -21,6 +23,9 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate tuple_map;
+
+#[cfg(test)]
+extern crate test;
 
 #[cfg(feature = "termion")]
 extern crate termion;
