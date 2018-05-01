@@ -33,6 +33,7 @@ extern crate termion;
 mod character;
 pub mod dungeon;
 mod error;
+mod fenwick;
 pub mod input;
 pub mod item;
 mod path;

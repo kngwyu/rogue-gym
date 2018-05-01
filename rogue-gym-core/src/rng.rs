@@ -1,10 +1,10 @@
 use num_traits::PrimInt;
 pub(crate) use rand::Rng;
-use rand::{distributions::uniform::SampleUniform, thread_rng, Error as RndError, RngCore,
-           SeedableRng, XorShiftRng};
+use rand::{thread_rng, Error as RndError, RngCore, SeedableRng, XorShiftRng,
+           distributions::uniform::SampleUniform};
 use std::convert;
 use std::ops::Range;
-
+use fenwick::FenwickSet;
 /// wrapper of XorShiftRng
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RngHandle(XorShiftRng);
@@ -98,151 +98,6 @@ impl<'a, T: PrimInt> Iterator for RandomSelecter<'a, T> {
         self.selected.remove(res);
         let res = T::from(res).expect("[RngSelect::Iterator::next] NumCast error") + self.offset;
         Some(res)
-    }
-}
-
-/// set implementation using Fenwick Tree
-pub struct FenwickSet {
-    inner: FenwickTree,
-    num_elements: usize,
-}
-
-impl FenwickSet {
-    pub fn new(length: usize) -> Self {
-        FenwickSet {
-            inner: FenwickTree::new(length),
-            num_elements: 0,
-        }
-    }
-    pub fn insert(&mut self, id: usize) -> bool {
-        if self.contains(id) {
-            false
-        } else {
-            self.inner.add(id, 1);
-            self.num_elements += 1;
-            true
-        }
-    }
-    pub fn remove(&mut self, id: usize) -> bool {
-        if self.contains(id) {
-            self.inner.add(id, -1);
-            self.num_elements -= 1;
-            true
-        } else {
-            false
-        }
-    }
-    pub fn contains(&self, id: usize) -> bool {
-        self.inner.sum_range(id..id + 1) == 1
-    }
-    pub fn nth(&self, n: usize) -> usize {
-        self.inner.lower_bound(n as i64 + 1)
-    }
-    pub fn len(&self) -> usize {
-        self.num_elements
-    }
-}
-
-/// simple 0-indexed fenwick tree
-struct FenwickTree {
-    inner: Vec<i64>,
-    len: isize,
-}
-
-impl FenwickTree {
-    fn new(length: usize) -> Self {
-        FenwickTree {
-            inner: vec![0; length + 10],
-            len: length as isize,
-        }
-    }
-    /// add plus to array[idx]
-    fn add(&mut self, idx: usize, plus: i64) {
-        let mut idx = (idx + 1) as isize;
-        while idx <= self.len {
-            self.inner[idx as usize] += plus;
-            idx += idx & -idx;
-        }
-    }
-    /// return sum of range 0..range_max
-    fn sum(&self, range_max: usize) -> i64 {
-        let mut sum = 0;
-        let mut idx = range_max as isize;
-        while idx > 0 {
-            sum += self.inner[idx as usize];
-            idx -= idx & -idx;
-        }
-        sum
-    }
-    /// return sum of range 0..range_max
-    fn sum_range(&self, range: Range<usize>) -> i64 {
-        let sum1 = self.sum(range.end);
-        if range.start == 0 {
-            return sum1;
-        } else {
-            let sum2 = self.sum(range.start);
-            sum1 - sum2
-        }
-    }
-    /// return minimum i where array[0] + array[1] + ... + array[i] >= query (1 <= i <= N)
-    fn lower_bound(&self, mut query: i64) -> usize {
-        if query <= 0 {
-            return 0;
-        }
-        let mut k = 1;
-        while k <= self.len {
-            k *= 2;
-        }
-        let mut cur = 0;
-        while k > 0 {
-            k /= 2;
-            let nxt = cur + k;
-            if nxt > self.len {
-                continue;
-            }
-            let val = self.inner[nxt as usize];
-            if val < query {
-                query -= val;
-                cur += k;
-            }
-        }
-        cur as usize
-    }
-}
-
-#[cfg(test)]
-mod fenwick_test {
-    use super::*;
-    #[test]
-    fn sum() {
-        let max = 10000;
-        let mut fenwick = FenwickTree::new(max);
-        let range = 0..max; // 3400..7000;
-        let mut rng = RngHandle::new();
-        let mut sum = 0;
-        for _ in 0..1 {
-            let plus = rng.gen_range(0, 1000000000i64);
-            let id = rng.gen_range(0, max);
-            fenwick.add(id, plus);
-            if range.start <= id && id < range.end {
-                sum += plus;
-            }
-        }
-        assert_eq!(sum, fenwick.sum_range(range));
-    }
-    #[test]
-    fn lower_bound() {
-        let max = 100;
-        let mut fenwick = FenwickTree::new(max);
-        for x in 0..max {
-            fenwick.add(x, x as i64);
-        }
-        let mut sum = 0;
-        for x in 0..max {
-            sum += x as i64;
-            assert_eq!(fenwick.lower_bound(sum), x);
-        }
-        assert_eq!(fenwick.lower_bound(sum + 10), max);
     }
 }
 
