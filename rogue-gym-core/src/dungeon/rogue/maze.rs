@@ -52,7 +52,7 @@ where
             Some(d) => d,
             None => break,
         };
-        for cd in current_cd.dir_iter(dig_dir, |_| false).skip(1).take(2) {
+        for cd in current_cd.direc_iter(dig_dir, |_| false).skip(1).take(2) {
             if used.insert(cd) {
                 register(cd)?;
             }

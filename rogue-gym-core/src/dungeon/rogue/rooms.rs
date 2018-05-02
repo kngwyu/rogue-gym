@@ -1,8 +1,39 @@
+use super::Config;
 use dungeon::Coord;
-use rng::RngHandle;
-use super::{Config, Room, RoomKind};
 use rect_iter::{IntoTuple2, RectRange};
+use rng::RngHandle;
 use tuple_map::TupleMap2;
+
+/// type of room
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum RoomKind {
+    /// normal room
+    Normal { range: RectRange<i32> },
+    /// maze room
+    Maze { range: RectRange<i32> },
+    /// passage only(gone room)
+    Empty { up_left: Coord },
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Room {
+    /// room kind
+    pub kind: RoomKind,
+    /// if the room is dark or not
+    pub is_dark: bool,
+    /// id for room
+    /// it's unique in same floor
+    pub id: usize,
+}
+
+impl Room {
+    fn new(kind: RoomKind, is_dark: bool, id: usize) -> Self {
+        Room { kind, is_dark, id }
+    }
+    fn edges(&self) -> Vec<Coord> {
+        vec![]
+    }
+}
 
 pub(crate) fn make_room(
     is_empty: bool,

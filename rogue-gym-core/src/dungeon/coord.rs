@@ -44,7 +44,7 @@ impl Coord {
         self.y += y.into();
         self
     }
-    pub fn dir_iter<F>(self, dir: Direction, end_condition: F) -> DirectionIter<F>
+    pub fn direc_iter<F>(self, dir: Direction, end_condition: F) -> DirectionIter<F>
     where
         F: FnMut(Coord) -> bool,
     {

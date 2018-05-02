@@ -1,3 +1,4 @@
+pub use self::rooms::{Room, RoomKind};
 use super::{field::{Field, Surface as SurfaceT},
             Coord,
             X,
@@ -10,7 +11,6 @@ use rng::RngHandle;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::Rc;
-use tuple_map::TupleMap2;
 use {ConfigInner as GlobalConfig, Drawable, GameInfo};
 
 pub mod maze;
@@ -84,34 +84,6 @@ impl Default for Surface {
 }
 
 impl SurfaceT for Surface {}
-
-/// type of room
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub enum RoomKind {
-    /// normal room
-    Normal { range: RectRange<i32> },
-    /// maze room
-    Maze { range: RectRange<i32> },
-    /// passage only(gone room)
-    Empty { up_left: Coord },
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Room {
-    /// room kind
-    kind: RoomKind,
-    /// if the room is dark or not
-    is_dark: bool,
-    /// id for room
-    /// it's unique in same floor
-    id: usize,
-}
-
-impl Room {
-    fn new(kind: RoomKind, is_dark: bool, id: usize) -> Self {
-        Room { kind, is_dark, id }
-    }
-}
 
 /// representation of 'floor'
 #[derive(Clone, Debug)]

@@ -1,10 +1,10 @@
+use fenwick::FenwickSet;
 use num_traits::PrimInt;
 pub(crate) use rand::Rng;
-use rand::{thread_rng, Error as RndError, RngCore, SeedableRng, XorShiftRng,
-           distributions::uniform::SampleUniform};
+use rand::{distributions::uniform::SampleUniform, thread_rng, Error as RndError, RngCore,
+           SeedableRng, XorShiftRng};
 use std::convert;
 use std::ops::Range;
-use fenwick::FenwickSet;
 /// wrapper of XorShiftRng
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RngHandle(XorShiftRng);
@@ -37,13 +37,9 @@ impl RngHandle {
         if width > 10_000_000 {
             panic!("[RngHandle::select] too large range");
         }
-        let mut set = FenwickSet::new(width);
-        (0..width).for_each(|i| {
-            set.insert(i);
-        });
         RandomSelecter {
             offset: range.start,
-            selected: set,
+            selected: FenwickSet::from_range(0..width),
             rng: self,
         }
     }
@@ -94,7 +90,9 @@ impl<'a, T: PrimInt> Iterator for RandomSelecter<'a, T> {
             return None;
         }
         let n = self.rng.gen_range(0, num_rests);
-        let res = self.selected.nth(n);
+        let res = self.selected
+            .nth(n)
+            .expect("[RandomSelecter::next] no nth element(maybe logic bug)");
         self.selected.remove(res);
         let res = T::from(res).expect("[RngSelect::Iterator::next] NumCast error") + self.offset;
         Some(res)
