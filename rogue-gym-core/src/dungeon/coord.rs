@@ -44,15 +44,21 @@ impl Coord {
         self.y += y.into();
         self
     }
-    pub fn direc_iter<F>(self, dir: Direction, end_condition: F) -> DirectionIter<F>
+    pub fn direc_iter<F>(self, dir: Direction, predicate: F) -> DirectionIter<F>
     where
         F: FnMut(Coord) -> bool,
     {
         DirectionIter {
             cur: self,
             dir,
-            end_condition: end_condition,
+            predicate,
         }
+    }
+    pub fn is_upper(self, other: Coord) -> bool {
+        self.y > other.y
+    }
+    pub fn is_lefter(self, other: Coord) -> bool {
+        self.x > other.x
     }
 }
 
@@ -95,9 +101,9 @@ pub enum Direction {
 }
 
 impl Direction {
-    pub fn to_cd(&self) -> Coord {
+    pub fn to_cd(self) -> Coord {
         use self::Direction::*;
-        match *self {
+        match self {
             Up => Coord::new(0, -1),
             Down => Coord::new(0, 1),
             Left => Coord::new(-1, 0),
@@ -109,12 +115,26 @@ impl Direction {
             Stay => Coord::new(0, 0),
         }
     }
+    pub fn reverse(self) -> Direction {
+        use self::Direction::*;
+        match self {
+            Up => Down,
+            Left => Right,
+            Right => Left,
+            Down => Up,
+            LeftUp => RightDown,
+            RightUp => LeftDown,
+            LeftDown => RightUp,
+            RightDown => LeftUp,
+            Stay => Stay,
+        }
+    }
 }
 
 pub struct DirectionIter<F> {
     cur: Coord,
     dir: Direction,
-    end_condition: F,
+    predicate: F,
 }
 
 impl<F> Iterator for DirectionIter<F>
@@ -123,8 +143,8 @@ where
 {
     type Item = Coord;
     fn next(&mut self) -> Option<Coord> {
-        let f = &mut self.end_condition;
-        if f(self.cur) {
+        let f = &mut self.predicate;
+        if !f(self.cur) {
             return None;
         }
         let cur = self.cur;

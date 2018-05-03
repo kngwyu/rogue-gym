@@ -3,6 +3,7 @@ use super::{field::{Field, Surface as SurfaceT},
             Coord,
             X,
             Y};
+use error::{GameResult, ResultExt};
 use fixedbitset::FixedBitSet;
 use item::{ItemHandler, ItemRc};
 use path::ObjectPath;
@@ -125,7 +126,7 @@ pub struct Dungeon {
 }
 
 impl Dungeon {
-    fn gen_rooms(&mut self) -> Vec<Room> {
+    fn gen_rooms(&mut self) -> GameResult<Vec<Room>> {
         self.level += 1;
         let level = self.level;
         let (rn_x, rn_y) = (self.config.room_num_x, self.config.room_num_y);

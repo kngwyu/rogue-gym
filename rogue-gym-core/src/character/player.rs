@@ -1,7 +1,6 @@
 use super::{HitPoint, Maxed, Strength};
 use dungeon::{Direction, DungeonPath};
-use error::{ErrorId, GameError, GameResult};
-use error_chain_mini::ErrorKind;
+use error::{ErrorId, ErrorKind, GameError, GameResult};
 use input::Key;
 use item::ItemRc;
 use path::ObjectPath;

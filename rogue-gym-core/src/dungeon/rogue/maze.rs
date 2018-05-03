@@ -52,7 +52,7 @@ where
             Some(d) => d,
             None => break,
         };
-        for cd in current_cd.direc_iter(dig_dir, |_| false).skip(1).take(2) {
+        for cd in current_cd.direc_iter(dig_dir, |_| true).skip(1).take(2) {
             if used.insert(cd) {
                 register(cd)?;
             }
@@ -66,15 +66,20 @@ where
 #[cfg(test)]
 mod maze_test {
     use super::*;
+    use error::{ErrorId, ErrorKind};
     use rect_iter::GetMut2D;
     #[test]
     fn print_maze() {
         let mut rng = RngHandle::new();
         let range = RectRange::from_ranges(20..50, 10..20).unwrap();
         let mut buffer = vec![vec![false; 80]; 24];
-        dig_maze(range, &mut rng, |cd| {
-            *buffer.get_mut_p(cd) = true;
-            Ok(())
+        dig_maze(range.clone(), &mut rng, |cd| {
+            if !range.contains(cd) {
+                Err(ErrorId::LogicError.into_with("dig_maze produced invalid Coordinate!"))
+            } else {
+                *buffer.get_mut_p(cd) = true;
+                Ok(())
+            }
         }).unwrap();
         for v in buffer {
             for f in v {
