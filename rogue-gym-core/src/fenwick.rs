@@ -65,7 +65,7 @@ impl FenwickSet {
     }
     /// return nth-smallest element in the set
     pub fn nth(&self, n: usize) -> Option<usize> {
-        let res = self.inner.lower_bound(n as i64 + 1);
+        let res = self.inner.lower_bound(n as i32 + 1);
         if res > self.max_val {
             None
         } else {
@@ -102,7 +102,7 @@ impl IntoIterator for FenwickSet {
 pub struct FenwickSetIter {
     fwt: FenwickTree,
     current: isize,
-    before: i64,
+    before: i32,
 }
 
 impl Iterator for FenwickSetIter {
@@ -124,7 +124,7 @@ impl Iterator for FenwickSetIter {
 /// simple 0-indexed fenwick tree
 #[derive(Clone, Debug, Serialize, Deserialize)]
 struct FenwickTree {
-    inner: Vec<i64>,
+    inner: Vec<i32>,
     len: isize,
 }
 
@@ -136,7 +136,7 @@ impl FenwickTree {
         }
     }
     /// add plus to array[idx]
-    fn add(&mut self, idx: usize, plus: i64) {
+    fn add(&mut self, idx: usize, plus: i32) {
         let mut idx = (idx + 1) as isize;
         while idx <= self.len {
             self.inner[idx as usize] += plus;
@@ -144,7 +144,7 @@ impl FenwickTree {
         }
     }
     /// return sum of range 0..range_max
-    fn sum(&self, range_max: usize) -> i64 {
+    fn sum(&self, range_max: usize) -> i32 {
         let mut sum = 0;
         let mut idx = range_max as isize;
         while idx > 0 {
@@ -154,7 +154,7 @@ impl FenwickTree {
         sum
     }
     /// return sum of range 0..range_max
-    fn sum_range(&self, range: Range<usize>) -> i64 {
+    fn sum_range(&self, range: Range<usize>) -> i32 {
         let sum1 = self.sum(range.end);
         if range.start == 0 {
             return sum1;
@@ -164,7 +164,7 @@ impl FenwickTree {
         }
     }
     /// return minimum i where array[0] + array[1] + ... + array[i] >= query (1 <= i <= N)
-    fn lower_bound(&self, mut query: i64) -> usize {
+    fn lower_bound(&self, mut query: i32) -> usize {
         if query <= 0 {
             return 0;
         }
@@ -281,7 +281,7 @@ mod fenwick_tree_test {
         let mut rng = RngHandle::new();
         let mut sum = 0;
         for _ in 0..1 {
-            let plus = rng.range(0..1000000000i64);
+            let plus = rng.range(0..10000i32);
             let id = rng.range(0..max);
             fenwick.add(id, plus);
             if range.start <= id && id < range.end {
@@ -295,11 +295,11 @@ mod fenwick_tree_test {
         let max = 100;
         let mut fenwick = FenwickTree::new(max);
         for x in 0..max {
-            fenwick.add(x, x as i64);
+            fenwick.add(x, x as i32);
         }
         let mut sum = 0;
         for x in 0..max {
-            sum += x as i64;
+            sum += x as i32;
             assert_eq!(fenwick.lower_bound(sum), x);
         }
         assert_eq!(fenwick.lower_bound(sum + 10), max);
