@@ -1,9 +1,12 @@
 use fenwick::FenwickSet;
 use num_traits::PrimInt;
 pub(crate) use rand::Rng;
-use rand::{distributions::uniform::SampleUniform, thread_rng, Error as RndError, RngCore,
-           SeedableRng, XorShiftRng};
+use rand::{
+    distributions::uniform::SampleUniform, thread_rng, Error as RndError, RngCore, SeedableRng,
+    XorShiftRng,
+};
 use std::convert;
+use std::fmt::Debug;
 use std::ops::Range;
 /// wrapper of XorShiftRng
 #[derive(Clone, Serialize, Deserialize)]
@@ -46,9 +49,11 @@ impl RngHandle {
     /// wrapper of gen_range which takes Range
     pub fn range<T>(&mut self, range: Range<T>) -> T
     where
-        T: Clone + PartialOrd + SampleUniform,
+        T: Clone + PartialOrd + SampleUniform + Debug,
     {
-        self.0.gen_range(range.start.clone(), range.end.clone())
+        let (s, e) = (range.start.clone(), range.end.clone());
+        assert!(s < e, "invalid range {:?}..{:?}", s, e);
+        self.0.gen_range(s, e)
     }
     /// judge an event with happenig probability 1 / p_inv happens or not
     pub fn does_happen(&mut self, p_inv: u32) -> bool {

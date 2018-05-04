@@ -98,6 +98,9 @@ where
     // decide where to turn randomly
     let (turn_start, turn_dir, turn_end) = match direction {
         Direction::Down => {
+            if start.y.0 + 1 == end.y.0 {
+                panic!("{:?} {:?}", room1.kind, room2.kind);
+            }
             let y = rng.range(start.y.0 + 1..end.y.0);
             let dir = if start.is_lefter(end) {
                 Direction::Right
@@ -272,7 +275,8 @@ mod test {
     use super::*;
     use dungeon::rogue::rooms;
     use error::{ErrorId, ErrorKind};
-    use rect_iter::GetMut2D;
+    use rect_iter::{Get2D, GetMut2D};
+    use std::collections::VecDeque;
     use Tile;
     fn to_buffer() -> Vec<Vec<Surface>> {
         let rooms = rooms::test::gen(10);
@@ -302,12 +306,51 @@ mod test {
     #[test]
     #[ignore]
     fn print_passages() {
-        let mut buffer = to_buffer();
+        let buffer = to_buffer();
+        print_impl(&buffer);
+    }
+    fn print_impl(buffer: &Vec<Vec<Surface>>) {
         for v in buffer {
             for x in v {
                 print!("{}", x.byte() as char);
             }
             println!("");
+        }
+    }
+    #[test]
+    fn connectivity() {
+        for _ in 0..1000 {
+            let buffer = to_buffer();
+            let (xlen, ylen) = (buffer[0].len(), buffer.len());
+            let start = RectRange::zero_start(xlen, ylen)
+                .unwrap()
+                .into_iter()
+                .find(|&t| *buffer.get_p(t) == Surface::Floor)
+                .map(|t| Coord::new(t.0 as i32, t.1 as i32))
+                .unwrap();
+            let mut visited = vec![vec![false; xlen]; ylen];
+            *visited.get_mut_p(start) = true;
+            let mut queue = VecDeque::new();
+            queue.push_back(start);
+            while let Some(cd) = queue.pop_front() {
+                for dir in Direction::iter_variants().take(4) {
+                    let nxt = cd + dir.to_cd();
+                    if let Ok(s) = buffer.try_get_p(nxt) {
+                        if s.can_walk() && !*visited.get_p(nxt) {
+                            *visited.get_mut_p(nxt) = true;
+                            queue.push_back(nxt);
+                        }
+                    }
+                }
+            }
+            RectRange::zero_start(xlen, ylen)
+                .unwrap()
+                .into_iter()
+                .for_each(|cd| {
+                    if buffer.get_p(cd).can_walk() {
+                        assert!(*visited.get_p(cd));
+                    }
+                });
         }
     }
 }

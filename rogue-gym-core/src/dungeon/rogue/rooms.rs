@@ -100,9 +100,8 @@ pub(crate) fn gen_rooms(
             let mut room_size = room_size;
             // adjust room positions so as not to hit the comment area
             let upper_left = if y == 0 {
-                let res = room_size.scale(x, y).slide_y(1);
                 room_size.y -= Y(1);
-                res
+                room_size.scale(x, y).slide_y(1)
             } else {
                 room_size.scale(x, y)
             };
@@ -140,7 +139,8 @@ pub(crate) fn make_room(
     let is_dark = rng.range(0..config.dark_level) + 1 < level;
     let kind = if is_dark && rng.does_happen(config.maze_rate_inv) {
         // maze
-        let range = RectRange::from_corners(upper_left, upper_left + room_size).unwrap();
+        let range =
+            RectRange::from_corners(upper_left, upper_left + room_size - Coord::new(1, 1)).unwrap();
         let mut passages = Vec::new();
         maze::dig_maze(range.clone(), rng, |cd| {
             if range.contains(cd) {

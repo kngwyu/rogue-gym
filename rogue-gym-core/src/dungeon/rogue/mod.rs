@@ -86,6 +86,15 @@ impl Default for Surface {
 
 impl SurfaceT for Surface {}
 
+impl Surface {
+    fn can_walk(&self) -> bool {
+        match *self {
+            Surface::WallX | Surface::WallY | Surface::None => false,
+            _ => true,
+        }
+    }
+}
+
 /// representation of 'floor'
 #[derive(Clone, Debug)]
 pub struct Floor {
