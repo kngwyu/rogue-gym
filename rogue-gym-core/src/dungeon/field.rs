@@ -2,10 +2,10 @@
 use num_traits::ToPrimitive;
 use rect_iter::{Get2D, GetMut2D, IndexError};
 use std::fmt::Debug;
-use Drawable;
+use Tile;
 
 /// Surface trait(just alias)
-pub trait Surface: Clone + Debug + Drawable {}
+pub trait Surface: Clone + Debug + Tile {}
 
 /// Generic Cell trait
 #[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
@@ -21,7 +21,7 @@ impl<S: Surface> Cell<S> {
     }
 }
 
-impl<S: Surface> Drawable for Cell<S> {
+impl<S: Surface> Tile for Cell<S> {
     fn byte(&self) -> u8 {
         if self.is_visible() {
             self.surface.byte()

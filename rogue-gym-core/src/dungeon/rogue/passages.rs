@@ -1,5 +1,5 @@
-use super::{Room, RoomKind};
-use dungeon::{Coord, Direction, X, Y};
+use super::{Room, RoomKind, Surface};
+use dungeon::{Coord, Direction, Positioned, X, Y};
 use error::{GameResult, ResultExt};
 use fenwick::FenwickSet;
 use fixedbitset::FixedBitSet;
@@ -7,12 +7,6 @@ use rect_iter::{IntoTuple2, RectRange};
 use rng::{Rng, RngHandle};
 use std::collections::HashMap;
 use tuple_map::TupleMap2;
-
-/// kind of passages(to register door)
-pub(crate) enum PassageKind {
-    Door,
-    Passage,
-}
 
 /// make passages between rooms
 pub(crate) fn dig_passges<F>(
@@ -24,7 +18,7 @@ pub(crate) fn dig_passges<F>(
     mut register: F,
 ) -> GameResult<()>
 where
-    F: FnMut((PassageKind, Coord)) -> GameResult<()>,
+    F: FnMut(Positioned<Surface>) -> GameResult<()>,
 {
     let mut graph = RoomGraph::new(xrooms, yrooms);
     let num_rooms = rooms.len();
@@ -91,7 +85,7 @@ fn connect_2rooms<F>(
     register: &mut F,
 ) -> GameResult<()>
 where
-    F: FnMut((PassageKind, Coord)) -> GameResult<()>,
+    F: FnMut(Positioned<Surface>) -> GameResult<()>,
 {
     let (room1, room2, direction) = match direction {
         Direction::Up | Direction::Left => (room2, room1, direction.reverse()),
@@ -99,8 +93,8 @@ where
     };
     let start = select_start_or_end(room1, direction, rng);
     let end = select_start_or_end(room2, direction.reverse(), rng);
-    register((door_kind(room1), start))?;
-    register((door_kind(room2), end))?;
+    register(Positioned(start, door_kind(room1)))?;
+    register(Positioned(end, door_kind(room2)))?;
     // decide where to turn randomly
     let (turn_start, turn_dir, turn_end) = match direction {
         Direction::Down => {
@@ -129,14 +123,14 @@ where
         .skip(1)
         .chain(turn_start.direc_iter(turn_dir, |cd| cd != turn_end))
         .chain(turn_end.direc_iter(direction, |cd| cd != end))
-        .try_for_each(|cd| register((PassageKind::Passage, cd)))
+        .try_for_each(|cd| register(Positioned(cd, Surface::Passage)))
         .chain_err("[passages::connect_2rooms]")
 }
 
-fn door_kind(room: &Room) -> PassageKind {
+fn door_kind(room: &Room) -> Surface {
     match room.kind {
-        RoomKind::Normal { .. } => PassageKind::Door,
-        _ => PassageKind::Passage,
+        RoomKind::Normal { .. } => Surface::Door,
+        _ => Surface::Passage,
     }
 }
 
@@ -271,4 +265,49 @@ fn test_inclusive_edges() {
         inclusive_edges(&range, Direction::Right),
         edge_vec(true, 9, 7..8)
     );
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use dungeon::rogue::rooms;
+    use error::{ErrorId, ErrorKind};
+    use rect_iter::GetMut2D;
+    use Tile;
+    fn to_buffer() -> Vec<Vec<Surface>> {
+        let rooms = rooms::test::gen(10);
+        let mut buffer = rooms::test::draw_to_buffer(&rooms);
+        let mut rng = RngHandle::new();
+        dig_passges(
+            &rooms,
+            X(3),
+            Y(3),
+            &mut rng,
+            5,
+            |Positioned(cd, surface)| {
+                buffer
+                    .try_get_mut_p(cd)
+                    .and_then(|buf| {
+                        *buf = surface;
+                        Ok(())
+                    })
+                    .map_err(|e| {
+                        let e: ErrorId = e.into();
+                        e.into_err()
+                    })
+            },
+        ).unwrap();
+        buffer
+    }
+    #[test]
+    #[ignore]
+    fn print_passages() {
+        let mut buffer = to_buffer();
+        for v in buffer {
+            for x in v {
+                print!("{}", x.byte() as char);
+            }
+            println!("");
+        }
+    }
 }

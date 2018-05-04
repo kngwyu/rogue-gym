@@ -55,10 +55,10 @@ impl Coord {
         }
     }
     pub fn is_upper(self, other: Coord) -> bool {
-        self.y > other.y
+        self.y < other.y
     }
     pub fn is_lefter(self, other: Coord) -> bool {
-        self.x > other.x
+        self.x < other.x
     }
 }
 
@@ -85,6 +85,8 @@ impl From<(i32, i32)> for Coord {
         Coord::new(t.0, t.1)
     }
 }
+
+pub struct Positioned<T>(pub Coord, pub T);
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, PartialOrd, Ord, Eq, Serialize, Deserialize,
          EnumIterator)]

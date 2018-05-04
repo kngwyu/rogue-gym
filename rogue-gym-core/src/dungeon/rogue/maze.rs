@@ -64,11 +64,12 @@ where
 }
 
 #[cfg(test)]
-mod maze_test {
+mod test {
     use super::*;
     use error::{ErrorId, ErrorKind};
     use rect_iter::GetMut2D;
     #[test]
+    #[ignore]
     fn print_maze() {
         let mut rng = RngHandle::new();
         let range = RectRange::from_ranges(20..50, 10..20).unwrap();

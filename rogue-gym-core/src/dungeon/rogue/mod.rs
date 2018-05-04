@@ -1,18 +1,18 @@
 pub use self::rooms::{Room, RoomKind};
-use super::{field::{Field, Surface as SurfaceT},
-            Coord,
-            X,
-            Y};
+use super::{
+    field::{Field, Surface as SurfaceT},
+    Coord,
+    X,
+    Y,
+};
 use error::{GameResult, ResultExt};
-use fixedbitset::FixedBitSet;
 use item::{ItemHandler, ItemRc};
 use path::ObjectPath;
-use rect_iter::RectRange;
 use rng::RngHandle;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::Rc;
-use {ConfigInner as GlobalConfig, Drawable, GameInfo};
+use {ConfigInner as GlobalConfig, GameInfo, Tile};
 
 pub mod maze;
 pub mod passages;
@@ -53,7 +53,7 @@ impl Default for Config {
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Surface {
-    Road,
+    Passage,
     Floor,
     WallX,
     WallY,
@@ -63,10 +63,10 @@ pub enum Surface {
     None,
 }
 
-impl Drawable for Surface {
+impl Tile for Surface {
     fn byte(&self) -> u8 {
         match *self {
-            Surface::Road => b'#',
+            Surface::Passage => b'#',
             Surface::Floor => b'.',
             Surface::WallX => b'-',
             Surface::WallY => b'|',
@@ -116,61 +116,34 @@ pub struct Dungeon {
     /// dungeon specific configuration
     config: Config,
     /// global configuration(constant)
-    confing_global: Rc<GlobalConfig>,
+    config_global: Rc<GlobalConfig>,
     /// item handle
     item_handle: Rc<RefCell<ItemHandler>>,
     /// global game information
     game_info: Rc<RefCell<GameInfo>>,
     /// random number generator
-    rng: RefCell<RngHandle>,
+    rng: RngHandle,
 }
 
-impl Dungeon {
-    fn gen_rooms(&mut self) -> GameResult<Vec<Room>> {
-        self.level += 1;
-        let level = self.level;
-        let (rn_x, rn_y) = (self.config.room_num_x, self.config.room_num_y);
-        let room_num = (rn_x.0 * rn_y.0) as usize;
-        // Be aware that it's **screen** size!
-        let (width, height) = (self.confing_global.width, self.confing_global.height);
-        let room_size = Coord::new(width / rn_x.0, height / rn_y.0);
-        // set empty rooms
-        let empty_rooms: FixedBitSet = {
-            let empty_num = self.rng.get_mut().range(0..self.config.max_empty_rooms) + 1;
-            self.rng
-                .get_mut()
-                .select(0..room_num)
-                .take(empty_num as usize)
-                .collect()
-        };
-        RectRange::zero_start(rn_x.0, rn_y.0)
-            .unwrap()
-            .into_iter()
-            .enumerate()
-            .map(|(i, (x, y))| {
-                let mut room_size = room_size;
-                // adjust room positions so as not to hit the comment area
-                let upper_left = if y == 0 {
-                    let res = room_size.scale(x, y).slide_y(1);
-                    room_size.y -= Y(1);
-                    res
-                } else {
-                    room_size.scale(x, y)
-                };
-                if upper_left.y + room_size.y == self.confing_global.height {
-                    room_size.y -= Y(1);
-                }
-                let is_empty = empty_rooms.contains(i);
-                rooms::make_room(
-                    is_empty,
-                    room_size,
-                    upper_left,
-                    i,
-                    &self.config,
-                    level,
-                    &mut self.rng.borrow_mut(),
-                )
-            })
-            .collect()
-    }
-}
+impl Dungeon {}
+
+// reserved code of item generation
+
+// floor_range = room_range - wall_range
+// let floor_range = room_range.clone().slide_start((1, 1)).slide_end((1, 1));
+// let floor_num = floor_range.len() as usize;
+// let cleared = self.game_info.borrow().is_cleared;
+// if !cleared || level >= self.config.amulet_level {
+//     self.item_handle.borrow_mut().setup_for_room(
+//         floor_range.clone(),
+//         level,
+//         |item_rc| {
+//             let selected = self.rng.borrow_mut().range(0..floor_num);
+//             let coord = floor_range
+//                 .nth(selected)
+//                 .expect("[Dungeon::gen_floor] Invalid floor_num")
+//                 .into();
+//             item_map.insert(coord, item_rc);
+//         },
+//     );
+// }

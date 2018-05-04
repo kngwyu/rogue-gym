@@ -5,7 +5,7 @@ use rng::{Rng, RngHandle};
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::{Rc, Weak};
-use {Drawable, GameInfo};
+use {GameInfo, Tile};
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum ItemKind {
@@ -29,7 +29,7 @@ impl ItemKind {
     }
 }
 
-impl Drawable for ItemKind {
+impl Tile for ItemKind {
     fn byte(&self) -> u8 {
         match *self {
             ItemKind::Gold => b'*',
@@ -119,6 +119,15 @@ pub struct ItemHandler {
 }
 
 impl ItemHandler {
+    pub fn new(config: ItemConfig, game_info: Rc<RefCell<GameInfo>>, seed: u64) -> Self {
+        ItemHandler {
+            items: BTreeMap::new(),
+            config,
+            game_info,
+            rng: RngHandle::from_seed(seed),
+            next_id: ItemId(0),
+        }
+    }
     /// generate and register an item
     pub fn gen_item<F>(&mut self, itemgen: F) -> ItemRc
     where

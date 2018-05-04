@@ -39,8 +39,8 @@ pub mod item;
 mod path;
 mod rng;
 
-use dungeon::{Dungeon, X, Y};
-pub use error::ErrorId;
+use dungeon::{Coord, Dungeon, X, Y};
+use error::{ErrorId, GameResult};
 use item::ItemHandler;
 use std::cell::RefCell;
 use std::rc::{Rc, Weak};
@@ -50,6 +50,17 @@ pub(crate) struct ConfigInner {
     pub width: X,
     pub height: Y,
     pub seed: u64,
+}
+
+// only for testing
+impl Default for ConfigInner {
+    fn default() -> Self {
+        ConfigInner {
+            width: X(80),
+            height: Y(24),
+            seed: 1,
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -67,14 +78,29 @@ pub struct GameInfo {
     is_cleared: bool,
 }
 
-pub trait Drawable {
+impl GameInfo {
+    fn new() -> Self {
+        GameInfo { is_cleared: false }
+    }
+}
+
+/// drawable object
+pub trait Tile {
     const NONE: u8 = b' ';
     fn byte(&self) -> u8;
     fn color(&self) -> Color {
         Color(0)
     }
     // STUB
-    fn order(&self) -> u32 {
+    fn draw_order(&self) -> u32 {
         u32::max_value()
     }
+}
+
+/// set of drawable objects
+pub trait TileSet {
+    type Item: Tile;
+    fn draw_tiles<F>(&self, draw: F) -> GameResult<()>
+    where
+        F: FnMut((Coord, Self::Item)) -> GameResult<()>;
 }

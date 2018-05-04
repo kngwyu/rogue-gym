@@ -2,7 +2,7 @@
 mod coord;
 mod field;
 mod rogue;
-pub use self::coord::{Coord, Direction, X, Y};
+pub use self::coord::{Coord, Direction, Positioned, X, Y};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum DungeonStyle {
