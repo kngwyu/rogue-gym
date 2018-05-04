@@ -1,13 +1,18 @@
 use super::{Room, RoomKind};
-use dungeon::{coord::DirectionIter, Coord, Direction, X, Y};
+use dungeon::{Coord, Direction, X, Y};
 use error::{GameResult, ResultExt};
 use fenwick::FenwickSet;
 use fixedbitset::FixedBitSet;
 use rect_iter::{IntoTuple2, RectRange};
 use rng::{Rng, RngHandle};
-use std::cell::RefCell;
 use std::collections::HashMap;
 use tuple_map::TupleMap2;
+
+/// kind of passages(to register door)
+pub(crate) enum PassageKind {
+    Door,
+    Passage,
+}
 
 /// make passages between rooms
 pub(crate) fn dig_passges<F>(
@@ -15,35 +20,23 @@ pub(crate) fn dig_passges<F>(
     xrooms: X,
     yrooms: Y,
     rng: &mut RngHandle,
+    max_extra_edges: usize,
     mut register: F,
 ) -> GameResult<()>
 where
     F: FnMut((PassageKind, Coord)) -> GameResult<()>,
 {
-    let range = RectRange::zero_start(xrooms.0, yrooms.0).unwrap();
-    let mut graph: Vec<_> = range
-        .into_iter()
-        .enumerate()
-        .map(|(i, t)| Node::new(xrooms, yrooms, t, i))
-        .collect();
+    let mut graph = RoomGraph::new(xrooms, yrooms);
     let num_rooms = rooms.len();
     let mut selected = FenwickSet::with_capacity(num_rooms);
     let mut cur_room = rng.range(0..num_rooms);
     selected.insert(cur_room);
+    // Connect all rooms
     while selected.len() < num_rooms {
-        let nxt = (0..num_rooms)
-            .filter_map(|i| {
-                if selected.contains(i) {
-                    return None;
-                }
-                graph[cur_room].candidates.get(&i).map(|dir| (i, *dir))
-            })
-            .enumerate()
-            .filter(|(i, _)| rng.does_happen(*i as u32 + 1))
-            .last()
-            .map(|t| t.1);
+        let nxt = select_candidate(num_rooms, &graph[cur_room], &selected, rng);
         if let Some((nxt_room, direction)) = nxt {
             selected.insert(nxt_room);
+            graph.coonect(cur_room, nxt_room);
             connect_2rooms(
                 &rooms[cur_room],
                 &rooms[nxt_room],
@@ -55,13 +48,39 @@ where
             cur_room = selected.select(rng).unwrap();
         }
     }
+    // Add some edges randomly so that there isn't always only one passage
+    // between adjacent 2 rooms
+    let try_num = rng.range(0..max_extra_edges);
+    for _ in 0..try_num {
+        let room1 = rng.range(0..num_rooms);
+        let selected = select_candidate(num_rooms, &graph[room1], &selected, rng);
+        if let Some((room2, direction)) = selected {
+            graph.coonect(room1, room2);
+            connect_2rooms(&rooms[room1], &rooms[room2], direction, rng, &mut register)
+                .chain_err("[passages::dig_passages]")?;
+        }
+    }
     Ok(())
 }
 
-/// kind of passages(to register door)
-pub(crate) enum PassageKind {
-    Door,
-    Passage,
+fn select_candidate(
+    num_rooms: usize,
+    node: &Node,
+    selected: &FenwickSet,
+    rng: &mut RngHandle,
+) -> Option<(usize, Direction)> {
+    (0..num_rooms)
+        .filter_map(|i| {
+            if selected.contains(i) {
+                None
+            } else {
+                node.candidates.get(&i).map(|dir| (i, *dir))
+            }
+        })
+        .enumerate()
+        .filter(|(i, _)| rng.does_happen(*i as u32 + 1))
+        .last()
+        .map(|t| t.1)
 }
 
 fn connect_2rooms<F>(
@@ -82,7 +101,8 @@ where
     let end = select_start_or_end(room2, direction.reverse(), rng);
     register((door_kind(room1), start))?;
     register((door_kind(room2), end))?;
-    let (turn_pos, turn_dir, turn_dist) = match direction {
+    // decide where to turn randomly
+    let (turn_start, turn_dir, turn_end) = match direction {
         Direction::Down => {
             let y = rng.range(start.y.0 + 1..end.y.0);
             let dir = if start.is_lefter(end) {
@@ -90,7 +110,7 @@ where
             } else {
                 Direction::Left
             };
-            (Coord::new(start.x, y), dir, (start.x - end.x).0.abs())
+            (Coord::new(start.x, y), dir, Coord::new(end.x, y))
         }
         Direction::Right => {
             let x = rng.range(start.x.0 + 1..end.x.0);
@@ -99,29 +119,18 @@ where
             } else {
                 Direction::Up
             };
-            (Coord::new(x, start.y), dir, (start.x - end.x).0.abs())
+            (Coord::new(x, start.y), dir, Coord::new(x, end.y))
         }
         _ => unreachable!(),
     };
-    // dig passage
-    // from start
-    for cd in start.direc_iter(direction, |cd| cd != turn_pos).skip(1) {
-        register((PassageKind::Passage, cd))?;
-    }
-    // turn
-    for cd in turn_pos
-        .direc_iter(turn_dir, |_| true)
-        .take(turn_dist as usize)
-    {
-        register((PassageKind::Passage, cd))?;
-    }
-    // to end
-    for cd in (turn_pos + turn_dir.to_cd().scale(turn_dist, turn_dist))
-        .direc_iter(direction, |cd| cd != end)
-    {
-        register((PassageKind::Passage, cd))?;
-    }
-    Ok(())
+    // dig passage from start to end
+    start
+        .direc_iter(direction, |cd| cd != turn_start)
+        .skip(1)
+        .chain(turn_start.direc_iter(turn_dir, |cd| cd != turn_end))
+        .chain(turn_end.direc_iter(direction, |cd| cd != end))
+        .try_for_each(|cd| register((PassageKind::Passage, cd)))
+        .chain_err("[passages::connect_2rooms]")
 }
 
 fn door_kind(room: &Room) -> PassageKind {
@@ -184,19 +193,42 @@ fn inclusive_edges(range: &RectRange<i32>, direction: Direction) -> Vec<Coord> {
     }
 }
 
+/// room connectivity
+#[derive(Clone, Debug, Index)]
+struct RoomGraph {
+    inner: Vec<Node>,
+}
+
+impl RoomGraph {
+    fn new(xrooms: X, yrooms: Y) -> Self {
+        let range = RectRange::zero_start(xrooms.0, yrooms.0).unwrap();
+        let inner: Vec<_> = range
+            .into_iter()
+            .enumerate()
+            .map(|(i, t)| Node::new(xrooms, yrooms, t, i))
+            .collect();
+        RoomGraph { inner }
+    }
+    fn coonect(&mut self, mut node1: usize, mut node2: usize) {
+        self.inner[node1].connections.insert(node2);
+        self.inner[node2].connections.insert(node1);
+    }
+}
+
 /// node of room graph
+#[derive(Clone, Debug)]
 struct Node {
-    connections: RefCell<FixedBitSet>,
+    connections: FixedBitSet,
     candidates: HashMap<usize, Direction>,
     id: usize,
 }
 
 impl Node {
-    fn new(xrooms: X, yrooms: Y, cd: (i32, i32), id: usize) -> Self {
+    fn new(xrooms: X, yrooms: Y, room_pos: (i32, i32), id: usize) -> Self {
         let candidates: HashMap<_, _> = Direction::iter_variants()
             .take(4)
             .filter_map(|d| {
-                let next = cd.add(d.to_cd().into_tuple2());
+                let next = room_pos.add(d.to_cd().into_tuple2());
                 if next.any(|a| a < 0) || next.0 >= xrooms.0 || next.1 >= yrooms.0 {
                     return None;
                 }
@@ -205,7 +237,7 @@ impl Node {
             .collect();
         let num_rooms = (xrooms.0 * yrooms.0) as usize;
         Node {
-            connections: RefCell::new(FixedBitSet::with_capacity(num_rooms)),
+            connections: FixedBitSet::with_capacity(num_rooms),
             candidates,
             id,
         }
