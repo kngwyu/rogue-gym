@@ -75,7 +75,7 @@ mod test {
     fn print_floor() {
         let config = Config::default();
         let mut rng = RngHandle::new();
-        let floor = Floor::with_no_item(1, &config, X(80), Y(24), &mut rng).unwrap();
+        let floor = Floor::with_no_item(10, &config, X(80), Y(24), &mut rng).unwrap();
         println!("{}", floor.field);
     }
 }

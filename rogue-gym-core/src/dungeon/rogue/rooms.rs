@@ -1,9 +1,11 @@
 use super::{maze, Config, Surface};
 use dungeon::{Coord, Positioned, X, Y};
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
+use fenwick::FenwickSet;
 use fixedbitset::FixedBitSet;
 use rect_iter::{IntoTuple2, RectRange};
 use rng::RngHandle;
+use std::collections::HashSet;
 use tuple_map::TupleMap2;
 /// type of room
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -13,7 +15,7 @@ pub enum RoomKind {
     /// maze room
     Maze {
         range: RectRange<i32>,
-        passages: Vec<Coord>,
+        passages: HashSet<Coord>,
     },
     /// passage only(gone room)
     Empty { up_left: Coord },
@@ -29,11 +31,19 @@ pub struct Room {
     /// id for room
     /// it's unique in same floor
     pub id: usize,
+    /// cells where we can set an object
+    empty_cells: FenwickSet,
 }
 
 impl Room {
     fn new(kind: RoomKind, is_dark: bool, id: usize) -> Self {
-        Room { kind, is_dark, id }
+        let empty_cells = gen_empty_cells(&kind);
+        Room {
+            kind,
+            is_dark,
+            id,
+            empty_cells,
+        }
     }
     pub fn draw<R>(&self, mut register: R) -> GameResult<()>
     where
@@ -71,6 +81,42 @@ impl Room {
             RoomKind::Normal { ref range } | RoomKind::Maze { ref range, .. } => Some(range),
             _ => None,
         }
+    }
+    pub fn select_empty_cell(&self, rng: &mut RngHandle) -> Option<Coord> {
+        match self.kind {
+            RoomKind::Normal { ref range } | RoomKind::Maze { ref range, .. } => {
+                let cell_n = self.empty_cells.select(rng)?;
+                range.nth(cell_n).map(|t| Coord::from(t))
+            }
+            _ => None,
+        }
+    }
+}
+
+fn gen_empty_cells(kind: &RoomKind) -> FenwickSet {
+    match kind {
+        RoomKind::Normal { range } => {
+            let len = range.len();
+            let mut set = FenwickSet::with_capacity(len);
+            range.iter().enumerate().for_each(|(i, cd)| {
+                if !range.is_edge(cd) {
+                    set.insert(i);
+                }
+            });
+            set
+        }
+        RoomKind::Maze { range, passages } => {
+            let len = range.len();
+            let mut set = FenwickSet::with_capacity(len);
+            range.iter().enumerate().for_each(|(i, cd)| {
+                let cd: Coord = cd.into();
+                if !passages.contains(&cd) {
+                    set.insert(i);
+                }
+            });
+            set
+        }
+        RoomKind::Empty { .. } => FenwickSet::with_capacity(1),
     }
 }
 
@@ -141,10 +187,10 @@ pub(crate) fn make_room(
         // maze
         let range =
             RectRange::from_corners(upper_left, upper_left + room_size - Coord::new(1, 1)).unwrap();
-        let mut passages = Vec::new();
+        let mut passages = HashSet::new();
         maze::dig_maze(range.clone(), rng, |cd| {
             if range.contains(cd) {
-                passages.push(cd);
+                passages.insert(cd);
                 Ok(())
             } else {
                 Err(ErrorId::LogicError.into_with("dig_maze produced invalid Coordinate!"))

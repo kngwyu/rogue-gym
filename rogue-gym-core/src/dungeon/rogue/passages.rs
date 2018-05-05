@@ -138,46 +138,74 @@ fn door_kind(room: &Room) -> Surface {
 fn select_start_or_end(room: &Room, direction: Direction, rng: &mut RngHandle) -> Coord {
     match room.kind {
         RoomKind::Normal { ref range } => {
-            let candidates = inclusive_edges(range, direction);
+            let candidates = edges(range, direction, true);
             *rng.choose(&candidates).unwrap()
         }
         RoomKind::Maze {
-            range: _,
+            ref range,
             ref passages,
-        } => *rng.choose(passages).unwrap(),
+        } => {
+            let mut range = range.clone();
+            while range.is_valid() {
+                let candidates: Vec<_> = edges(&range, direction, false)
+                    .into_iter()
+                    .filter(|cd| passages.contains(cd))
+                    .collect();
+                if let Some(&cd) = rng.choose(&candidates) {
+                    return cd;
+                }
+                match direction {
+                    Direction::Down => {
+                        range.get_mut_y().end -= 1;
+                    }
+                    Direction::Left => {
+                        range.get_mut_x().start -= 1;
+                    }
+                    Direction::Right => {
+                        range.get_mut_x().end -= 1;
+                    }
+                    Direction::Up => {
+                        range.get_mut_y().start -= 1;
+                    }
+                    _ => unreachable!(),
+                }
+            }
+            unreachable!("cannot find maze floor in passages::select_start_or_end")
+        }
         RoomKind::Empty { up_left } => up_left,
     }
 }
 
-fn inclusive_edges(range: &RectRange<i32>, direction: Direction) -> Vec<Coord> {
-    let bound_x = X(range.get_x().end - 1);
-    let bound_y = Y(range.get_y().end - 1);
+fn edges(range: &RectRange<i32>, direction: Direction, is_inclusive: bool) -> Vec<Coord> {
+    let offset = if is_inclusive { 1 } else { 0 };
+    let bound_x = X(range.get_x().end - offset);
+    let bound_y = Y(range.get_y().end - offset);
     match direction {
         Direction::Down => {
             let start: Coord = range.lower_left().into();
             start
-                .slide_x(1)
+                .slide_x(offset)
                 .direc_iter(Direction::Right, |cd: Coord| cd.x < bound_x)
                 .collect()
         }
         Direction::Left => {
             let start: Coord = range.upper_left().into();
             start
-                .slide_y(1)
+                .slide_y(offset)
                 .direc_iter(Direction::Down, |cd| cd.y < bound_y)
                 .collect()
         }
         Direction::Right => {
             let start: Coord = range.upper_right().into();
             start
-                .slide_y(1)
+                .slide_y(offset)
                 .direc_iter(Direction::Down, |cd| cd.y < bound_y)
                 .collect()
         }
         Direction::Up => {
             let start: Coord = range.upper_left().into();
             start
-                .slide_x(1)
+                .slide_x(offset)
                 .direc_iter(Direction::Right, |cd| cd.x < bound_x)
                 .collect()
         }
@@ -251,19 +279,16 @@ fn test_inclusive_edges() {
         }
     };
     assert_eq!(
-        inclusive_edges(&range, Direction::Down),
+        edges(&range, Direction::Down, true),
         edge_vec(false, 8, 6..9)
     );
+    assert_eq!(edges(&range, Direction::Up, true), edge_vec(false, 6, 6..9));
     assert_eq!(
-        inclusive_edges(&range, Direction::Up),
-        edge_vec(false, 6, 6..9)
-    );
-    assert_eq!(
-        inclusive_edges(&range, Direction::Left),
+        edges(&range, Direction::Left, true),
         edge_vec(true, 5, 7..8)
     );
     assert_eq!(
-        inclusive_edges(&range, Direction::Right),
+        edges(&range, Direction::Right, true),
         edge_vec(true, 9, 7..8)
     );
 }
@@ -272,7 +297,6 @@ fn test_inclusive_edges() {
 mod test {
     use super::*;
     use dungeon::rogue::rooms;
-    use error::{ErrorId, ErrorKind};
     use rect_iter::{Get2D, GetMut2D};
     use std::collections::VecDeque;
     use Tile;
