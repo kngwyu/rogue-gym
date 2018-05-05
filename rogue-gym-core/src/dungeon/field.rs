@@ -1,6 +1,8 @@
 //! General field representation
+use super::{X, Y};
 use num_traits::ToPrimitive;
 use rect_iter::{Get2D, GetMut2D, IndexError};
+use std::fmt;
 use Tile;
 
 /// Generic Cell trait
@@ -14,6 +16,12 @@ impl<S> Cell<S> {
     /// if the cell is visible or not
     pub fn is_visible(&self) -> bool {
         self.attr.contains(CellAttr::IS_VISIBLE)
+    }
+    pub fn with_default_attr(surface: S) -> Cell<S> {
+        Cell {
+            surface,
+            attr: CellAttr::default(),
+        }
     }
 }
 
@@ -49,6 +57,15 @@ pub struct Field<S> {
     inner: Vec<Vec<Cell<S>>>,
 }
 
+impl<S: Clone> Field<S> {
+    pub fn new(width: X, height: Y, init: Cell<S>) -> Self {
+        let (w, h) = (width.0 as usize, height.0 as usize);
+        Field {
+            inner: vec![vec![init; w]; h],
+        }
+    }
+}
+
 impl<S> Get2D for Field<S> {
     type Item = Cell<S>;
     fn try_get_xy<T: ToPrimitive>(&self, x: T, y: T) -> Result<&Self::Item, IndexError> {
@@ -63,5 +80,17 @@ impl<S> GetMut2D for Field<S> {
         y: T,
     ) -> Result<&mut Self::Item, IndexError> {
         self.inner.try_get_mut_xy(x, y)
+    }
+}
+
+impl<S: Tile> fmt::Display for Field<S> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for v in &self.inner {
+            for cell in v {
+                write!(f, "{}", cell.surface.byte() as char)?;
+            }
+            writeln!(f, "")?;
+        }
+        Ok(())
     }
 }

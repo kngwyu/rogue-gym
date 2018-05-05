@@ -23,12 +23,16 @@ pub struct Config {
     pub min_room_size: Coord,
     /// enables trap or not
     pub enable_trap: bool,
+    /// maximum number of empty rooms
     pub max_empty_rooms: u32,
+    /// the level where the Amulet of Yendor is
     pub amulet_level: u32,
     /// a room changes to maze with a probability of 1 / maze_rate_inv
     pub maze_rate_inv: u32,
     /// if the rooms is dark or not is judged by rand[0..dark_levl) < level - 1
     pub dark_level: u32,
+    /// try number of additional passages
+    pub max_extra_edges: u32,
 }
 
 impl Default for Config {
@@ -42,6 +46,7 @@ impl Default for Config {
             amulet_level: 25,
             maze_rate_inv: 15,
             dark_level: 10,
+            max_extra_edges: 5,
         }
     }
 }

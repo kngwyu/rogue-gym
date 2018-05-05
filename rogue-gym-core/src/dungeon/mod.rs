@@ -3,7 +3,7 @@ mod coord;
 mod field;
 mod rogue;
 pub use self::coord::{Coord, Direction, Positioned, X, Y};
-pub use self::field::{Cell, Field};
+pub use self::field::{Cell, CellAttr, Field};
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum DungeonStyle {
     /// rogue 5.4.4 like dungeon

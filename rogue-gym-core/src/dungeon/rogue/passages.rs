@@ -14,7 +14,7 @@ pub(crate) fn dig_passges<F>(
     xrooms: X,
     yrooms: Y,
     rng: &mut RngHandle,
-    max_extra_edges: usize,
+    max_extra_edges: u32,
     mut register: F,
 ) -> GameResult<()>
 where
@@ -293,10 +293,7 @@ mod test {
                         *buf = surface;
                         Ok(())
                     })
-                    .map_err(|e| {
-                        let e: ErrorId = e.into();
-                        e.into_err()
-                    })
+                    .into_chained("[passages::test::to_buffer]")
             },
         ).unwrap();
         buffer
