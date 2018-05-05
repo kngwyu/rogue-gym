@@ -1,17 +1,20 @@
 use super::{passages, rooms, Config, Room, Surface};
 use dungeon::{Cell, CellAttr, Coord, Field, Positioned, X, Y};
 use error::{GameResult, ResultExt};
+use item::ItemHandler;
 use item::ItemRc;
-use rect_iter::{Get2D, GetMut2D};
+use rect_iter::GetMut2D;
 use rng::RngHandle;
-use std::collections::BTreeMap;
+use std::collections::HashMap;
+use GameInfo;
 /// representation of 'floor'
 #[derive(Clone, Debug)]
 pub struct Floor {
     /// rooms
-    rooms: Vec<Room>,
-    /// items
-    item_map: BTreeMap<Coord, ItemRc>,
+    pub rooms: Vec<Room>,
+    /// numbers of rooms which is not empty
+    pub nonempty_rooms: usize,
+    pub items: HashMap<Coord, ItemRc>,
     /// field (level map)
     field: Field<Surface>,
 }
@@ -39,7 +42,7 @@ impl Floor {
                     .into_chained("[Floor::new]")
             })
         })?;
-        // TODO: can't generate cell attribute here
+        // NOTE: can't generate cell attribute here
         passages::dig_passges(
             &rooms,
             config.room_num_x,
@@ -55,11 +58,40 @@ impl Floor {
                     .into_chained("[Floor::new]")
             },
         )?;
+        let nonempty_rooms = rooms.iter().fold(0, |acc, room| {
+            let plus = if room.is_empty() { 0 } else { 1 };
+            acc + plus
+        });
         Ok(Floor {
             rooms,
-            item_map: BTreeMap::new(),
+            items: HashMap::new(),
             field,
+            nonempty_rooms,
         })
+    }
+    pub fn setup_items(
+        &mut self,
+        level: u32,
+        item_handle: &mut ItemHandler,
+        set_gold: bool,
+        rng: &mut RngHandle,
+    ) {
+        let mut items = HashMap::new();
+        // setup gold
+        if set_gold {
+            self.rooms
+                .iter_mut()
+                .filter(|room| !room.is_empty())
+                .for_each(|room| {
+                    item_handle.setup_gold(level, |item_rc| {
+                        if let Some(cell) = room.select_empty_cell(rng) {
+                            items.insert(cell, item_rc);
+                            room.fill_cell(cell);
+                        }
+                    })
+                });
+        }
+        self.items = items;
     }
 }
 
@@ -70,6 +102,10 @@ fn attr_gen(surface: Surface, rng: &mut RngHandle) -> CellAttr {
 
 mod test {
     use super::*;
+    use item::ItemConfig;
+    use rect_iter::{Get2D, RectRange};
+    use rng::Rng;
+    use Tile;
     #[test]
     #[ignore]
     fn print_floor() {
@@ -77,5 +113,32 @@ mod test {
         let mut rng = RngHandle::new();
         let floor = Floor::with_no_item(10, &config, X(80), Y(24), &mut rng).unwrap();
         println!("{}", floor.field);
+    }
+    #[test]
+    #[ignore]
+    fn print_floor_with_item() {
+        let config = Config::default();
+        let mut rng = RngHandle::new();
+        let mut floor = Floor::with_no_item(10, &config, X(80), Y(24), &mut rng).unwrap();
+        let item_config = ItemConfig::default();
+        let mut rng = RngHandle::new();
+        let mut item_handle = ItemHandler::new(item_config, rng.gen());
+        floor.setup_items(10, &mut item_handle, true, &mut rng);
+        println!("{}", floor.field);
+        RectRange::zero_start(80, 24)
+            .unwrap()
+            .into_iter()
+            .for_each(|cd| {
+                let cd: Coord = cd.into();
+                let byte = if let Some(item) = floor.items.get(&cd) {
+                    item.byte()
+                } else {
+                    floor.field.get_p(cd).surface.byte()
+                };
+                print!("{}", byte as char);
+                if cd.x == X(79) {
+                    println!("");
+                }
+            });
     }
 }

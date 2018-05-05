@@ -129,9 +129,10 @@ where
 }
 
 fn door_kind(room: &Room) -> Surface {
-    match room.kind {
-        RoomKind::Normal { .. } => Surface::Door,
-        _ => Surface::Passage,
+    if room.is_normal() {
+        Surface::Door
+    } else {
+        Surface::Passage
     }
 }
 

@@ -1,11 +1,9 @@
 //! module for item
-use path::ObjectPath;
-use rect_iter::RectRange;
 use rng::{Rng, RngHandle};
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::{Rc, Weak};
-use {GameInfo, Tile};
+use Tile;
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum ItemKind {
@@ -101,31 +99,34 @@ impl Item {
     }
 }
 
-// TODO: is is really necesarry?
 #[derive(Clone, Debug)]
 pub struct ItemRc {
     pub id: ItemId,
     item: Rc<RefCell<Item>>,
 }
 
+impl Tile for ItemRc {
+    fn byte(&self) -> u8 {
+        self.item.borrow().kind.byte()
+    }
+}
+
 /// generate and management all items
 #[derive(Clone)]
 pub struct ItemHandler {
     /// stores all items in the game
+    // TODO: do we really need this
     items: BTreeMap<ItemId, Weak<RefCell<Item>>>,
     config: ItemConfig,
-    /// global game information    
-    game_info: Rc<RefCell<GameInfo>>,
     rng: RngHandle,
     next_id: ItemId,
 }
 
 impl ItemHandler {
-    pub fn new(config: ItemConfig, game_info: Rc<RefCell<GameInfo>>, seed: u64) -> Self {
+    pub fn new(config: ItemConfig, seed: u64) -> Self {
         ItemHandler {
             items: BTreeMap::new(),
             config,
-            game_info,
             rng: RngHandle::from_seed(seed),
             next_id: ItemId(0),
         }
@@ -151,7 +152,7 @@ impl ItemHandler {
     {
         if let Some(num) = self.gen_gold(level) {
             let item_rc = self.gen_item(|| ItemKind::Gold.numbered(num).many());
-            register(item_rc);
+            register(item_rc)
         }
     }
     /// setup gold for 1 room

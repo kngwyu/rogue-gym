@@ -45,6 +45,7 @@ impl Room {
             empty_cells,
         }
     }
+    /// takes a closure `register` and draw room by it
     pub fn draw<R>(&self, mut register: R) -> GameResult<()>
     where
         R: FnMut(Positioned<Surface>) -> GameResult<()>,
@@ -76,19 +77,56 @@ impl Room {
             RoomKind::Empty { .. } => Ok(()),
         }
     }
+    /// return a range occupied by the room
     pub fn range(&self) -> Option<&RectRange<i32>> {
         match self.kind {
             RoomKind::Normal { ref range } | RoomKind::Maze { ref range, .. } => Some(range),
             _ => None,
         }
     }
+    fn get_cell_id(&mut self, cd: Coord) -> Option<usize> {
+        let range = self.range()?;
+        range.index(cd)
+    }
+    /// modifiy the a cell's condition to 'not filled'
+    pub fn empty_cell(&mut self, cd: Coord) -> bool {
+        if let Some(id) = self.get_cell_id(cd) {
+            self.empty_cells.remove(id)
+        } else {
+            false
+        }
+    }
+    /// modifiy the a cell's condition to 'filled'
+    pub fn fill_cell(&mut self, cd: Coord) -> bool {
+        if let Some(id) = self.get_cell_id(cd) {
+            self.empty_cells.insert(id)
+        } else {
+            false
+        }
+    }
+    /// select a cell where we can set an object
     pub fn select_empty_cell(&self, rng: &mut RngHandle) -> Option<Coord> {
+        self.range().and_then(|range| {
+            let cell_n = self.empty_cells.select(rng)?;
+            range.nth(cell_n).map(|t| Coord::from(t))
+        })
+    }
+    pub fn is_normal(&self) -> bool {
         match self.kind {
-            RoomKind::Normal { ref range } | RoomKind::Maze { ref range, .. } => {
-                let cell_n = self.empty_cells.select(rng)?;
-                range.nth(cell_n).map(|t| Coord::from(t))
-            }
-            _ => None,
+            RoomKind::Normal { .. } => true,
+            _ => false,
+        }
+    }
+    pub fn is_maze(&self) -> bool {
+        match self.kind {
+            RoomKind::Maze { .. } => true,
+            _ => false,
+        }
+    }
+    pub fn is_empty(&self) -> bool {
+        match self.kind {
+            RoomKind::Empty { .. } => true,
+            _ => false,
         }
     }
 }

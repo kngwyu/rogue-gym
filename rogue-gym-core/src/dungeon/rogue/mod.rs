@@ -1,10 +1,11 @@
 use self::floor::Floor;
 pub use self::rooms::{Room, RoomKind};
 use super::{Coord, X, Y};
+use error::{GameResult, ResultExt};
 use item::ItemHandler;
-use path::ObjectPath;
 use rng::RngHandle;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 use {ConfigInner as GlobalConfig, GameInfo, Tile};
 
@@ -118,15 +119,28 @@ pub struct Dungeon {
     /// global game information
     game_info: Rc<RefCell<GameInfo>>,
     /// random number generator
-    rng: RngHandle,
+    rng: RefCell<RngHandle>,
 }
 
 impl Dungeon {
-    fn new_level(&mut self) {
+    pub fn new_level(&mut self) -> GameResult<()> {
         let level = {
             self.level += 1;
             self.level
         };
+        let (width, height) = (self.config_global.width, self.config_global.height);
+        let mut floor = Floor::with_no_item(level, &self.config, width, height, self.rng.get_mut())
+            .chain_err("[Dungeon::new_level]")?;
+        // setup gold
+        let set_gold = self.game_info.borrow().is_cleared || level >= self.config.amulet_level;
+        floor.setup_items(
+            level,
+            &mut self.item_handle.borrow_mut(),
+            set_gold,
+            &mut self.rng.borrow_mut(),
+        );
+        self.current_floor = floor;
+        Ok(())
     }
 }
 
