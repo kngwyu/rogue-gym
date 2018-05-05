@@ -13,8 +13,6 @@ extern crate error_chain_mini;
 #[macro_use]
 extern crate error_chain_mini_derive;
 extern crate fixedbitset;
-#[macro_use]
-extern crate log;
 extern crate num_traits;
 extern crate rand;
 extern crate rect_iter;

@@ -1,19 +1,14 @@
+use self::floor::Floor;
 pub use self::rooms::{Room, RoomKind};
-use super::{
-    field::{Field, Surface as SurfaceT},
-    Coord,
-    X,
-    Y,
-};
-use error::{GameResult, ResultExt};
-use item::{ItemHandler, ItemRc};
+use super::{Coord, X, Y};
+use item::ItemHandler;
 use path::ObjectPath;
 use rng::RngHandle;
 use std::cell::RefCell;
-use std::collections::BTreeMap;
 use std::rc::Rc;
 use {ConfigInner as GlobalConfig, GameInfo, Tile};
 
+pub mod floor;
 pub mod maze;
 pub mod passages;
 pub mod rooms;
@@ -84,8 +79,6 @@ impl Default for Surface {
     }
 }
 
-impl SurfaceT for Surface {}
-
 impl Surface {
     fn can_walk(&self) -> bool {
         match *self {
@@ -93,17 +86,6 @@ impl Surface {
             _ => true,
         }
     }
-}
-
-/// representation of 'floor'
-#[derive(Clone, Debug)]
-pub struct Floor {
-    /// rooms
-    rooms: Vec<Room>,
-    /// items
-    item_map: BTreeMap<Coord, ItemRc>,
-    /// field (level map)
-    field: Field<Surface>,
 }
 
 /// Address in the dungeon.
@@ -120,7 +102,7 @@ pub struct Dungeon {
     /// current level
     level: u32,
     /// current floor
-    current_floor: Option<Floor>,
+    current_floor: Floor,
     /// configurations are constant
     /// dungeon specific configuration
     config: Config,
@@ -134,10 +116,16 @@ pub struct Dungeon {
     rng: RngHandle,
 }
 
-impl Dungeon {}
+impl Dungeon {
+    fn new_level(&mut self) {
+        let level = {
+            self.level += 1;
+            self.level
+        };
+    }
+}
 
-// reserved code of item generation
-
+// reserved code for item generation
 // floor_range = room_range - wall_range
 // let floor_range = room_range.clone().slide_start((1, 1)).slide_end((1, 1));
 // let floor_num = floor_range.len() as usize;

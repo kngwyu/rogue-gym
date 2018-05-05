@@ -9,12 +9,12 @@ use rect_iter::IndexError;
 pub enum ErrorId {
     #[msg(short = "Invalid index access", detailed = "{:?}", _0)]
     Index(IndexError),
-    #[msg(short = "Invalid Input", detailed = "key: {:?}", _0)]
+    #[msg(short = "Invalid input", detailed = "key: {:?}", _0)]
     Input(Key),
-    #[msg(short = "Incomplete Input")]
+    #[msg(short = "Incomplete input")]
     IncompleteInput,
-    // it's intended to use only in immediate panic pattern
-    #[msg(short = "Logic Error")]
+    // it's intended to use only in 'immediate panic pattern'
+    #[msg(short = "Logic error")]
     LogicError,
 }
 

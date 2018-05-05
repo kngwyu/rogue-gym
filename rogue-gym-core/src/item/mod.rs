@@ -72,6 +72,7 @@ impl ItemId {
     }
 }
 
+/// Unique item
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Item {
     pub kind: ItemKind,
@@ -100,6 +101,7 @@ impl Item {
     }
 }
 
+// TODO: is is really necesarry?
 #[derive(Clone, Debug)]
 pub struct ItemRc {
     pub id: ItemId,
@@ -142,19 +144,18 @@ impl ItemHandler {
         self.next_id.increment();
         ItemRc { id, item }
     }
-    /// setup itmes for Rogue
-    pub fn setup_for_room<F>(&mut self, range: RectRange<i32>, level: u32, mut register: F)
+    /// setup gold for 1 room
+    pub fn setup_gold<F>(&mut self, level: u32, mut register: F)
     where
         F: FnMut(ItemRc),
     {
-        let len = range.len();
-        if let Some(num) = self.setup_gold(level) {
+        if let Some(num) = self.gen_gold(level) {
             let item_rc = self.gen_item(|| ItemKind::Gold.numbered(num).many());
             register(item_rc);
         }
     }
     /// setup gold for 1 room
-    fn setup_gold(&mut self, level: u32) -> Option<ItemNum> {
+    fn gen_gold(&mut self, level: u32) -> Option<ItemNum> {
         if !self.rng.does_happen(self.config.gold_rate_inv) {
             return None;
         }

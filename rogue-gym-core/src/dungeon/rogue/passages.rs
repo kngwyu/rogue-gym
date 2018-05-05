@@ -91,6 +91,7 @@ where
         Direction::Up | Direction::Left => (room2, room1, direction.reverse()),
         _ => (room1, room2, direction),
     };
+
     let start = select_start_or_end(room1, direction, rng);
     let end = select_start_or_end(room2, direction.reverse(), rng);
     register(Positioned(start, door_kind(room1)))?;
@@ -98,9 +99,6 @@ where
     // decide where to turn randomly
     let (turn_start, turn_dir, turn_end) = match direction {
         Direction::Down => {
-            if start.y.0 + 1 == end.y.0 {
-                panic!("{:?} {:?}", room1.kind, room2.kind);
-            }
             let y = rng.range(start.y.0 + 1..end.y.0);
             let dir = if start.is_lefter(end) {
                 Direction::Right
@@ -190,7 +188,7 @@ fn inclusive_edges(range: &RectRange<i32>, direction: Direction) -> Vec<Coord> {
     }
 }
 
-/// room connectivity
+/// a representation of room connectivity
 #[derive(Clone, Debug, Index)]
 struct RoomGraph {
     inner: Vec<Node>,
@@ -206,13 +204,13 @@ impl RoomGraph {
             .collect();
         RoomGraph { inner }
     }
-    fn coonect(&mut self, mut node1: usize, mut node2: usize) {
+    fn coonect(&mut self, node1: usize, node2: usize) {
         self.inner[node1].connections.insert(node2);
         self.inner[node2].connections.insert(node1);
     }
 }
 
-/// node of room graph
+/// a node of room graph
 #[derive(Clone, Debug)]
 struct Node {
     connections: FixedBitSet,
@@ -347,9 +345,7 @@ mod test {
                 .unwrap()
                 .into_iter()
                 .for_each(|cd| {
-                    if buffer.get_p(cd).can_walk() {
-                        assert!(*visited.get_p(cd));
-                    }
+                    assert_eq!(buffer.get_p(cd).can_walk(), *visited.get_p(cd));
                 });
         }
     }
