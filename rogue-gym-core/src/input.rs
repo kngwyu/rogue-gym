@@ -1,4 +1,6 @@
-/// Keycode
+//! a module for handling user input
+
+/// a representation of Keyboard input
 /// almost same as termion::event::Key
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, Hash, Eq, PartialEq)]
 pub enum Key {

@@ -169,7 +169,8 @@ impl ItemHandler {
 }
 
 /// Item configuration
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[serde(rename = "item-setting")]
 pub struct ItemConfig {
     pub gold_rate_inv: u32,
     pub gold_base: u32,

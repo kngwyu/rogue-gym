@@ -12,6 +12,11 @@ use std::ops::Range;
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RngHandle(XorShiftRng);
 
+pub fn gen_seed() -> u64 {
+    let mut rng = thread_rng();
+    rng.gen()
+}
+
 impl RngHandle {
     fn gen_seed(seed: u64) -> [u8; 16] {
         let mut seed_bytes = [0u8; 16];

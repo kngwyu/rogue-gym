@@ -1,0 +1,25 @@
+{
+    "width": 80,
+    "height": 24,
+    "seed": null,
+    "dungeon-style": "rogue",
+    "dungeon-setting": {
+        "room_num_x": 3,
+        "room_num_y": 3,
+        "min_room_size": {
+            "x": 4,
+            "y": 4
+        },
+        "enable_trap": true,
+        "max_empty_rooms": 4,
+        "amulet_level": 25,
+        "maze_rate_inv": 15,
+        "dark_level": 10,
+        "max_extra_edges": 5
+    },
+    "item": {
+        "gold_rate_inv": 2,
+        "gold_base": 50,
+        "gold_per_level": 10
+    }
+}

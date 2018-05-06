@@ -14,7 +14,7 @@ pub mod maze;
 pub mod passages;
 pub mod rooms;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Config {
     /// room number in X-axis direction
     pub room_num_x: X,
@@ -123,6 +123,27 @@ pub struct Dungeon {
 }
 
 impl Dungeon {
+    /// make new dungeon
+    pub fn new(
+        config: Config,
+        config_global: Rc<GlobalConfig>,
+        item_handle: Rc<RefCell<ItemHandler>>,
+        game_info: Rc<RefCell<GameInfo>>,
+        seed: u64,
+    ) -> GameResult<Self> {
+        let rng = RefCell::new(RngHandle::from_seed(seed));
+        let mut dungeon = Dungeon {
+            level: 1,
+            current_floor: Floor::default(),
+            config,
+            config_global,
+            item_handle,
+            game_info,
+            rng,
+        };
+        dungeon.new_level().chain_err("[rogue::Dungeon::new]")?;
+        Ok(dungeon)
+    }
     pub fn new_level(&mut self) -> GameResult<()> {
         let level = {
             self.level += 1;
@@ -130,7 +151,7 @@ impl Dungeon {
         };
         let (width, height) = (self.config_global.width, self.config_global.height);
         let mut floor = Floor::with_no_item(level, &self.config, width, height, self.rng.get_mut())
-            .chain_err("[Dungeon::new_level]")?;
+            .chain_err("[Dungeon::new_floor]")?;
         // setup gold
         let set_gold = self.game_info.borrow().is_cleared || level >= self.config.amulet_level;
         floor.setup_items(
@@ -143,23 +164,3 @@ impl Dungeon {
         Ok(())
     }
 }
-
-// reserved code for item generation
-// floor_range = room_range - wall_range
-// let floor_range = room_range.clone().slide_start((1, 1)).slide_end((1, 1));
-// let floor_num = floor_range.len() as usize;
-// let cleared = self.game_info.borrow().is_cleared;
-// if !cleared || level >= self.config.amulet_level {
-//     self.item_handle.borrow_mut().setup_for_room(
-//         floor_range.clone(),
-//         level,
-//         |item_rc| {
-//             let selected = self.rng.borrow_mut().range(0..floor_num);
-//             let coord = floor_range
-//                 .nth(selected)
-//                 .expect("[Dungeon::gen_floor] Invalid floor_num")
-//                 .into();
-//             item_map.insert(coord, item_rc);
-//         },
-//     );
-// }

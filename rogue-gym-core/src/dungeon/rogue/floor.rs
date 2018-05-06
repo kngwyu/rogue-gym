@@ -8,7 +8,7 @@ use rng::RngHandle;
 use std::collections::HashMap;
 use GameInfo;
 /// representation of 'floor'
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Floor {
     /// rooms
     pub rooms: Vec<Room>,
