@@ -32,6 +32,10 @@ pub struct Config {
     pub maze_rate_inv: u32,
     /// if the rooms is dark or not is judged by rand[0..dark_levl) < level - 1
     pub dark_level: u32,
+    /// a passage is hidden with a probability of 1 / hidden_rate_inv
+    pub hidden_rate_inv: u32,
+    /// a door is locked with a probability of 1 / hidden_rate_inv
+    pub door_lock_rate_inv: u32,
     /// try number of additional passages
     pub max_extra_edges: u32,
 }
@@ -47,6 +51,8 @@ impl Default for Config {
             amulet_level: 25,
             maze_rate_inv: 15,
             dark_level: 10,
+            hidden_rate_inv: 40,
+            door_lock_rate_inv: 5,
             max_extra_edges: 5,
         }
     }

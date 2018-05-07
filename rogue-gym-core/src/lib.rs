@@ -68,9 +68,9 @@ impl Default for GameConfig {
 }
 
 const MIN_WIDTH: i32 = 80;
-const MAX_WIDTH: i32 = 600;
+const MAX_WIDTH: i32 = MIN_WIDTH * 2;
 const MIN_HEIGHT: i32 = 24;
-const MAX_HEIGHT: i32 = 400;
+const MAX_HEIGHT: i32 = MIN_HEIGHT * 2;
 impl GameConfig {
     fn to_inner(&self) -> GameResult<ConfigInner> {
         let seed = self.seed.unwrap_or_else(rng::gen_seed);
@@ -130,7 +130,7 @@ pub struct RunTime {
 
 /// Global configuration
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub(crate) struct ConfigInner {
+pub struct ConfigInner {
     pub width: X,
     pub height: Y,
     pub seed: u64,

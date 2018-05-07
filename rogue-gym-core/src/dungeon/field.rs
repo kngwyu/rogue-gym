@@ -17,6 +17,8 @@ impl<S> Cell<S> {
     pub fn is_visible(&self) -> bool {
         self.attr.contains(CellAttr::IS_VISIBLE)
     }
+}
+impl<S> Cell<S> {
     pub fn with_default_attr(surface: S) -> Cell<S> {
         Cell {
             surface,
@@ -39,16 +41,16 @@ bitflags! {
     #[derive(Serialize, Deserialize, Default)]
     pub struct CellAttr: u32 {
         /// the player has visited the cell
-        const IS_VISITED  = 0b00000001;
+        const IS_VISITED = 0b00000001;
         /// the cell is hidden and the player needs to 's'
-        const IS_HIDDEN   = 0b00000010;
+        const IS_HIDDEN  = 0b00000010;
         /// the cell is visible or not
-        const IS_VISIBLE  = 0b00000100;
+        const IS_VISIBLE = 0b00000100;
         /// In many rogue like, draw status can be changed by the cell has been drawn or not.
         /// So to record the cell has been drawn or not is very important.
-        const IS_DRAWN    = 0b00001000;
-        /// if the cell is 'blocking' cell
-        const IS_BLCOKING = 0b00010000;
+        const IS_DRAWN   = 0b00001000;
+        /// the cell is locked
+        const IS_LOCKED  = 0b00010000;
     }
 }
 
