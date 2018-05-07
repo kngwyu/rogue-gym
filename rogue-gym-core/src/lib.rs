@@ -18,11 +18,11 @@ extern crate rect_iter;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
+extern crate regex;
 extern crate serde_json;
-extern crate tuple_map;
-
 #[cfg(test)]
 extern crate test;
+extern crate tuple_map;
 
 #[cfg(feature = "termion")]
 extern crate termion;
@@ -38,11 +38,11 @@ mod rng;
 
 use dungeon::{Coord, Dungeon, DungeonStyle, X, Y};
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
-use input::Key;
+use input::{InputCode, Key, KeyMap};
 use item::{ItemConfig, ItemHandler};
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::{Rc, Weak};
-
 /// Game configuration
 /// it's inteded to construct from json
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
@@ -53,6 +53,7 @@ pub struct GameConfig {
     #[serde(flatten)]
     pub dungeon: DungeonStyle,
     pub item: ItemConfig,
+    pub keymap: KeyMap,
 }
 
 impl Default for GameConfig {
@@ -63,6 +64,7 @@ impl Default for GameConfig {
             seed: None,
             dungeon: DungeonStyle::rogue(),
             item: ItemConfig::default(),
+            keymap: KeyMap::default(),
         }
     }
 }
@@ -126,6 +128,14 @@ pub struct RunTime {
     config: Weak<ConfigInner>,
     dungeon: Dungeon,
     item: Weak<RefCell<ItemHandler>>,
+}
+
+impl RunTime {}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct SaveData {
+    game_info: GameInfo,
+    config: ConfigInner,
 }
 
 /// Global configuration

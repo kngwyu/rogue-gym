@@ -15,11 +15,51 @@
         "amulet_level": 25,
         "maze_rate_inv": 15,
         "dark_level": 10,
+        "hidden_rate_inv": 40,
+        "door_lock_rate_inv": 5,
         "max_extra_edges": 5
     },
     "item": {
         "gold_rate_inv": 2,
         "gold_base": 50,
         "gold_per_level": 10
+    },
+    "keymap": {
+        "Left": {
+            "Direction": "Left"
+        },
+        "y": {
+            "Direction": "LeftUp"
+        },
+        "u": {
+            "Direction": "RightUp"
+        },
+        "l": {
+            "Direction": "Right"
+        },
+        "j": {
+            "Direction": "Down"
+        },
+        "k": {
+            "Direction": "Up"
+        },
+        "h": {
+            "Direction": "Left"
+        },
+        "Right": {
+            "Direction": "Right"
+        },
+        "Down": {
+            "Direction": "Down"
+        },
+        "n": {
+            "Direction": "RightDown"
+        },
+        "b": {
+            "Direction": "LeftDown"
+        },
+        "Up": {
+            "Direction": "Up"
+        }
     }
 }

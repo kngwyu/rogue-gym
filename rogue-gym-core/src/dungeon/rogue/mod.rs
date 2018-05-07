@@ -1,6 +1,6 @@
 use self::floor::Floor;
 pub use self::rooms::{Room, RoomKind};
-use super::{Coord, X, Y};
+use super::{Coord, DungeonPath, X, Y};
 use error::{GameResult, ResultExt};
 use item::ItemHandler;
 use rng::RngHandle;
@@ -168,5 +168,27 @@ impl Dungeon {
         );
         self.current_floor = floor;
         Ok(())
+    }
+}
+
+// TODO
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct SerializedDungeon {
+    level: u32,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct RoguePath {
+    pub level: u32,
+    pub coord: Coord,
+}
+
+impl From<DungeonPath> for RoguePath {
+    fn from(d: DungeonPath) -> RoguePath {
+        assert!(d.0.len() == 3, "RoguePath::from invalid value {:?}", d);
+        RoguePath {
+            level: d.0[0] as u32,
+            coord: Coord::new(d.0[1], d.0[2]),
+        }
     }
 }
