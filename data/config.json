@@ -31,32 +31,32 @@
         "y": {
             "Direction": "LeftUp"
         },
-        "u": {
-            "Direction": "RightUp"
-        },
-        "l": {
-            "Direction": "Right"
-        },
-        "j": {
-            "Direction": "Down"
-        },
         "k": {
             "Direction": "Up"
         },
         "h": {
             "Direction": "Left"
         },
+        "b": {
+            "Direction": "LeftDown"
+        },
         "Right": {
+            "Direction": "Right"
+        },
+        "l": {
             "Direction": "Right"
         },
         "Down": {
             "Direction": "Down"
         },
+        "j": {
+            "Direction": "Down"
+        },
         "n": {
             "Direction": "RightDown"
         },
-        "b": {
-            "Direction": "LeftDown"
+        "u": {
+            "Direction": "RightUp"
         },
         "Up": {
             "Direction": "Up"

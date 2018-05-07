@@ -11,11 +11,11 @@ error-chain-mini = "0.0.3"
 error-chain-mini-derive = "0.0.3"
 fixedbitset = "0.1.9"
 num-traits = "0.2"
+regex = "1.0.0"
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
 tuple-map = "0.3"
-regex = "1.0.0"
 
 [dependencies.termion]
 version = "1.5.1"

@@ -38,22 +38,29 @@ mod rng;
 
 use dungeon::{Coord, Dungeon, DungeonStyle, X, Y};
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
-use input::{InputCode, Key, KeyMap};
+use input::KeyMap;
 use item::{ItemConfig, ItemHandler};
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::rc::{Rc, Weak};
 /// Game configuration
 /// it's inteded to construct from json
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct GameConfig {
+    /// screen width
     pub width: i32,
+    /// screen height
     pub height: i32,
+    /// seed of random number generator
+    /// if None, we use random value chosen by `thread_rng().gen()`
     pub seed: Option<u64>,
+    /// dungeon configuration
     #[serde(flatten)]
     pub dungeon: DungeonStyle,
+    /// item configuration
     pub item: ItemConfig,
-    pub keymap: KeyMap,
+    /// AI players don't need keymap so we use Option here
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub keymap: Option<KeyMap>,
 }
 
 impl Default for GameConfig {
@@ -64,7 +71,7 @@ impl Default for GameConfig {
             seed: None,
             dungeon: DungeonStyle::rogue(),
             item: ItemConfig::default(),
-            keymap: KeyMap::default(),
+            keymap: Some(KeyMap::default()),
         }
     }
 }
@@ -112,11 +119,13 @@ impl GameConfig {
                 config.seed,
             )
             .chain_err("[GameConfig::build]")?;
+        let keymap = self.keymap.unwrap_or_default();
         Ok(RunTime {
             game_info: Rc::downgrade(&game_info),
             config: Rc::downgrade(&config),
             dungeon,
             item: Rc::downgrade(&item),
+            keymap,
         })
     }
 }
@@ -128,6 +137,7 @@ pub struct RunTime {
     config: Weak<ConfigInner>,
     dungeon: Dungeon,
     item: Weak<RefCell<ItemHandler>>,
+    keymap: KeyMap,
 }
 
 impl RunTime {}
@@ -200,8 +210,16 @@ mod config_test {
         file.write(json.as_bytes()).unwrap();
     }
     #[test]
-    fn assert_json() {
+    fn default() {
         let game_config = GameConfig::default();
+        let json = serde_json::to_string(&game_config).unwrap();
+        let config: GameConfig = serde_json::from_str(&json).unwrap();
+        assert_eq!(config, game_config);
+    }
+    #[test]
+    fn no_keymap() {
+        let mut game_config = GameConfig::default();
+        game_config.keymap = None;
         let json = serde_json::to_string(&game_config).unwrap();
         let config: GameConfig = serde_json::from_str(&json).unwrap();
         assert_eq!(config, game_config);
