@@ -1,4 +1,5 @@
 //! a module for handling user input
+use character::Action;
 use dungeon::Direction;
 use regex::Regex;
 use serde::de::{Deserialize, Deserializer, MapAccess, Visitor};
@@ -23,20 +24,21 @@ impl KeyMap {
 impl Default for KeyMap {
     fn default() -> Self {
         use self::Direction::*;
-        use self::InputCode::*;
         let map = vec![
-            (Key::Char('l'), Direction(Right)),
-            (Key::Char('k'), Direction(Up)),
-            (Key::Char('j'), Direction(Down)),
-            (Key::Char('h'), Direction(Left)),
-            (Key::Char('u'), Direction(RightUp)),
-            (Key::Char('y'), Direction(LeftUp)),
-            (Key::Char('n'), Direction(RightDown)),
-            (Key::Char('b'), Direction(LeftDown)),
-            (Key::Up, Direction(Up)),
-            (Key::Down, Direction(Down)),
-            (Key::Left, Direction(Left)),
-            (Key::Right, Direction(Right)),
+            (Key::Char('l'), InputCode::Game(Action::Move(Right))),
+            (Key::Char('k'), InputCode::Game(Action::Move(Up))),
+            (Key::Char('j'), InputCode::Game(Action::Move(Down))),
+            (Key::Char('h'), InputCode::Game(Action::Move(Left))),
+            (Key::Char('u'), InputCode::Game(Action::Move(RightUp))),
+            (Key::Char('y'), InputCode::Game(Action::Move(LeftUp))),
+            (Key::Char('n'), InputCode::Game(Action::Move(RightDown))),
+            (Key::Char('b'), InputCode::Game(Action::Move(LeftDown))),
+            (Key::Up, InputCode::Game(Action::Move(Up))),
+            (Key::Down, InputCode::Game(Action::Move(Down))),
+            (Key::Left, InputCode::Game(Action::Move(Left))),
+            (Key::Right, InputCode::Game(Action::Move(Right))),
+            (Key::Char('S'), InputCode::System(System::Save)),
+            (Key::Char('Q'), InputCode::System(System::Quit)),
         ];
         let inner: HashMap<_, _> = map.into_iter().collect();
         KeyMap { inner }
@@ -98,10 +100,18 @@ impl<'de> Deserialize<'de> for KeyMap {
     }
 }
 
-/// generalized user input
+/// Categorized user input
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, Hash, Eq, PartialEq)]
 pub enum InputCode {
-    Direction(Direction),
+    Game(Action),
+    System(System),
+}
+
+/// System input
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, Hash, Eq, PartialEq)]
+pub enum System {
+    Save,
+    Quit,
 }
 
 /// a representation of Keyboard input

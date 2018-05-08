@@ -15,8 +15,8 @@
         "amulet_level": 25,
         "maze_rate_inv": 15,
         "dark_level": 10,
-        "hidden_rate_inv": 40,
-        "door_lock_rate_inv": 5,
+        "hidden_passage_rate_inv": 40,
+        "locked_door_rate_inv": 5,
         "max_extra_edges": 5
     },
     "item": {
@@ -25,41 +25,71 @@
         "gold_per_level": 10
     },
     "keymap": {
-        "h": {
-            "Direction": "Left"
-        },
-        "u": {
-            "Direction": "RightUp"
-        },
-        "k": {
-            "Direction": "Up"
+        "b": {
+            "Game": {
+                "Move": "LeftDown"
+            }
         },
         "n": {
-            "Direction": "RightDown"
+            "Game": {
+                "Move": "RightDown"
+            }
         },
-        "b": {
-            "Direction": "LeftDown"
-        },
-        "j": {
-            "Direction": "Down"
-        },
-        "Right": {
-            "Direction": "Right"
-        },
-        "Down": {
-            "Direction": "Down"
-        },
-        "y": {
-            "Direction": "LeftUp"
-        },
-        "l": {
-            "Direction": "Right"
-        },
-        "Left": {
-            "Direction": "Left"
+        "h": {
+            "Game": {
+                "Move": "Left"
+            }
         },
         "Up": {
-            "Direction": "Up"
+            "Game": {
+                "Move": "Up"
+            }
+        },
+        "Q": {
+            "System": "Quit"
+        },
+        "l": {
+            "Game": {
+                "Move": "Right"
+            }
+        },
+        "Down": {
+            "Game": {
+                "Move": "Down"
+            }
+        },
+        "Right": {
+            "Game": {
+                "Move": "Right"
+            }
+        },
+        "u": {
+            "Game": {
+                "Move": "RightUp"
+            }
+        },
+        "Left": {
+            "Game": {
+                "Move": "Left"
+            }
+        },
+        "S": {
+            "System": "Save"
+        },
+        "k": {
+            "Game": {
+                "Move": "Up"
+            }
+        },
+        "j": {
+            "Game": {
+                "Move": "Down"
+            }
+        },
+        "y": {
+            "Game": {
+                "Move": "LeftUp"
+            }
         }
     }
 }
