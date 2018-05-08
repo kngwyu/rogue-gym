@@ -3,8 +3,7 @@ use rng::{Rng, RngHandle};
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::{Rc, Weak};
-use {Drawable, Tile};
-
+use ui::{Drawable, Tile};
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum ItemKind {
     Gold,
@@ -172,17 +171,32 @@ impl ItemHandler {
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename = "item-setting")]
 pub struct ItemConfig {
+    #[serde(default = "default_gold_rate")]
     pub gold_rate_inv: u32,
+    #[serde(default = "default_gold_base")]
     pub gold_base: u32,
+    #[serde(default = "default_gold_per_level")]
     pub gold_per_level: u32,
+}
+
+const fn default_gold_rate() -> u32 {
+    2
+}
+
+const fn default_gold_base() -> u32 {
+    50
+}
+
+const fn default_gold_per_level() -> u32 {
+    10
 }
 
 impl Default for ItemConfig {
     fn default() -> ItemConfig {
         ItemConfig {
-            gold_rate_inv: 2,
-            gold_base: 50,
-            gold_per_level: 10,
+            gold_rate_inv: default_gold_rate(),
+            gold_base: default_gold_base(),
+            gold_per_level: default_gold_per_level(),
         }
     }
 }

@@ -4,10 +4,8 @@ use super::{Coord, DungeonPath, X, Y};
 use error::{GameResult, ResultExt};
 use item::ItemHandler;
 use rng::RngHandle;
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::rc::Rc;
-use {ConfigInner as GlobalConfig, Drawable, GameInfo, Tile};
+use ui::{Drawable, Tile};
+use {GameInfo, GlobalConfig};
 
 pub mod floor;
 pub mod maze;
@@ -17,43 +15,88 @@ pub mod rooms;
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Config {
     /// room number in X-axis direction
+    #[serde(default = "default_room_num_x")]
     pub room_num_x: X,
     /// room number in X-axis direction
+    #[serde(default = "default_room_num_y")]
     pub room_num_y: Y,
     /// minimum size of a room
+    #[serde(default = "default_min_room_size")]
     pub min_room_size: Coord,
     /// enables trap or not
+    #[serde(default = "default_trap")]
     pub enable_trap: bool,
     /// maximum number of empty rooms
+    #[serde(default = "default_max_empty_rooms")]
     pub max_empty_rooms: u32,
     /// the level where the Amulet of Yendor is
+    #[serde(default = "default_amulet_level")]
     pub amulet_level: u32,
     /// a room changes to maze with a probability of 1 / maze_rate_inv
+    #[serde(default = "default_maze_rate")]
     pub maze_rate_inv: u32,
     /// if the rooms is dark or not is judged by rand[0..dark_levl) < level - 1
+    #[serde(default = "default_dark_level")]
     pub dark_level: u32,
     /// a passage is hidden with a probability of 1 / hidden_rate_inv
-    pub hidden_rate_inv: u32,
+    #[serde(default = "default_hidden_passage_rate")]
+    pub hidden_passage_rate_inv: u32,
     /// a door is locked with a probability of 1 / hidden_rate_inv
-    pub door_lock_rate_inv: u32,
+    #[serde(default = "default_locked_door_rate")]
+    pub locked_door_rate_inv: u32,
     /// try number of additional passages
+    #[serde(default = "default_max_extra_edges")]
     pub max_extra_edges: u32,
 }
 
+const fn default_room_num_x() -> X {
+    X(3)
+}
+const fn default_room_num_y() -> Y {
+    Y(3)
+}
+#[inline]
+fn default_min_room_size() -> Coord {
+    Coord::new(4, 4)
+}
+const fn default_trap() -> bool {
+    true
+}
+const fn default_max_empty_rooms() -> u32 {
+    4
+}
+const fn default_amulet_level() -> u32 {
+    25
+}
+const fn default_maze_rate() -> u32 {
+    15
+}
+const fn default_dark_level() -> u32 {
+    10
+}
+const fn default_hidden_passage_rate() -> u32 {
+    40
+}
+const fn default_locked_door_rate() -> u32 {
+    5
+}
+const fn default_max_extra_edges() -> u32 {
+    5
+}
 impl Default for Config {
     fn default() -> Config {
         Config {
-            room_num_x: X(3),
-            room_num_y: Y(3),
-            min_room_size: Coord::new(4, 4),
-            enable_trap: true,
-            max_empty_rooms: 4,
-            amulet_level: 25,
-            maze_rate_inv: 15,
-            dark_level: 10,
-            hidden_rate_inv: 40,
-            door_lock_rate_inv: 5,
-            max_extra_edges: 5,
+            room_num_x: default_room_num_x(),
+            room_num_y: default_room_num_y(),
+            min_room_size: default_min_room_size(),
+            enable_trap: default_trap(),
+            max_empty_rooms: default_max_empty_rooms(),
+            amulet_level: default_amulet_level(),
+            maze_rate_inv: default_maze_rate(),
+            dark_level: default_dark_level(),
+            hidden_passage_rate_inv: default_hidden_passage_rate(),
+            locked_door_rate_inv: default_locked_door_rate(),
+            max_extra_edges: default_max_extra_edges(),
         }
     }
 }
@@ -119,53 +162,48 @@ pub struct Dungeon {
     /// dungeon specific configuration
     config: Config,
     /// global configuration(constant)
-    config_global: Rc<GlobalConfig>,
-    /// item handle
-    item_handle: Rc<RefCell<ItemHandler>>,
-    /// global game information
-    game_info: Rc<RefCell<GameInfo>>,
+    config_global: GlobalConfig,
     /// random number generator
-    rng: RefCell<RngHandle>,
+    rng: RngHandle,
 }
 
 impl Dungeon {
     /// make new dungeon
     pub fn new(
         config: Config,
-        config_global: Rc<GlobalConfig>,
-        item_handle: Rc<RefCell<ItemHandler>>,
-        game_info: Rc<RefCell<GameInfo>>,
+        config_global: &GlobalConfig,
+        game_info: &GameInfo,
+        item_handle: &mut ItemHandler,
         seed: u64,
     ) -> GameResult<Self> {
-        let rng = RefCell::new(RngHandle::from_seed(seed));
+        let rng = RngHandle::from_seed(seed);
         let mut dungeon = Dungeon {
             level: 1,
             current_floor: Floor::default(),
             config,
-            config_global,
-            item_handle,
-            game_info,
+            config_global: config_global.clone(),
             rng,
         };
-        dungeon.new_level().chain_err("[rogue::Dungeon::new]")?;
+        dungeon
+            .new_level(game_info, item_handle)
+            .chain_err("[rogue::Dungeon::new]")?;
         Ok(dungeon)
     }
-    pub fn new_level(&mut self) -> GameResult<()> {
+    pub fn new_level(
+        &mut self,
+        game_info: &GameInfo,
+        item_handle: &mut ItemHandler,
+    ) -> GameResult<()> {
         let level = {
             self.level += 1;
             self.level
         };
         let (width, height) = (self.config_global.width, self.config_global.height);
-        let mut floor = Floor::with_no_item(level, &self.config, width, height, self.rng.get_mut())
+        let mut floor = Floor::with_no_item(level, &self.config, width, height, &mut self.rng)
             .chain_err("[Dungeon::new_floor]")?;
         // setup gold
-        let set_gold = self.game_info.borrow().is_cleared || level >= self.config.amulet_level;
-        floor.setup_items(
-            level,
-            &mut self.item_handle.borrow_mut(),
-            set_gold,
-            &mut self.rng.borrow_mut(),
-        );
+        let set_gold = game_info.is_cleared || level >= self.config.amulet_level;
+        floor.setup_items(level, item_handle, set_gold, &mut self.rng);
         self.current_floor = floor;
         Ok(())
     }

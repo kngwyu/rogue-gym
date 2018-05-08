@@ -262,7 +262,7 @@ mod fenwick_set_test {
     #[test]
     fn from_range() {
         let (start, end) = (40, 500);
-        let mut fws = FenwickSet::from_range(start..end);
+        let fws = FenwickSet::from_range(start..end);
         for i in 0..1000 {
             let in_range = start <= i && i < end;
             assert_eq!(fws.contains(i), in_range);

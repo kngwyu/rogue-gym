@@ -3,9 +3,9 @@ use super::{X, Y};
 use num_traits::ToPrimitive;
 use rect_iter::{Get2D, GetMut2D, IndexError};
 use std::fmt;
-use {Drawable, Tile};
+use ui::{Drawable, Tile};
 
-/// Generic Cell trait
+/// Generic representation of Cell
 #[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
 pub struct Cell<S> {
     pub surface: S,
@@ -54,6 +54,7 @@ bitflags! {
     }
 }
 
+/// generic representation of Field
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Field<S> {
     inner: Vec<Vec<Cell<S>>>,

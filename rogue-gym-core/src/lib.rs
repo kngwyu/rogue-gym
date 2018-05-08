@@ -1,5 +1,5 @@
 #![allow(stable_features)]
-#![feature(try_from, dyn_trait, try_iterator)]
+#![feature(const_fn, dyn_trait, try_from, try_iterator)]
 #![cfg_attr(test, feature(test))]
 
 #[macro_use]
@@ -15,34 +15,33 @@ extern crate fixedbitset;
 extern crate num_traits;
 extern crate rand;
 extern crate rect_iter;
+extern crate regex;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-extern crate regex;
 extern crate serde_json;
+#[cfg(feature = "termion")]
+extern crate termion;
 #[cfg(test)]
 extern crate test;
 extern crate tuple_map;
 
-#[cfg(feature = "termion")]
-extern crate termion;
-
 mod character;
 pub mod dungeon;
-mod error;
+pub mod error;
 mod fenwick;
 pub mod input;
 pub mod item;
 mod path;
 mod rng;
+mod ui;
 
-use dungeon::{Coord, Dungeon, DungeonStyle, X, Y};
+use dungeon::{Dungeon, DungeonStyle, X, Y};
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
 use input::{InputCode, Key, KeyMap};
 use item::{ItemConfig, ItemHandler};
-use std::cell::RefCell;
-use std::fmt;
-use std::rc::{Rc, Weak};
+pub use ui::Tile;
+use ui::UiState;
 /// Game configuration
 /// it's inteded to construct from json
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
@@ -53,26 +52,28 @@ pub struct GameConfig {
     pub height: i32,
     /// seed of random number generator
     /// if None, we use random value chosen by `thread_rng().gen()`
+    #[serde(default)]
     pub seed: Option<u64>,
     /// dungeon configuration
     #[serde(flatten)]
     pub dungeon: DungeonStyle,
     /// item configuration
+    #[serde(default)]
     pub item: ItemConfig,
-    /// AI players don't need keymap so we use Option here
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub keymap: Option<KeyMap>,
+    /// keymap configuration
+    #[serde(default)]
+    pub keymap: KeyMap,
 }
 
 impl Default for GameConfig {
     fn default() -> Self {
         GameConfig {
-            width: 80,
-            height: 24,
+            width: MIN_WIDTH,
+            height: MIN_HEIGHT,
             seed: None,
             dungeon: DungeonStyle::rogue(),
             item: ItemConfig::default(),
-            keymap: Some(KeyMap::default()),
+            keymap: KeyMap::default(),
         }
     }
 }
@@ -82,7 +83,7 @@ const MAX_WIDTH: i32 = MIN_WIDTH * 2;
 const MIN_HEIGHT: i32 = 24;
 const MAX_HEIGHT: i32 = MIN_HEIGHT * 2;
 impl GameConfig {
-    fn to_inner(&self) -> GameResult<ConfigInner> {
+    fn to_global(&self) -> GameResult<GlobalConfig> {
         let seed = self.seed.unwrap_or_else(rng::gen_seed);
         let (w, h) = (self.width, self.height);
         if w < MIN_WIDTH {
@@ -97,36 +98,28 @@ impl GameConfig {
         if h > MAX_HEIGHT {
             return Err(ErrorId::InvalidSetting.into_with("screen height is too wide"));
         }
-        Ok(ConfigInner {
+        Ok(GlobalConfig {
             width: w.into(),
             height: h.into(),
             seed,
         })
     }
     pub fn build(self) -> GameResult<RunTime> {
-        let game_info = Rc::new(RefCell::new(GameInfo::new()));
-        let config = Rc::new(self.to_inner().chain_err("[GameConfig::build]")?);
+        let game_info = GameInfo::new();
+        let config = self.to_global().chain_err("[GameConfig::build]")?;
         // TODO: invalid checking
-        let item = Rc::new(RefCell::new(ItemHandler::new(
-            self.item.clone(),
-            config.seed,
-        )));
+        let mut item = ItemHandler::new(self.item.clone(), config.seed);
         // TODO: invalid checking
         let dungeon = self.dungeon
-            .build(
-                Rc::clone(&config),
-                Rc::clone(&item),
-                Rc::clone(&game_info),
-                config.seed,
-            )
+            .build(&config, &mut item, &game_info, config.seed)
             .chain_err("[GameConfig::build]")?;
-        let keymap = self.keymap.unwrap_or_default();
         Ok(RunTime {
-            game_info: Rc::downgrade(&game_info),
-            config: Rc::downgrade(&config),
+            game_info,
+            config,
             dungeon,
-            item: Rc::downgrade(&item),
-            keymap,
+            item,
+            ui: UiState::Dungeon,
+            keymap: self.keymap,
         })
     }
 }
@@ -134,46 +127,63 @@ impl GameConfig {
 /// API entry point of rogue core
 // TODO: maybe just reference is better than Weak?
 pub struct RunTime {
-    game_info: Weak<RefCell<GameInfo>>,
-    config: Weak<ConfigInner>,
+    game_info: GameInfo,
+    config: GlobalConfig,
     dungeon: Dungeon,
-    item: Weak<RefCell<ItemHandler>>,
-    keymap: KeyMap,
+    item: ItemHandler,
+    ui: UiState,
+    pub keymap: KeyMap,
 }
 
 impl RunTime {
-    pub fn react_to_input(&mut self, input: InputCode) -> GameResult<()> {
-        Ok(())
+    pub fn react_to_input(&mut self, input: InputCode) -> GameResult<Vec<Reaction>> {
+        let transition = match self.ui {
+            UiState::Dungeon => {}
+        };
+        Ok(vec![])
+    }
+    pub fn react_to_key(&mut self, key: Key) -> GameResult<Vec<Reaction>> {
+        match self.keymap.get(key) {
+            Some(i) => self.react_to_input(i),
+            None => {
+                Err(ErrorId::InvalidInput(key).into_with("[rogue_gym_core::RunTime::react_to_key]"))
+            }
+        }
     }
 }
 
-/// Every turn RunTime return Vec<Reaction>
+/// Reaction to user input
+#[derive(Clone, Debug)]
 pub enum Reaction {
     /// Tile buffer
     Redraw(Vec<Vec<u8>>),
     /// Game Messages,
-    Notify,
+    Notify(GameMsg),
 }
+
+// STUB
+#[derive(Clone, Debug)]
+pub enum GameMsg {}
 
 // TODO
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SaveData {
     game_info: GameInfo,
-    config: ConfigInner,
+    config: GlobalConfig,
 }
 
 /// Global configuration
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ConfigInner {
+pub struct GlobalConfig {
     pub width: X,
     pub height: Y,
     pub seed: u64,
 }
 
 // only for testing
-impl Default for ConfigInner {
+impl Default for GlobalConfig {
     fn default() -> Self {
-        ConfigInner {
+        GlobalConfig {
             width: X(80),
             height: Y(24),
             seed: 1,
@@ -181,6 +191,7 @@ impl Default for ConfigInner {
     }
 }
 
+/// game information shared and able to be modified by each modules
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct GameInfo {
     is_cleared: bool,
@@ -192,34 +203,6 @@ impl GameInfo {
     }
 }
 
-/// Tile id
-#[derive(Clone, Debug, Hash, Eq, PartialEq, From, Serialize, Deserialize)]
-pub struct Tile(pub u8);
-
-impl fmt::Display for Tile {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.0 as char)
-    }
-}
-
-/// drawable object
-pub trait Drawable {
-    const NONE: Tile = Tile(b' ');
-    fn tile(&self) -> Tile;
-    fn color(&self) -> Color {
-        Color(0)
-    }
-    // STUB
-    fn draw_order(&self) -> u32 {
-        u32::max_value()
-    }
-}
-
-/// color representation
-/// currently it's not used at all
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Color(pub u8);
-
 #[cfg(test)]
 mod config_test {
     use super::*;
@@ -227,10 +210,10 @@ mod config_test {
     use std::io::prelude::*;
     #[test]
     #[ignore]
-    fn print_json() {
+    fn print_default() {
         let game_config = GameConfig::default();
         let json = serde_json::to_string(&game_config).unwrap();
-        let mut file = File::create("../data/config.json").unwrap();
+        let mut file = File::create("../data/config-default.json").unwrap();
         file.write(json.as_bytes()).unwrap();
     }
     #[test]
@@ -241,11 +224,11 @@ mod config_test {
         assert_eq!(config, game_config);
     }
     #[test]
-    fn no_keymap() {
-        let mut game_config = GameConfig::default();
-        game_config.keymap = None;
-        let json = serde_json::to_string(&game_config).unwrap();
-        let config: GameConfig = serde_json::from_str(&json).unwrap();
-        assert_eq!(config, game_config);
+    fn minimum() {
+        let mut file = File::open("../data/config-minimum.json").unwrap();
+        let mut buf = String::new();
+        file.read_to_string(&mut buf).unwrap();
+        let config: GameConfig = serde_json::from_str(&buf).unwrap();
+        assert_eq!(config, GameConfig::default());
     }
 }

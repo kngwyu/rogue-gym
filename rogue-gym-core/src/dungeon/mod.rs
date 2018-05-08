@@ -7,9 +7,7 @@ pub use self::field::{Cell, CellAttr, Field};
 use self::rogue::RoguePath;
 use error::{GameResult, ResultExt};
 use item::ItemHandler;
-use std::cell::RefCell;
-use std::rc::Rc;
-use {ConfigInner as GlobalConfig, GameInfo};
+use {GameInfo, GlobalConfig};
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(tag = "dungeon-style", content = "dungeon-setting")]
 #[serde(rename_all = "lowercase")]
@@ -20,6 +18,8 @@ pub enum DungeonStyle {
     NetHack,
     /// not implemented now
     Cataclysm,
+    /// not implemented now
+    Custom,
 }
 
 impl DungeonStyle {
@@ -28,15 +28,15 @@ impl DungeonStyle {
     }
     pub fn build(
         self,
-        config_global: Rc<GlobalConfig>,
-        item_handle: Rc<RefCell<ItemHandler>>,
-        game_info: Rc<RefCell<GameInfo>>,
+        config_global: &GlobalConfig,
+        item_handle: &mut ItemHandler,
+        game_info: &GameInfo,
         seed: u64,
     ) -> GameResult<Dungeon> {
         match self {
             DungeonStyle::Rogue(config) => {
                 let dungeon =
-                    rogue::Dungeon::new(config, config_global, item_handle, game_info, seed)
+                    rogue::Dungeon::new(config, config_global, game_info, item_handle, seed)
                         .chain_err("[DungeonStyle::build]")?;
                 Ok(Dungeon::Rogue(dungeon))
             }
@@ -45,13 +45,18 @@ impl DungeonStyle {
     }
 }
 
+/// Dungeon Implementation
 pub enum Dungeon {
     Rogue(rogue::Dungeon),
     /// not implemented now
     NetHack,
     /// not implemented now
     Cataclysm,
+    /// not implemented now
+    Custom,
 }
+
+impl Dungeon {}
 
 #[derive(Clone, Debug, Serialize, Deserialize, Hash, Eq, PartialEq)]
 pub struct DungeonPath(Vec<i32>);

@@ -122,14 +122,14 @@ fn attr_gen(surface: Surface, rng: &mut RngHandle, level: u32, config: &Config) 
     match surface {
         Surface::Passage => {
             if rng.range(0..config.dark_level) + 1 < level
-                && rng.does_happen(config.hidden_rate_inv)
+                && rng.does_happen(config.hidden_passage_rate_inv)
             {
                 attr |= CellAttr::IS_HIDDEN;
             }
         }
         Surface::Door => {
             if rng.range(0..config.dark_level) + 1 < level
-                && rng.does_happen(config.door_lock_rate_inv)
+                && rng.does_happen(config.locked_door_rate_inv)
             {
                 attr |= CellAttr::IS_HIDDEN;
             }
@@ -144,7 +144,7 @@ mod test {
     use item::ItemConfig;
     use rect_iter::{Get2D, RectRange};
     use rng::Rng;
-    use Drawable;
+    use ui::Drawable;
     #[test]
     #[ignore]
     fn print_floor() {

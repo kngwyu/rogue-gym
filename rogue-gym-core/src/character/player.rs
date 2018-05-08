@@ -1,23 +1,36 @@
-use super::{HitPoint, Maxed, Strength};
+use super::{Defense, Exp, HitPoint, Maxed, Strength};
 use dungeon::{Direction, DungeonPath};
-use error::{ErrorId, ErrorKind, GameError, GameResult};
-use input::Key;
-use item::ItemRc;
-use path::ObjectPath;
-use std::collections::HashMap;
-use std::convert::TryFrom;
 
+/// Representation of player
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Player {
     pos: DungeonPath,
+    status: PlayerStatus,
 }
 
+/// Player status
+/// it's same as what's diplayed
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Status {
+pub struct PlayerStatus {
     hp: Maxed<HitPoint>,
+    strength: Maxed<Strength>,
+    defense: Defense,
+    exp: Maxed<Exp>,
+    hunger: Hunger,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+/// possible player actions
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub enum Action {
     Move(Direction),
+    UpStair,
+    DownStair,
+}
+
+/// Hunger level
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub enum Hunger {
+    Normal,
+    Hungry,
+    Weak,
 }

@@ -25,38 +25,38 @@
         "gold_per_level": 10
     },
     "keymap": {
-        "Left": {
+        "h": {
             "Direction": "Left"
         },
-        "y": {
-            "Direction": "LeftUp"
+        "u": {
+            "Direction": "RightUp"
         },
         "k": {
             "Direction": "Up"
         },
-        "h": {
-            "Direction": "Left"
+        "n": {
+            "Direction": "RightDown"
         },
         "b": {
             "Direction": "LeftDown"
         },
-        "Right": {
-            "Direction": "Right"
+        "j": {
+            "Direction": "Down"
         },
-        "l": {
+        "Right": {
             "Direction": "Right"
         },
         "Down": {
             "Direction": "Down"
         },
-        "j": {
-            "Direction": "Down"
+        "y": {
+            "Direction": "LeftUp"
         },
-        "n": {
-            "Direction": "RightDown"
+        "l": {
+            "Direction": "Right"
         },
-        "u": {
-            "Direction": "RightUp"
+        "Left": {
+            "Direction": "Left"
         },
         "Up": {
             "Direction": "Up"

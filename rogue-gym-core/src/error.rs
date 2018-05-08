@@ -10,7 +10,7 @@ pub enum ErrorId {
     #[msg(short = "Invalid index access", detailed = "{:?}", _0)]
     Index(IndexError),
     #[msg(short = "Invalid input", detailed = "key: {:?}", _0)]
-    Input(Key),
+    InvalidInput(Key),
     #[msg(short = "Incomplete input")]
     IncompleteInput,
     #[msg(short = "Invalid Setting")]

@@ -7,9 +7,17 @@ use std::collections::HashMap;
 use std::fmt;
 use std::marker::PhantomData;
 use std::str;
+
+/// Mapping from Keyboard input to InputCode
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct KeyMap {
     inner: HashMap<Key, InputCode>,
+}
+
+impl KeyMap {
+    pub fn get(&self, key: Key) -> Option<InputCode> {
+        self.inner.get(&key).map(|code| code.to_owned())
+    }
 }
 
 impl Default for KeyMap {
