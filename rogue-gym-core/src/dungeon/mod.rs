@@ -59,7 +59,7 @@ pub enum Dungeon {
 
 impl Dungeon {}
 
-#[derive(Clone, Debug, Serialize, Deserialize, Hash, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, Hash, Eq, PartialEq)]
 pub struct DungeonPath(Vec<i32>);
 
 impl From<RoguePath> for DungeonPath {

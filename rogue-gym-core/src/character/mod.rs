@@ -1,4 +1,4 @@
-pub use self::player::{Action, Hunger, Player, PlayerStatus};
+pub use self::player::{Action, Hunger, Leveling, Player, PlayerConfig, PlayerStatus};
 
 mod player;
 /// values compatible with Hit Point
@@ -25,4 +25,19 @@ pub struct Exp(u32);
 pub struct Maxed<T> {
     pub max: T,
     pub current: T,
+}
+
+impl<T: Copy> Maxed<T> {
+    fn max(init: T) -> Maxed<T> {
+        Maxed {
+            max: init,
+            current: init,
+        }
+    }
+}
+
+impl<T> Maxed<T> {
+    fn new(max: T, current: T) -> Maxed<T> {
+        Maxed { max, current }
+    }
 }

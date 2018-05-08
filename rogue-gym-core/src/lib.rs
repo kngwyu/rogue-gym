@@ -36,6 +36,7 @@ mod path;
 mod rng;
 mod ui;
 
+use character::{Player, PlayerConfig};
 use dungeon::{Dungeon, DungeonStyle, X, Y};
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
 use input::{InputCode, Key, KeyMap};
@@ -63,6 +64,8 @@ pub struct GameConfig {
     /// keymap configuration
     #[serde(default)]
     pub keymap: KeyMap,
+    #[serde(default)]
+    pub player: PlayerConfig,
 }
 
 impl Default for GameConfig {
@@ -74,6 +77,7 @@ impl Default for GameConfig {
             dungeon: DungeonStyle::rogue(),
             item: ItemConfig::default(),
             keymap: KeyMap::default(),
+            player: PlayerConfig::default(),
         }
     }
 }
@@ -113,6 +117,7 @@ impl GameConfig {
         let dungeon = self.dungeon
             .build(&config, &mut item, &game_info, config.seed)
             .chain_err("[GameConfig::build]")?;
+        let player = self.player.build();
         Ok(RunTime {
             game_info,
             config,
@@ -120,6 +125,7 @@ impl GameConfig {
             item,
             ui: UiState::Dungeon,
             keymap: self.keymap,
+            player,
         })
     }
 }
@@ -131,6 +137,7 @@ pub struct RunTime {
     config: GlobalConfig,
     dungeon: Dungeon,
     item: ItemHandler,
+    player: Player,
     ui: UiState,
     pub keymap: KeyMap,
 }
@@ -148,12 +155,14 @@ impl RunTime {
                     self.ui = next_ui;
                     Ok(res)
                 }
-                InputCode::Act(a) => Ok(vec![]),
+                InputCode::Act(_) => Err(ErrorId::IgnoredInput(input)
+                    .into_with("[rogue_gym_core::RunTime::react_to_input]")),
                 InputCode::Both { .. } => Ok(vec![]),
             },
             UiState::Mordal(kind) => match input {
                 InputCode::Sys(s) => Ok(vec![]),
-                InputCode::Act(a) => Ok(vec![]),
+                InputCode::Act(_) => Err(ErrorId::IgnoredInput(input)
+                    .into_with("[rogue_gym_core::RunTime::react_to_input]")),
                 InputCode::Both { .. } => Ok(vec![]),
             },
         }
