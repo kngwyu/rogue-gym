@@ -8,6 +8,7 @@ use self::rogue::RoguePath;
 use error::{GameResult, ResultExt};
 use item::ItemHandler;
 use {GameInfo, GlobalConfig};
+
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(tag = "dungeon-style", content = "dungeon-setting")]
 #[serde(rename_all = "lowercase")]

@@ -1,5 +1,5 @@
 #![allow(stable_features)]
-#![feature(const_fn, dyn_trait, try_from, try_iterator)]
+#![feature(dyn_trait, try_from, try_iterator)]
 #![cfg_attr(test, feature(test))]
 
 #[macro_use]

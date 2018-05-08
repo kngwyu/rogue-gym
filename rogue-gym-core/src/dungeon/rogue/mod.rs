@@ -49,38 +49,48 @@ pub struct Config {
     pub max_extra_edges: u32,
 }
 
-const fn default_room_num_x() -> X {
+#[inline]
+fn default_room_num_x() -> X {
     X(3)
 }
-const fn default_room_num_y() -> Y {
+#[inline]
+fn default_room_num_y() -> Y {
     Y(3)
 }
 #[inline]
 fn default_min_room_size() -> Coord {
     Coord::new(4, 4)
 }
-const fn default_trap() -> bool {
+#[inline]
+fn default_trap() -> bool {
     true
 }
-const fn default_max_empty_rooms() -> u32 {
+#[inline]
+fn default_max_empty_rooms() -> u32 {
     4
 }
-const fn default_amulet_level() -> u32 {
+#[inline]
+fn default_amulet_level() -> u32 {
     25
 }
-const fn default_maze_rate() -> u32 {
+#[inline]
+fn default_maze_rate() -> u32 {
     15
 }
-const fn default_dark_level() -> u32 {
+#[inline]
+fn default_dark_level() -> u32 {
     10
 }
-const fn default_hidden_passage_rate() -> u32 {
+#[inline]
+fn default_hidden_passage_rate() -> u32 {
     40
 }
-const fn default_locked_door_rate() -> u32 {
+#[inline]
+fn default_locked_door_rate() -> u32 {
     5
 }
-const fn default_max_extra_edges() -> u32 {
+#[inline]
+fn default_max_extra_edges() -> u32 {
     5
 }
 impl Default for Config {
