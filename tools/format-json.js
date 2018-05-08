@@ -10,7 +10,7 @@ function format_file(file_name) {
     }
     let file = fs.readFileSync(file_name, 'utf8');
     let json = JSON.parse(file);
-    fs.writeFile(file_name, JSON.stringify(json, null, 4))
+    fs.writeFileSync(file_name, JSON.stringify(json, null, 4))
     return true;
 }
 function format_directory(dir_name) {
