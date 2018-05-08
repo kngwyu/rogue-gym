@@ -144,7 +144,7 @@ mod test {
     use item::ItemConfig;
     use rect_iter::{Get2D, RectRange};
     use rng::Rng;
-    use Tile;
+    use Drawable;
     #[test]
     #[ignore]
     fn print_floor() {
@@ -169,12 +169,12 @@ mod test {
             .into_iter()
             .for_each(|cd| {
                 let cd: Coord = cd.into();
-                let byte = if let Some(item) = floor.items.get(&cd) {
-                    item.byte()
+                let tile = if let Some(item) = floor.items.get(&cd) {
+                    item.tile()
                 } else {
-                    floor.field.get_p(cd).surface.byte()
+                    floor.field.get_p(cd).surface.tile()
                 };
-                print!("{}", byte as char);
+                print!("{}", tile);
                 if cd.x == X(79) {
                     println!("");
                 }

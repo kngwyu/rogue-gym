@@ -3,7 +3,7 @@ use rng::{Rng, RngHandle};
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::{Rc, Weak};
-use Tile;
+use {Drawable, Tile};
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum ItemKind {
@@ -27,14 +27,14 @@ impl ItemKind {
     }
 }
 
-impl Tile for ItemKind {
-    fn byte(&self) -> u8 {
+impl Drawable for ItemKind {
+    fn tile(&self) -> Tile {
         match *self {
             ItemKind::Gold => b'*',
             // STUB!!!
             ItemKind::Weapon => b')',
             ItemKind::Custom => unimplemented!(),
-        }
+        }.into()
     }
 }
 
@@ -105,9 +105,9 @@ pub struct ItemRc {
     item: Rc<RefCell<Item>>,
 }
 
-impl Tile for ItemRc {
-    fn byte(&self) -> u8 {
-        self.item.borrow().kind.byte()
+impl Drawable for ItemRc {
+    fn tile(&self) -> Tile {
+        self.item.borrow().kind.tile()
     }
 }
 

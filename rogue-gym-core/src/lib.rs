@@ -38,9 +38,10 @@ mod rng;
 
 use dungeon::{Coord, Dungeon, DungeonStyle, X, Y};
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
-use input::KeyMap;
+use input::{InputCode, Key, KeyMap};
 use item::{ItemConfig, ItemHandler};
 use std::cell::RefCell;
+use std::fmt;
 use std::rc::{Rc, Weak};
 /// Game configuration
 /// it's inteded to construct from json
@@ -140,8 +141,21 @@ pub struct RunTime {
     keymap: KeyMap,
 }
 
-impl RunTime {}
+impl RunTime {
+    pub fn react_to_input(&mut self, input: InputCode) -> GameResult<()> {
+        Ok(())
+    }
+}
 
+/// Every turn RunTime return Vec<Reaction>
+pub enum Reaction {
+    /// Tile buffer
+    Redraw(Vec<Vec<u8>>),
+    /// Game Messages,
+    Notify,
+}
+
+// TODO
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SaveData {
     game_info: GameInfo,
@@ -178,10 +192,20 @@ impl GameInfo {
     }
 }
 
+/// Tile id
+#[derive(Clone, Debug, Hash, Eq, PartialEq, From, Serialize, Deserialize)]
+pub struct Tile(pub u8);
+
+impl fmt::Display for Tile {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0 as char)
+    }
+}
+
 /// drawable object
-pub trait Tile {
-    const NONE: u8 = b' ';
-    fn byte(&self) -> u8;
+pub trait Drawable {
+    const NONE: Tile = Tile(b' ');
+    fn tile(&self) -> Tile;
     fn color(&self) -> Color {
         Color(0)
     }

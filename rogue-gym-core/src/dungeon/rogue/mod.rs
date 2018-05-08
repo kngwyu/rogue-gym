@@ -7,7 +7,7 @@ use rng::RngHandle;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use {ConfigInner as GlobalConfig, GameInfo, Tile};
+use {ConfigInner as GlobalConfig, Drawable, GameInfo, Tile};
 
 pub mod floor;
 pub mod maze;
@@ -70,8 +70,8 @@ pub enum Surface {
     None,
 }
 
-impl Tile for Surface {
-    fn byte(&self) -> u8 {
+impl Drawable for Surface {
+    fn tile(&self) -> Tile {
         match *self {
             Surface::Passage => b'#',
             Surface::Floor => b'.',
@@ -81,7 +81,7 @@ impl Tile for Surface {
             Surface::Door => b'+',
             Surface::Trap => b'^',
             Surface::None => b' ',
-        }
+        }.into()
     }
 }
 

@@ -260,7 +260,7 @@ pub(crate) mod test {
     use super::*;
     use dungeon::Direction;
     use rect_iter::GetMut2D;
-    use Tile;
+    use Drawable;
     pub(crate) fn gen(level: u32) -> Vec<Room> {
         let config = Config::default();
         let (w, h) = (X(80), Y(24));
@@ -284,7 +284,7 @@ pub(crate) mod test {
         let buffer = draw_to_buffer(&rooms);
         for v in buffer {
             for x in v {
-                print!("{}", x.byte() as char);
+                print!("{}", x.tile())
             }
             println!("");
         }

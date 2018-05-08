@@ -3,7 +3,7 @@ use super::{X, Y};
 use num_traits::ToPrimitive;
 use rect_iter::{Get2D, GetMut2D, IndexError};
 use std::fmt;
-use Tile;
+use {Drawable, Tile};
 
 /// Generic Cell trait
 #[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
@@ -27,10 +27,10 @@ impl<S> Cell<S> {
     }
 }
 
-impl<S: Tile> Tile for Cell<S> {
-    fn byte(&self) -> u8 {
+impl<S: Drawable> Drawable for Cell<S> {
+    fn tile(&self) -> Tile {
         if self.is_visible() {
-            self.surface.byte()
+            self.surface.tile()
         } else {
             Self::NONE
         }
@@ -85,11 +85,11 @@ impl<S> GetMut2D for Field<S> {
     }
 }
 
-impl<S: Tile> fmt::Display for Field<S> {
+impl<S: Drawable> fmt::Display for Field<S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for v in &self.inner {
             for cell in v {
-                write!(f, "{}", cell.surface.byte() as char)?;
+                write!(f, "{}", cell.surface.tile())?;
             }
             writeln!(f, "")?;
         }

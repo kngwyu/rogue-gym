@@ -300,7 +300,7 @@ mod test {
     use dungeon::rogue::rooms;
     use rect_iter::{Get2D, GetMut2D};
     use std::collections::VecDeque;
-    use Tile;
+    use Drawable;
     fn to_buffer() -> Vec<Vec<Surface>> {
         let rooms = rooms::test::gen(10);
         let mut buffer = rooms::test::draw_to_buffer(&rooms);
@@ -332,7 +332,7 @@ mod test {
     fn print_impl(buffer: &Vec<Vec<Surface>>) {
         for v in buffer {
             for x in v {
-                print!("{}", x.byte() as char);
+                print!("{}", x.tile())
             }
             println!("");
         }
