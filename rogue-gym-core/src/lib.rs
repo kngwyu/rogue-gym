@@ -136,11 +136,27 @@ pub struct RunTime {
 }
 
 impl RunTime {
+    fn react_system(&mut self, input: input::System) -> GameResult<(UiState, Vec<Reaction>)> {
+        Ok((UiState::Dungeon, vec![]))
+    }
     pub fn react_to_input(&mut self, input: InputCode) -> GameResult<Vec<Reaction>> {
-        let transition = match self.ui {
-            UiState::Dungeon => {}
-        };
-        Ok(vec![])
+        match self.ui {
+            UiState::Dungeon => match input {
+                InputCode::Sys(s) => {
+                    let (next_ui, res) = self.react_system(s)
+                        .chain_err("[rogue_gym_core::RunTime::react_to_input]")?;
+                    self.ui = next_ui;
+                    Ok(res)
+                }
+                InputCode::Act(a) => Ok(vec![]),
+                InputCode::Both { .. } => Ok(vec![]),
+            },
+            UiState::Mordal(kind) => match input {
+                InputCode::Sys(s) => Ok(vec![]),
+                InputCode::Act(a) => Ok(vec![]),
+                InputCode::Both { .. } => Ok(vec![]),
+            },
+        }
     }
     pub fn react_to_key(&mut self, key: Key) -> GameResult<Vec<Reaction>> {
         match self.keymap.get(key) {

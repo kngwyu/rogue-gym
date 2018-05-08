@@ -25,70 +25,76 @@
         "gold_per_level": 10
     },
     "keymap": {
-        "b": {
-            "Game": {
-                "Move": "LeftDown"
-            }
-        },
-        "n": {
-            "Game": {
-                "Move": "RightDown"
+        "k": {
+            "Act": {
+                "Move": "Up"
             }
         },
         "h": {
-            "Game": {
+            "Act": {
+                "Move": "Left"
+            }
+        },
+        "n": {
+            "Both": {
+                "act": {
+                    "Move": "RightDown"
+                },
+                "sys": "No"
+            }
+        },
+        "b": {
+            "Act": {
+                "Move": "LeftDown"
+            }
+        },
+        "Left": {
+            "Act": {
                 "Move": "Left"
             }
         },
         "Up": {
-            "Game": {
+            "Act": {
                 "Move": "Up"
-            }
-        },
-        "Q": {
-            "System": "Quit"
-        },
-        "l": {
-            "Game": {
-                "Move": "Right"
-            }
-        },
-        "Down": {
-            "Game": {
-                "Move": "Down"
             }
         },
         "Right": {
-            "Game": {
+            "Act": {
                 "Move": "Right"
             }
         },
-        "u": {
-            "Game": {
-                "Move": "RightUp"
-            }
-        },
-        "Left": {
-            "Game": {
-                "Move": "Left"
-            }
-        },
         "S": {
-            "System": "Save"
-        },
-        "k": {
-            "Game": {
-                "Move": "Up"
-            }
+            "Sys": "Save"
         },
         "j": {
-            "Game": {
+            "Act": {
                 "Move": "Down"
             }
         },
         "y": {
-            "Game": {
-                "Move": "LeftUp"
+            "Both": {
+                "act": {
+                    "Move": "LeftUp"
+                },
+                "sys": "Yes"
+            }
+        },
+        "Down": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "l": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "Q": {
+            "Sys": "Quit"
+        },
+        "u": {
+            "Act": {
+                "Move": "RightUp"
             }
         }
     }

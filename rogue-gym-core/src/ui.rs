@@ -3,6 +3,12 @@ use std::fmt;
 #[derive(Clone, Copy, Eq, PartialEq, Hash)]
 pub enum UiState {
     Dungeon,
+    Mordal(MordalKind),
+}
+
+#[derive(Clone, Copy, Eq, PartialEq, Hash)]
+pub enum MordalKind {
+    Quit,
 }
 
 /// Tile id

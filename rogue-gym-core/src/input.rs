@@ -25,20 +25,32 @@ impl Default for KeyMap {
     fn default() -> Self {
         use self::Direction::*;
         let map = vec![
-            (Key::Char('l'), InputCode::Game(Action::Move(Right))),
-            (Key::Char('k'), InputCode::Game(Action::Move(Up))),
-            (Key::Char('j'), InputCode::Game(Action::Move(Down))),
-            (Key::Char('h'), InputCode::Game(Action::Move(Left))),
-            (Key::Char('u'), InputCode::Game(Action::Move(RightUp))),
-            (Key::Char('y'), InputCode::Game(Action::Move(LeftUp))),
-            (Key::Char('n'), InputCode::Game(Action::Move(RightDown))),
-            (Key::Char('b'), InputCode::Game(Action::Move(LeftDown))),
-            (Key::Up, InputCode::Game(Action::Move(Up))),
-            (Key::Down, InputCode::Game(Action::Move(Down))),
-            (Key::Left, InputCode::Game(Action::Move(Left))),
-            (Key::Right, InputCode::Game(Action::Move(Right))),
-            (Key::Char('S'), InputCode::System(System::Save)),
-            (Key::Char('Q'), InputCode::System(System::Quit)),
+            (Key::Char('l'), InputCode::Act(Action::Move(Right))),
+            (Key::Char('k'), InputCode::Act(Action::Move(Up))),
+            (Key::Char('j'), InputCode::Act(Action::Move(Down))),
+            (Key::Char('h'), InputCode::Act(Action::Move(Left))),
+            (Key::Char('u'), InputCode::Act(Action::Move(RightUp))),
+            (
+                Key::Char('y'),
+                InputCode::Both {
+                    act: Action::Move(LeftUp),
+                    sys: System::Yes,
+                },
+            ),
+            (
+                Key::Char('n'),
+                InputCode::Both {
+                    act: Action::Move(RightDown),
+                    sys: System::No,
+                },
+            ),
+            (Key::Char('b'), InputCode::Act(Action::Move(LeftDown))),
+            (Key::Up, InputCode::Act(Action::Move(Up))),
+            (Key::Down, InputCode::Act(Action::Move(Down))),
+            (Key::Left, InputCode::Act(Action::Move(Left))),
+            (Key::Right, InputCode::Act(Action::Move(Right))),
+            (Key::Char('S'), InputCode::Sys(System::Save)),
+            (Key::Char('Q'), InputCode::Sys(System::Quit)),
         ];
         let inner: HashMap<_, _> = map.into_iter().collect();
         KeyMap { inner }
@@ -103,15 +115,19 @@ impl<'de> Deserialize<'de> for KeyMap {
 /// Categorized user input
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, Hash, Eq, PartialEq)]
 pub enum InputCode {
-    Game(Action),
-    System(System),
+    Act(Action),
+    Both { act: Action, sys: System },
+    Sys(System),
 }
 
 /// System input
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, Hash, Eq, PartialEq)]
 pub enum System {
+    Enter,
+    No,
     Save,
     Quit,
+    Yes,
 }
 
 /// a representation of Keyboard input
