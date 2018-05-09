@@ -98,6 +98,31 @@ impl Dungeon {
             _ => unimplemented!(),
         }
     }
+    pub(crate) fn select_cell(&mut self, is_character: bool) -> Option<DungeonPath> {
+        match self {
+            Dungeon::Rogue(dungeon) => {
+                let cd = dungeon
+                    .current_floor
+                    .select_cell(&mut dungeon.rng, is_character)?;
+                Some(
+                    rogue::Address {
+                        level: dungeon.level,
+                        cd,
+                    }.into(),
+                )
+            }
+            _ => unimplemented!(),
+        }
+    }
+    pub(crate) fn enter_room(&mut self, path: DungeonPath) -> GameResult<()> {
+        match self {
+            Dungeon::Rogue(dungeon) => {
+                let address = rogue::Address::from(path);
+                dungeon.current_floor.move_player(address.cd)
+            }
+            _ => unimplemented!(),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize, Hash, Eq, PartialEq)]
@@ -105,6 +130,6 @@ pub struct DungeonPath(Vec<i32>);
 
 impl From<rogue::Address> for DungeonPath {
     fn from(r: rogue::Address) -> DungeonPath {
-        DungeonPath(vec![r.level as i32, r.coord.x.0, r.coord.y.0])
+        DungeonPath(vec![r.level as i32, r.cd.x.0, r.cd.y.0])
     }
 }

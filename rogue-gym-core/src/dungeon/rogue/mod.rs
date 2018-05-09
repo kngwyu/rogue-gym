@@ -156,18 +156,18 @@ impl Surface {
 
 pub struct Dungeon {
     /// current level
-    level: u32,
+    pub level: u32,
     /// amulet level or more deeper level the player visited
-    max_level: u32,
+    pub max_level: u32,
     /// current floor
-    current_floor: Floor,
+    pub current_floor: Floor,
     /// configurations are constant
     /// dungeon specific configuration
-    config: Config,
+    pub config: Config,
     /// global configuration(constant)
-    config_global: GlobalConfig,
+    pub config_global: GlobalConfig,
     /// random number generator
-    rng: RngHandle,
+    pub rng: RngHandle,
 }
 
 impl Dungeon {
@@ -218,7 +218,7 @@ impl Dungeon {
         if address.level != self.level {
             return false;
         }
-        if let Ok(cell) = self.current_floor.field.try_get_p(address.coord) {
+        if let Ok(cell) = self.current_floor.field.try_get_p(address.cd) {
             cell.surface == Surface::Stair
         } else {
             false
@@ -228,7 +228,7 @@ impl Dungeon {
         if address.level != self.level {
             return false;
         }
-        self.current_floor.can_move_player(address.coord, direction)
+        self.current_floor.can_move_player(address.cd, direction)
     }
     pub(crate) fn move_player(
         &mut self,
@@ -239,10 +239,10 @@ impl Dungeon {
         if address.level != self.level {
             return logic_err();
         }
-        let cd = address.coord + direction.to_cd();
+        let cd = address.cd + direction.to_cd();
         let address = Address {
             level: self.level,
-            coord: cd,
+            cd,
         };
         self.current_floor.move_player(cd).map(|_| address.into())
     }
@@ -261,7 +261,7 @@ pub(crate) struct Address {
     /// level
     pub(crate) level: u32,
     /// coordinate
-    pub(crate) coord: Coord,
+    pub(crate) cd: Coord,
 }
 
 impl From<DungeonPath> for Address {
@@ -269,7 +269,7 @@ impl From<DungeonPath> for Address {
         assert!(d.0.len() == 3, "Address::from invalid value {:?}", d);
         Address {
             level: d.0[0] as u32,
-            coord: Coord::new(d.0[1], d.0[2]),
+            cd: Coord::new(d.0[1], d.0[2]),
         }
     }
 }

@@ -97,21 +97,13 @@ impl Room {
         let range = self.range()?;
         range.index(cd)
     }
-    /// modifiy the a cell's condition to 'not filled'
-    pub fn empty_cell(&mut self, cd: Coord) -> bool {
-        if let Some(id) = self.get_cell_id(cd) {
-            self.empty_cells.remove(id)
-        } else {
-            false
-        }
-    }
     /// modifiy the a cell's condition to 'filled'
     pub fn fill_cell(&mut self, cd: Coord, is_character: bool) -> bool {
         if let Some(id) = self.get_cell_id(cd) {
             if is_character {
-                self.nocharacter_cells.insert(id);
+                self.nocharacter_cells.remove(id);
             }
-            self.empty_cells.insert(id)
+            self.empty_cells.remove(id)
         } else {
             false
         }
@@ -133,6 +125,9 @@ impl Room {
             RoomKind::Empty { .. } => true,
             _ => false,
         }
+    }
+    pub fn contains(&self, cd: Coord) -> bool {
+        self.assigned_area.contains(cd)
     }
     fn select_cell_impl(&self, set: &FenwickSet, rng: &mut RngHandle) -> Option<Coord> {
         self.range().and_then(|range| {

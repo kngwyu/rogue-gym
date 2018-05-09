@@ -17,7 +17,7 @@ pub(crate) fn process_action(
     match action {
         Action::DownStair => {
             if dungeon.is_downstair(player.pos.clone()) {
-                new_level(info, dungeon, player, item, false)
+                new_level(info, dungeon, item, player, false)
                     .chain_err("[action::process_action]")?;
                 Ok(vec![Reaction::Redraw])
             } else {
@@ -52,6 +52,8 @@ pub(crate) fn new_level(
             .new_level(info, item)
             .chain_err("[action::process_action]")?;
     }
-
-    Ok(())
+    player.pos = dungeon
+        .select_cell(true)
+        .expect("Couldn't find space for player![action::new_level]");
+    dungeon.enter_room(player.pos.clone())
 }

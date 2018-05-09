@@ -1,10 +1,8 @@
 use fenwick::FenwickSet;
 use num_traits::PrimInt;
 pub(crate) use rand::Rng;
-use rand::{
-    distributions::uniform::SampleUniform, thread_rng, Error as RndError, RngCore, SeedableRng,
-    XorShiftRng,
-};
+use rand::{distributions::uniform::SampleUniform, thread_rng, Error as RndError, RngCore,
+           SeedableRng, XorShiftRng};
 use std::convert;
 use std::fmt::Debug;
 use std::ops::Range;
@@ -48,6 +46,14 @@ impl RngHandle {
         RandomSelecter {
             offset: range.start,
             selected: FenwickSet::from_range(0..width),
+            rng: self,
+        }
+    }
+    /// select some values randomly using given FenwickSet
+    pub fn select_with<T: PrimInt>(&mut self, set: FenwickSet) -> RandomSelecter<T> {
+        RandomSelecter {
+            offset: T::zero(),
+            selected: set,
             rng: self,
         }
     }

@@ -9,6 +9,12 @@ pub struct FenwickSet {
     max_val: usize,
 }
 
+impl Default for FenwickSet {
+    fn default() -> Self {
+        FenwickSet::with_capacity(10)
+    }
+}
+
 impl FenwickSet {
     /// create a new set with capacity [0..n)
     pub fn with_capacity(n: usize) -> Self {
@@ -23,7 +29,8 @@ impl FenwickSet {
             max_val: n - 1,
         }
     }
-    /// create a new set from range `r` with the capacity [0..r.end)
+    /// create a new set from range `range` with the capacity [0..range.end)
+    /// and already have elements [range.start..range.end)
     pub fn from_range(range: Range<usize>) -> Self {
         let (start, end) = (range.start, range.end);
         let mut set = FenwickSet::with_capacity(end);

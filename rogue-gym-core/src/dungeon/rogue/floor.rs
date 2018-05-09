@@ -1,6 +1,7 @@
 use super::{passages, rooms, Config, Room, Surface};
 use dungeon::{Cell, CellAttr, Coord, Direction, Field, Positioned, X, Y};
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
+use fenwick::FenwickSet;
 use item::ItemHandler;
 use item::ItemRc;
 use rect_iter::{Get2D, GetMut2D};
@@ -11,17 +12,31 @@ use std::collections::{HashMap, HashSet};
 pub struct Floor {
     /// rooms
     pub rooms: Vec<Room>,
-    /// numbers of rooms which is not empty
-    pub nonempty_rooms: usize,
     /// items set in the floor
     pub items: HashMap<Coord, ItemRc>,
     /// Coordinates of doors
     pub doors: HashSet<Coord>,
     /// field (level map)
     pub field: Field<Surface>,
+    /// numbers of rooms which is not empty
+    pub non_empty_rooms: FenwickSet,
 }
 
 impl Floor {
+    pub fn new(rooms: Vec<Room>, doors: HashSet<Coord>, field: Field<Surface>) -> Self {
+        let non_emptys = rooms.iter().fold(0, |acc, room| {
+            let plus = if room.is_empty() { 0 } else { 1 };
+            acc + plus
+        });
+        Floor {
+            rooms,
+            doors,
+            field,
+            items: HashMap::new(),
+            non_empty_rooms: FenwickSet::from_range(0..non_emptys),
+        }
+    }
+
     /// generate a new floor without items
     pub fn with_no_item(
         level: u32,
@@ -77,17 +92,7 @@ impl Floor {
                     })
                     .into_chained("[Floor::new] dig_passges returned invalid index")
             })?;
-        let nonempty_rooms = rooms.iter().fold(0, |acc, room| {
-            let plus = if room.is_empty() { 0 } else { 1 };
-            acc + plus
-        });
-        Ok(Floor {
-            rooms,
-            nonempty_rooms,
-            items: HashMap::new(),
-            doors,
-            field,
-        })
+        Ok(Floor::new(rooms, doors, field))
     }
     /// setup items for a floor
     pub fn setup_items(
@@ -160,7 +165,7 @@ impl Floor {
             .find(|(_, room)| room.assigned_area.contains(cd))
             .map(|t| t.0)
     }
-    fn enter_room(&mut self, cd: Coord) -> GameResult<()> {
+    pub(crate) fn enter_room(&mut self, cd: Coord) -> GameResult<()> {
         let room_num = match self.cd_to_room_id(cd) {
             Some(u) => u,
             None => {
@@ -197,7 +202,25 @@ impl Floor {
         }
         Ok(())
     }
-    pub(crate) fn select_cell(&self, rng: &mut RngHandle) -> Option<Coord> {
+    pub(crate) fn fill_cell(&mut self, cd: Coord, is_character: bool) -> bool {
+        fn fill_cell_impl(rooms: &mut Vec<Room>, cd: Coord, is_character: bool) -> Option<bool> {
+            let room = rooms.iter_mut().find(|room| room.contains(cd))?;
+            Some(room.fill_cell(cd, is_character))
+        }
+        fill_cell_impl(&mut self.rooms, cd, is_character) == Some(true)
+    }
+    pub(crate) fn select_cell(&self, rng: &mut RngHandle, is_character: bool) -> Option<Coord> {
+        let mut candidates = self.non_empty_rooms.clone();
+        while candidates.len() > 0 {
+            let room_idx = candidates
+                .select(rng)
+                .expect("Logic Error in floor::select_cell");
+            if let Some(cd) = self.rooms[room_idx].select_cell(rng, is_character) {
+                return Some(cd);
+            } else {
+                candidates.remove(room_idx);
+            }
+        }
         None
     }
 }
@@ -289,5 +312,23 @@ mod test {
             assert!(before <= hidden + 10);
             before = hidden;
         }
+    }
+    #[test]
+    fn select_cell() {
+        let config = Config::default();
+        let mut rng = RngHandle::new();
+        let (w, h) = (80, 24);
+        let mut floor = Floor::with_no_item(10, &config, X(w), Y(h), &mut rng).unwrap();
+        let mut cnt = 0;
+        for _ in 0..1000 {
+            let cd = floor.select_cell(&mut rng, false);
+            if let Some(cd) = cd {
+                cnt += 1;
+                assert!(floor.fill_cell(cd, false));
+            } else {
+                break;
+            }
+        }
+        assert!(cnt > 15);
     }
 }
