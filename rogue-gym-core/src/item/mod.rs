@@ -3,7 +3,7 @@ use rng::{Rng, RngHandle};
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::{Rc, Weak};
-use ui::{Drawable, Tile};
+use tile::{Drawable, Tile};
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum ItemKind {
     Gold,

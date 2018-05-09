@@ -1,16 +1,17 @@
+pub mod floor;
+pub mod maze;
+pub mod passages;
+pub mod rooms;
+
 use self::floor::Floor;
 pub use self::rooms::{Room, RoomKind};
 use super::{Coord, DungeonPath, X, Y};
 use error::{GameResult, ResultExt};
 use item::ItemHandler;
 use rng::RngHandle;
-use ui::{Drawable, Tile};
+use tile::{Drawable, Tile};
+use rect_iter::Get2D;
 use {GameInfo, GlobalConfig};
-
-pub mod floor;
-pub mod maze;
-pub mod passages;
-pub mod rooms;
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Config {
@@ -153,16 +154,6 @@ impl Surface {
     }
 }
 
-/// Address in the dungeon.
-/// It's quite simple in rogue.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-struct Address {
-    /// level
-    level: u32,
-    /// coordinate
-    coord: Coord,
-}
-
 pub struct Dungeon {
     /// current level
     level: u32,
@@ -217,6 +208,16 @@ impl Dungeon {
         self.current_floor = floor;
         Ok(())
     }
+    pub(crate) fn is_downstair(&self, address: Address) -> bool {
+        if address.level != self.level {
+            return false;
+        }
+        if let Ok(cell) = self.current_floor.field.try_get_p(address.coord) {
+            cell.surface == Surface::Stair
+        } else {
+            false
+        }
+    }
 }
 
 // TODO
@@ -225,16 +226,20 @@ pub struct SerializedDungeon {
     level: u32,
 }
 
+/// Address in the dungeon.
+/// It's quite simple in rogue.
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct RoguePath {
-    pub level: u32,
-    pub coord: Coord,
+pub(crate) struct Address {
+    /// level
+    pub(crate) level: u32,
+    /// coordinate
+    pub(crate) coord: Coord,
 }
 
-impl From<DungeonPath> for RoguePath {
-    fn from(d: DungeonPath) -> RoguePath {
-        assert!(d.0.len() == 3, "RoguePath::from invalid value {:?}", d);
-        RoguePath {
+impl From<DungeonPath> for Address {
+    fn from(d: DungeonPath) -> Address {
+        assert!(d.0.len() == 3, "Address::from invalid value {:?}", d);
+        Address {
             level: d.0[0] as u32,
             coord: Coord::new(d.0[1], d.0[2]),
         }

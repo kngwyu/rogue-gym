@@ -49,6 +49,7 @@ impl Default for KeyMap {
             (Key::Down, InputCode::Act(Action::Move(Down))),
             (Key::Left, InputCode::Act(Action::Move(Left))),
             (Key::Right, InputCode::Act(Action::Move(Right))),
+            (Key::Esc, InputCode::Sys(System::Cancel)),
             (Key::Char('S'), InputCode::Sys(System::Save)),
             (Key::Char('Q'), InputCode::Sys(System::Quit)),
         ];
@@ -123,6 +124,7 @@ pub enum InputCode {
 /// System input
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, Hash, Eq, PartialEq)]
 pub enum System {
+    Cancel,
     Enter,
     No,
     Save,

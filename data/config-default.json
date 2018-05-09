@@ -25,37 +25,9 @@
         "gold_per_level": 10
     },
     "keymap": {
-        "k": {
-            "Act": {
-                "Move": "Up"
-            }
-        },
-        "h": {
-            "Act": {
-                "Move": "Left"
-            }
-        },
-        "n": {
-            "Both": {
-                "act": {
-                    "Move": "RightDown"
-                },
-                "sys": "No"
-            }
-        },
         "b": {
             "Act": {
                 "Move": "LeftDown"
-            }
-        },
-        "Left": {
-            "Act": {
-                "Move": "Left"
-            }
-        },
-        "Up": {
-            "Act": {
-                "Move": "Up"
             }
         },
         "Right": {
@@ -63,12 +35,14 @@
                 "Move": "Right"
             }
         },
-        "S": {
-            "Sys": "Save"
-        },
-        "j": {
+        "Left": {
             "Act": {
-                "Move": "Down"
+                "Move": "Left"
+            }
+        },
+        "l": {
+            "Act": {
+                "Move": "Right"
             }
         },
         "y": {
@@ -79,23 +53,78 @@
                 "sys": "Yes"
             }
         },
-        "Down": {
-            "Act": {
-                "Move": "Down"
-            }
+        "S": {
+            "Sys": "Save"
         },
-        "l": {
+        "k": {
             "Act": {
-                "Move": "Right"
+                "Move": "Up"
             }
-        },
-        "Q": {
-            "Sys": "Quit"
         },
         "u": {
             "Act": {
                 "Move": "RightUp"
             }
+        },
+        "Up": {
+            "Act": {
+                "Move": "Up"
+            }
+        },
+        "j": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "n": {
+            "Both": {
+                "act": {
+                    "Move": "RightDown"
+                },
+                "sys": "No"
+            }
+        },
+        "Down": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "Q": {
+            "Sys": "Quit"
+        },
+        "h": {
+            "Act": {
+                "Move": "Left"
+            }
+        }
+    },
+    "player": {
+        "init_hp": 12,
+        "init_strength": 16,
+        "level": {
+            "exps": [
+                10,
+                20,
+                40,
+                80,
+                160,
+                320,
+                640,
+                1300,
+                2600,
+                5200,
+                13000,
+                26000,
+                50000,
+                100000,
+                200000,
+                400000,
+                800000,
+                2000000,
+                4000000,
+                8000000,
+                0
+            ]
         }
     }
 }

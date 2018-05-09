@@ -4,7 +4,6 @@ mod field;
 mod rogue;
 pub use self::coord::{Coord, Direction, Positioned, X, Y};
 pub use self::field::{Cell, CellAttr, Field};
-use self::rogue::RoguePath;
 use error::{GameResult, ResultExt};
 use item::ItemHandler;
 use {GameInfo, GlobalConfig};
@@ -57,13 +56,33 @@ pub enum Dungeon {
     Custom,
 }
 
-impl Dungeon {}
+impl Dungeon {
+    pub(crate) fn is_downstair(&self, path: DungeonPath) -> bool {
+        match self {
+            Dungeon::Rogue(dungeon) => {
+                let address = rogue::Address::from(path);
+                dungeon.is_downstair(address)
+            }
+            _ => unimplemented!(),
+        }
+    }
+    pub(crate) fn new_level(
+        &mut self,
+        game_info: &GameInfo,
+        item: &mut ItemHandler,
+    ) -> GameResult<()> {
+        match self {
+            Dungeon::Rogue(dungeon) => dungeon.new_level(game_info, item),
+            _ => unimplemented!(),
+        }
+    }
+}
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize, Hash, Eq, PartialEq)]
 pub struct DungeonPath(Vec<i32>);
 
-impl From<RoguePath> for DungeonPath {
-    fn from(r: RoguePath) -> DungeonPath {
+impl From<rogue::Address> for DungeonPath {
+    fn from(r: rogue::Address) -> DungeonPath {
         DungeonPath(vec![r.level as i32, r.coord.x.0, r.coord.y.0])
     }
 }

@@ -34,11 +34,11 @@ impl PlayerConfig {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Player {
     /// player position
-    pos: DungeonPath,
+    pub(crate) pos: DungeonPath,
     /// player status
-    status: PlayerStatus,
+    pub(crate) status: PlayerStatus,
     /// level map
-    leveling: Leveling,
+    pub(crate) leveling: Leveling,
 }
 
 /// Player status

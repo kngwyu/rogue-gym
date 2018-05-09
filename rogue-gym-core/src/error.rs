@@ -17,6 +17,7 @@ pub enum ErrorId {
     IncompleteInput,
     #[msg(short = "Invalid Setting")]
     InvalidSetting,
+    Unimplemented,
     // it's intended to use only in 'immediate panic pattern'
     LogicError,
 }

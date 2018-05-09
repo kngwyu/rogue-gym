@@ -300,7 +300,7 @@ mod test {
     use dungeon::rogue::rooms;
     use rect_iter::{Get2D, GetMut2D};
     use std::collections::VecDeque;
-    use ui::Drawable;
+    use tile::Drawable;
     fn to_buffer() -> Vec<Vec<Surface>> {
         let rooms = rooms::test::gen(10);
         let mut buffer = rooms::test::draw_to_buffer(&rooms);

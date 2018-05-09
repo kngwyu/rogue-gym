@@ -18,7 +18,7 @@ pub struct Floor {
     /// Coordinates of doors
     pub doors: HashSet<Coord>,
     /// field (level map)
-    field: Field<Surface>,
+    pub field: Field<Surface>,
 }
 
 impl Floor {
@@ -144,7 +144,7 @@ mod test {
     use item::ItemConfig;
     use rect_iter::{Get2D, RectRange};
     use rng::Rng;
-    use ui::Drawable;
+    use tile::Drawable;
     #[test]
     #[ignore]
     fn print_floor() {

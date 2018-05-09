@@ -3,7 +3,7 @@ use super::{X, Y};
 use num_traits::ToPrimitive;
 use rect_iter::{Get2D, GetMut2D, IndexError};
 use std::fmt;
-use ui::{Drawable, Tile};
+use tile::{Drawable, Tile};
 
 /// Generic representation of Cell
 #[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]

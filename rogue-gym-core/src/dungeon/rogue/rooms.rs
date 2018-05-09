@@ -260,7 +260,7 @@ pub(crate) mod test {
     use super::*;
     use dungeon::Direction;
     use rect_iter::GetMut2D;
-    use ui::Drawable;
+    use tile::Drawable;
     pub(crate) fn gen(level: u32) -> Vec<Room> {
         let config = Config::default();
         let (w, h) = (X(80), Y(24));
