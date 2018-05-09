@@ -105,9 +105,9 @@ impl Floor {
                 .filter(|room| !room.is_empty())
                 .for_each(|room| {
                     item_handle.setup_gold(level, |item_rc| {
-                        if let Some(cell) = room.select_empty_cell(rng) {
+                        if let Some(cell) = room.select_cell(rng, false) {
                             items.insert(cell, item_rc);
-                            room.fill_cell(cell);
+                            room.fill_cell(cell, false);
                         }
                     })
                 });
@@ -196,6 +196,9 @@ impl Floor {
             cell.attr |= CellAttr::IS_VISITED;
         }
         Ok(())
+    }
+    pub(crate) fn select_cell(&self, rng: &mut RngHandle) -> Option<Coord> {
+        None
     }
 }
 

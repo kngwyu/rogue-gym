@@ -35,8 +35,10 @@ pub struct Room {
     pub assigned_area: RectRange<i32>,
     /// if the player has visited the room or notify
     pub is_visited: bool,
-    /// cells where we can set an object
+    /// cells which has no object
     empty_cells: FenwickSet,
+    /// cells which has no enemy
+    nocharacter_cells: FenwickSet,
 }
 
 impl Room {
@@ -47,6 +49,7 @@ impl Room {
             is_dark,
             id,
             assigned_area: assigned,
+            nocharacter_cells: empty_cells.clone(),
             empty_cells,
             is_visited: false,
         }
@@ -103,19 +106,15 @@ impl Room {
         }
     }
     /// modifiy the a cell's condition to 'filled'
-    pub fn fill_cell(&mut self, cd: Coord) -> bool {
+    pub fn fill_cell(&mut self, cd: Coord, is_character: bool) -> bool {
         if let Some(id) = self.get_cell_id(cd) {
+            if is_character {
+                self.nocharacter_cells.insert(id);
+            }
             self.empty_cells.insert(id)
         } else {
             false
         }
-    }
-    /// select a cell where we can set an object
-    pub fn select_empty_cell(&self, rng: &mut RngHandle) -> Option<Coord> {
-        self.range().and_then(|range| {
-            let cell_n = self.empty_cells.select(rng)?;
-            range.nth(cell_n).map(|t| Coord::from(t))
-        })
     }
     pub fn is_normal(&self) -> bool {
         match self.kind {
@@ -133,6 +132,19 @@ impl Room {
         match self.kind {
             RoomKind::Empty { .. } => true,
             _ => false,
+        }
+    }
+    fn select_cell_impl(&self, set: &FenwickSet, rng: &mut RngHandle) -> Option<Coord> {
+        self.range().and_then(|range| {
+            let cell_n = set.select(rng)?;
+            range.nth(cell_n).map(|t| Coord::from(t))
+        })
+    }
+    pub fn select_cell(&self, rng: &mut RngHandle, is_character: bool) -> Option<Coord> {
+        if is_character {
+            self.select_cell_impl(&self.nocharacter_cells, rng)
+        } else {
+            self.select_cell_impl(&self.empty_cells, rng)
         }
     }
 }

@@ -157,6 +157,8 @@ impl Surface {
 pub struct Dungeon {
     /// current level
     level: u32,
+    /// amulet level or more deeper level the player visited
+    max_level: u32,
     /// current floor
     current_floor: Floor,
     /// configurations are constant
@@ -180,6 +182,7 @@ impl Dungeon {
         let rng = RngHandle::from_seed(seed);
         let mut dungeon = Dungeon {
             level: 1,
+            max_level: config.amulet_level,
             current_floor: Floor::default(),
             config,
             config_global: config_global.clone(),
@@ -199,11 +202,14 @@ impl Dungeon {
             self.level += 1;
             self.level
         };
+        if level > self.max_level {
+            self.max_level = level;
+        }
         let (width, height) = (self.config_global.width, self.config_global.height);
         let mut floor = Floor::with_no_item(level, &self.config, width, height, &mut self.rng)
             .chain_err("[Dungeon::new_floor]")?;
         // setup gold
-        let set_gold = game_info.is_cleared || level >= self.config.amulet_level;
+        let set_gold = game_info.is_cleared || level >= self.max_level;
         floor.setup_items(level, item_handle, set_gold, &mut self.rng);
         self.current_floor = floor;
         Ok(())

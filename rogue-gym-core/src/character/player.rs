@@ -4,17 +4,15 @@ use dungeon::{Direction, DungeonPath};
 /// Player configuration
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct PlayerConfig {
-    init_hp: i64,
-    init_strength: i64,
     level: Leveling,
+    hunger_time: u32,
 }
 
 impl Default for PlayerConfig {
     fn default() -> Self {
         PlayerConfig {
-            init_hp: 12,
-            init_strength: 16,
             level: Leveling::default(),
+            hunger_time: 1300,
         }
     }
 }
@@ -25,7 +23,7 @@ impl PlayerConfig {
         Player {
             pos: DungeonPath::default(),
             status,
-            leveling: self.level,
+            config: self,
         }
     }
 }
@@ -35,10 +33,10 @@ impl PlayerConfig {
 pub struct Player {
     /// player position
     pub(crate) pos: DungeonPath,
-    /// player status
+    /// player status(for drawing)
     pub(crate) status: PlayerStatus,
-    /// level map
-    pub(crate) leveling: Leveling,
+    /// configuration
+    pub(crate) config: PlayerConfig,
 }
 
 /// Player status
@@ -62,15 +60,19 @@ pub struct PlayerStatus {
 impl PlayerStatus {
     fn new(config: &PlayerConfig) -> Self {
         PlayerStatus {
-            hp: Maxed::max(HitPoint(config.init_hp)),
-            strength: Maxed::max(Strength(config.init_strength)),
-            // STUB!
-            defense: 10.into(),
+            hp: Maxed::max(HitPoint(12)),       // STUB
+            strength: Maxed::max(Strength(16)), // STUB
+            defense: 10.into(),                 // STUB
             exp: Exp(0),
             level: 1,
             hunger: Hunger::Normal,
         }
     }
+}
+
+/// statuses only for internal
+pub struct StatusInner {
+    hunger_time: u32,
 }
 
 /// possible player actions
