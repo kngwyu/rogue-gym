@@ -4,8 +4,10 @@ mod field;
 mod rogue;
 pub use self::coord::{Coord, Direction, Positioned, X, Y};
 pub use self::field::{Cell, CellAttr, Field};
-use error::{GameResult, ResultExt};
+use error::{ErrorId, ErrorKind, GameResult, ResultExt};
+use error_chain_mini::ChainedError;
 use item::ItemHandler;
+use tile::Tile;
 use {GameInfo, GlobalConfig};
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
@@ -119,6 +121,23 @@ impl Dungeon {
             Dungeon::Rogue(dungeon) => {
                 let address = rogue::Address::from(path);
                 dungeon.current_floor.move_player(address.cd)
+            }
+            _ => unimplemented!(),
+        }
+    }
+    pub(crate) fn draw<F, E>(
+        &self,
+        player_pos: DungeonPath,
+        drawer: F,
+    ) -> Result<(), ChainedError<E>>
+    where
+        F: FnMut(Positioned<Tile>) -> Result<(), ChainedError<E>>,
+        E: From<ErrorId> + ErrorKind,
+    {
+        match self {
+            Dungeon::Rogue(dungeon) => {
+                let address = rogue::Address::from(player_pos);
+                dungeon.draw(address.cd, drawer)
             }
             _ => unimplemented!(),
         }

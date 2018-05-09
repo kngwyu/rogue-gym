@@ -41,6 +41,7 @@ mod ui;
 use character::{Player, PlayerConfig};
 use dungeon::{Dungeon, DungeonStyle, Positioned, X, Y};
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
+use error_chain_mini::ChainedError;
 use input::{InputCode, Key, KeyMap};
 use item::{ItemConfig, ItemHandler};
 pub use tile::Tile;
@@ -160,11 +161,13 @@ impl RunTime {
                 .into_with("[rogue_gym_core::RunTime::check_interuppting]")),
         }
     }
-    pub fn draw_screen<F, E>(&self, drawer: F) -> Result<(), E>
+    pub fn draw_screen<F, E>(&self, drawer: F) -> Result<(), ChainedError<E>>
     where
-        F: FnMut(Positioned<Tile>) -> Result<(), E>,
+        F: FnMut(Positioned<Tile>) -> Result<(), ChainedError<E>>,
+        E: From<ErrorId> + ErrorKind,
     {
-        // STUB!!!
+        // floor => item => character
+
         Ok(())
     }
     pub fn react_to_input(&mut self, input: InputCode) -> GameResult<Vec<Reaction>> {

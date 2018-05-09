@@ -5,8 +5,9 @@ pub mod rooms;
 
 use self::floor::Floor;
 pub use self::rooms::{Room, RoomKind};
-use super::{Coord, Direction, DungeonPath, X, Y};
+use super::{Coord, Direction, DungeonPath, Positioned, X, Y};
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
+use error_chain_mini::ChainedError;
 use item::ItemHandler;
 use rect_iter::Get2D;
 use rng::RngHandle;
@@ -245,6 +246,15 @@ impl Dungeon {
             cd,
         };
         self.current_floor.move_player(cd).map(|_| address.into())
+    }
+    pub(crate) fn draw<F, E>(&self, player_pos: Coord, mut drawer: F) -> Result<(), ChainedError<E>>
+    where
+        F: FnMut(Positioned<Tile>) -> Result<(), ChainedError<E>>,
+        E: From<ErrorId> + ErrorKind,
+    {
+        // first, draw field
+        let range = self.current_floor.field.size();
+        Ok(())
     }
 }
 

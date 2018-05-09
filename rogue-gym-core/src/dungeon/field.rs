@@ -1,7 +1,7 @@
 //! General field representation
 use super::{X, Y};
 use num_traits::ToPrimitive;
-use rect_iter::{Get2D, GetMut2D, IndexError};
+use rect_iter::{Get2D, GetMut2D, IndexError, RectRange};
 use std::fmt;
 use tile::{Drawable, Tile};
 
@@ -64,6 +64,14 @@ impl CellAttr {
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Field<S> {
     inner: Vec<Vec<Cell<S>>>,
+}
+
+impl<S> Field<S> {
+    pub fn size(&self) -> Option<RectRange<i32>> {
+        let y = self.inner.len();
+        let x = self.inner.get(0)?.len();
+        RectRange::zero_start(x as i32, y as i32)
+    }
 }
 
 impl<S: Clone> Field<S> {
