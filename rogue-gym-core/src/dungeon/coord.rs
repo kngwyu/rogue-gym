@@ -131,6 +131,13 @@ impl Direction {
             Stay => Stay,
         }
     }
+    pub fn is_diag(self) -> bool {
+        use self::Direction::*;
+        match self {
+            LeftUp | LeftDown | RightDown | RightUp => true,
+            _ => false,
+        }
+    }
 }
 
 pub struct DirectionIter<F> {

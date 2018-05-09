@@ -76,6 +76,28 @@ impl Dungeon {
             _ => unimplemented!(),
         }
     }
+    pub(crate) fn can_move_player(&self, path: DungeonPath, direction: Direction) -> bool {
+        match self {
+            Dungeon::Rogue(dungeon) => {
+                let address = rogue::Address::from(path);
+                dungeon.can_move_player(address, direction)
+            }
+            _ => unimplemented!(),
+        }
+    }
+    pub(crate) fn move_player(
+        &mut self,
+        path: DungeonPath,
+        direction: Direction,
+    ) -> GameResult<DungeonPath> {
+        match self {
+            Dungeon::Rogue(dungeon) => {
+                let address = rogue::Address::from(path);
+                dungeon.move_player(address, direction)
+            }
+            _ => unimplemented!(),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize, Hash, Eq, PartialEq)]

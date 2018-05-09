@@ -5,12 +5,12 @@ pub mod rooms;
 
 use self::floor::Floor;
 pub use self::rooms::{Room, RoomKind};
-use super::{Coord, DungeonPath, X, Y};
-use error::{GameResult, ResultExt};
+use super::{Coord, Direction, DungeonPath, X, Y};
+use error::{ErrorId, ErrorKind, GameResult, ResultExt};
 use item::ItemHandler;
+use rect_iter::Get2D;
 use rng::RngHandle;
 use tile::{Drawable, Tile};
-use rect_iter::Get2D;
 use {GameInfo, GlobalConfig};
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
@@ -217,6 +217,28 @@ impl Dungeon {
         } else {
             false
         }
+    }
+    pub(crate) fn can_move_player(&self, address: Address, direction: Direction) -> bool {
+        if address.level != self.level {
+            return false;
+        }
+        self.current_floor.can_move_player(address.coord, direction)
+    }
+    pub(crate) fn move_player(
+        &mut self,
+        address: Address,
+        direction: Direction,
+    ) -> GameResult<DungeonPath> {
+        let logic_err = || Err(ErrorId::LogicError.into_with("[rogue::Dungeon::move_player]"));
+        if address.level != self.level {
+            return logic_err();
+        }
+        let cd = address.coord + direction.to_cd();
+        let address = Address {
+            level: self.level,
+            coord: cd,
+        };
+        self.current_floor.move_player(cd).map(|_| address.into())
     }
 }
 

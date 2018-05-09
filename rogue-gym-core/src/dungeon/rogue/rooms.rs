@@ -31,18 +31,24 @@ pub struct Room {
     /// id for room
     /// it's unique in same floor
     pub id: usize,
+    /// a range punctuated when generating rooms
+    pub assigned_area: RectRange<i32>,
+    /// if the player has visited the room or notify
+    pub is_visited: bool,
     /// cells where we can set an object
     empty_cells: FenwickSet,
 }
 
 impl Room {
-    fn new(kind: RoomKind, is_dark: bool, id: usize) -> Self {
+    fn new(kind: RoomKind, is_dark: bool, id: usize, assigned: RectRange<i32>) -> Self {
         let empty_cells = gen_empty_cells(&kind);
         Room {
             kind,
             is_dark,
             id,
+            assigned_area: assigned,
             empty_cells,
+            is_visited: false,
         }
     }
     /// takes a closure `register` and draw room by it
@@ -208,6 +214,7 @@ pub(crate) fn make_room(
     level: u32,
     rng: &mut RngHandle,
 ) -> GameResult<Room> {
+    let assigned_range = RectRange::from_corners(upper_left, upper_left + room_size).unwrap();
     if is_empty {
         let (x, y) = (room_size.x.0, room_size.y.0)
             .map(|size| rng.range(1..size - 1))
@@ -218,6 +225,7 @@ pub(crate) fn make_room(
             },
             true,
             id,
+            assigned_range,
         ));
     }
     let is_dark = rng.range(0..config.dark_level) + 1 < level;
@@ -252,7 +260,7 @@ pub(crate) fn make_room(
         // Take care that doors is empty at this phase
         RoomKind::Normal { range: room_range }
     };
-    Ok(Room::new(kind, is_dark, id))
+    Ok(Room::new(kind, is_dark, id, assigned_range))
 }
 
 #[cfg(test)]

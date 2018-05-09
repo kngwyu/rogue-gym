@@ -1,9 +1,9 @@
 use super::{passages, rooms, Config, Room, Surface};
-use dungeon::{Cell, CellAttr, Coord, Field, Positioned, X, Y};
-use error::{GameResult, ResultExt};
+use dungeon::{Cell, CellAttr, Coord, Direction, Field, Positioned, X, Y};
+use error::{ErrorId, ErrorKind, GameResult, ResultExt};
 use item::ItemHandler;
 use item::ItemRc;
-use rect_iter::GetMut2D;
+use rect_iter::{Get2D, GetMut2D};
 use rng::RngHandle;
 use std::collections::{HashMap, HashSet};
 /// representation of 'floor'
@@ -67,7 +67,7 @@ impl Floor {
                     .map(|mut_cell| {
                         let attr = attr_gen(surface, rng, level, config);
                         // if the door is hiddden, don't draw it
-                        if !(attr.contains(CellAttr::IS_HIDDEN) && surface == Surface::Door) {
+                        if !mut_cell.attr.is_hidden() {
                             mut_cell.surface = surface;
                         }
                         if surface == Surface::Door {
@@ -114,6 +114,89 @@ impl Floor {
         }
         self.items = items;
     }
+    fn can_move_impl(&self, cd: Coord, direction: Direction, is_enemy: bool) -> GameResult<bool> {
+        let cur_cell = self.field.try_get_p(cd).into_chained("")?;
+        let nxt_cell = self.field
+            .try_get_p(cd + direction.to_cd())
+            .into_chained("")?;
+        // TODO: trap
+        let mut res = match cur_cell.surface {
+            Surface::Floor => match nxt_cell.surface {
+                Surface::Floor | Surface::Stair | Surface::Trap => true,
+                Surface::Door | Surface::Passage => !direction.is_diag(),
+                _ => false,
+            },
+            Surface::Passage => match nxt_cell.surface {
+                Surface::Passage | Surface::Stair | Surface::Trap | Surface::Door => {
+                    !direction.is_diag() || is_enemy
+                }
+                _ => false,
+            },
+            Surface::Door => match nxt_cell.surface {
+                Surface::Passage
+                | Surface::Stair
+                | Surface::Trap
+                | Surface::Door
+                | Surface::Floor => !direction.is_diag(),
+                _ => false,
+            },
+            _ => false,
+        };
+        res &= nxt_cell.surface.can_walk();
+        res &= !nxt_cell.attr.is_hidden();
+        Ok(res)
+    }
+    pub(crate) fn can_move_player(&self, cd: Coord, direction: Direction) -> bool {
+        if let Ok(b) = self.can_move_impl(cd, direction, false) {
+            b
+        } else {
+            false
+        }
+    }
+    fn cd_to_room_id(&self, cd: Coord) -> Option<usize> {
+        self.rooms
+            .iter()
+            .enumerate()
+            .find(|(_, room)| room.assigned_area.contains(cd))
+            .map(|t| t.0)
+    }
+    fn enter_room(&mut self, cd: Coord) -> GameResult<()> {
+        let room_num = match self.cd_to_room_id(cd) {
+            Some(u) => u,
+            None => {
+                return Err(ErrorId::LogicError.into_with("[Floor::enter_room] no room for given cd"))
+            }
+        };
+        let range = {
+            let room = &mut self.rooms[room_num];
+            if !room.is_normal() || room.is_visited || room.is_dark {
+                room.is_visited = true;
+                return Ok(());
+            }
+            room.range().unwrap().to_owned()
+        };
+        range.iter().try_for_each(|cd| {
+            if range.is_edge(cd) {
+                return Ok(());
+            }
+            self.field
+                .try_get_mut_p(cd)
+                .map(|mut_cell| {
+                    mut_cell.attr |= CellAttr::IS_DRAWN;
+                    mut_cell.attr |= CellAttr::IS_VISIBLE;
+                })
+                .into_chained("[Floor::enter_room]")
+        })
+    }
+    pub(crate) fn move_player(&mut self, cd: Coord) -> GameResult<()> {
+        if self.doors.contains(&cd) {
+            self.enter_room(cd).chain_err("[Floor::move_player]")?;
+        }
+        if let Ok(cell) = self.field.try_get_mut_p(cd) {
+            cell.attr |= CellAttr::IS_VISITED;
+        }
+        Ok(())
+    }
 }
 
 // generate initial attribute of cell
@@ -131,7 +214,7 @@ fn attr_gen(surface: Surface, rng: &mut RngHandle, level: u32, config: &Config) 
             if rng.range(0..config.dark_level) + 1 < level
                 && rng.does_happen(config.locked_door_rate_inv)
             {
-                attr |= CellAttr::IS_HIDDEN;
+                attr |= CellAttr::IS_LOCKED;
             }
         }
         _ => {}

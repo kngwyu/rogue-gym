@@ -38,13 +38,13 @@ mod rng;
 mod tile;
 mod ui;
 
-use character::{Action, Player, PlayerConfig};
-use dungeon::{Dungeon, DungeonStyle, X, Y};
+use character::{Player, PlayerConfig};
+use dungeon::{Dungeon, DungeonStyle, Positioned, X, Y};
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
 use input::{InputCode, Key, KeyMap};
 use item::{ItemConfig, ItemHandler};
 pub use tile::Tile;
-use ui::{MordalKind, UiState};
+use ui::{MordalKind, MordalMsg, UiState};
 /// Game configuration
 /// it's inteded to construct from json
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
@@ -160,14 +160,18 @@ impl RunTime {
                 .into_with("[rogue_gym_core::RunTime::check_interuppting]")),
         }
     }
-    // STUB!!!
-    fn process_action(&mut self, input: Action) -> GameResult<Vec<Reaction>> {
-        Ok(vec![])
+    pub fn draw_screen<F, E>(&self, drawer: F) -> Result<(), E>
+    where
+        F: FnMut(Positioned<Tile>) -> Result<(), E>,
+    {
+        // STUB!!!
+        Ok(())
     }
     pub fn react_to_input(&mut self, input: InputCode) -> GameResult<Vec<Reaction>> {
-        match self.ui {
-            UiState::Dungeon => {
-                let res = match input {
+        let (next_ui, res) = match self.ui {
+            UiState::Dungeon => (
+                None,
+                match input {
                     InputCode::Sys(sys) => self.check_interrupting(sys),
                     InputCode::Act(act) | InputCode::Both { act, .. } => action::process_action(
                         act,
@@ -177,19 +181,31 @@ impl RunTime {
                         &mut self.item,
                         &mut self.player,
                     ),
-                };
-                res.chain_err("[rogue_gym_core::RunTime::react_to_input]")
-            }
+                },
+            ),
             UiState::Mordal(ref mut kind) => match input {
                 InputCode::Sys(sys) | InputCode::Both { sys, .. } => {
                     let res = kind.process(sys);
-                    // STUB!
-                    Ok(vec![])
+                    match res {
+                        MordalMsg::Cancel => (
+                            Some(UiState::Dungeon),
+                            Ok(vec![Reaction::UiTransition(UiState::Dungeon)]),
+                        ),
+                        MordalMsg::Save => (
+                            Some(UiState::Dungeon),
+                            Err(ErrorId::Unimplemented.into_with("Save command is unimplemented")),
+                        ),
+                        MordalMsg::Quit => (None, Ok(vec![Reaction::Notify(GameMsg::Quit)])),
+                        MordalMsg::None => (None, Ok(vec![])),
+                    }
                 }
-                InputCode::Act(_) => Err(ErrorId::IgnoredInput(input)
-                    .into_with("[rogue_gym_core::RunTime::react_to_input]")),
+                InputCode::Act(_) => (None, Err(ErrorId::IgnoredInput(input).into_err())),
             },
+        };
+        if let Some(next_ui) = next_ui {
+            self.ui = next_ui;
         }
+        res
     }
     pub fn react_to_key(&mut self, key: Key) -> GameResult<Vec<Reaction>> {
         match self.keymap.get(key) {
@@ -205,16 +221,19 @@ impl RunTime {
 #[derive(Clone, Debug)]
 pub enum Reaction {
     /// dungeon
-    Redraw(Vec<Vec<u8>>),
+    Redraw,
     /// Ui State changed
     UiTransition(UiState),
     /// Game Messages,
     Notify(GameMsg),
 }
 
-// STUB
 #[derive(Clone, Debug)]
-pub enum GameMsg {}
+pub enum GameMsg {
+    CantMove,
+    NoDownStair,
+    Quit,
+}
 
 // TODO
 #[derive(Clone, Debug, Serialize, Deserialize)]

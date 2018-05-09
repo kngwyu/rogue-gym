@@ -54,6 +54,12 @@ bitflags! {
     }
 }
 
+impl CellAttr {
+    pub fn is_hidden(&self) -> bool {
+        self.contains(CellAttr::IS_HIDDEN) || self.contains(CellAttr::IS_LOCKED)
+    }
+}
+
 /// generic representation of Field
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Field<S> {

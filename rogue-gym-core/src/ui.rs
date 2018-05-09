@@ -1,22 +1,33 @@
-use input;
+use input::System;
+
+/// A representation of Ui transition
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub enum UiState {
     Dungeon,
     Mordal(MordalKind),
 }
 
+/// mordals
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MordalKind {
     Quit,
 }
 
 impl MordalKind {
-    pub(crate) fn process(&mut self, input: input::System) -> MordalMsg {
-        // STUB!
-        MordalMsg::A
+    pub fn process(&mut self, input: System) -> MordalMsg {
+        match self {
+            MordalKind::Quit => match input {
+                System::Cancel | System::No => MordalMsg::Cancel,
+                System::Yes => MordalMsg::Quit,
+                _ => MordalMsg::None,
+            },
+        }
     }
 }
 
-pub(crate) enum MordalMsg {
-    A,
+pub enum MordalMsg {
+    Quit,
+    Save,
+    Cancel,
+    None,
 }
