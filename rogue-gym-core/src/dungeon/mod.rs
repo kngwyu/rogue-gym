@@ -40,7 +40,7 @@ impl DungeonStyle {
                 let dungeon =
                     rogue::Dungeon::new(config, config_global, game_info, item_handle, seed)
                         .chain_err("[DungeonStyle::build]")?;
-                Ok(Dungeon::Rogue(dungeon))
+                Ok(Dungeon::Rogue(Box::new(dungeon)))
             }
             _ => unimplemented!(),
         }
@@ -49,7 +49,7 @@ impl DungeonStyle {
 
 /// Dungeon Implementation
 pub enum Dungeon {
-    Rogue(rogue::Dungeon),
+    Rogue(Box<rogue::Dungeon>),
     /// not implemented now
     NetHack,
     /// not implemented now
@@ -102,17 +102,7 @@ impl Dungeon {
     }
     pub(crate) fn select_cell(&mut self, is_character: bool) -> Option<DungeonPath> {
         match self {
-            Dungeon::Rogue(dungeon) => {
-                let cd = dungeon
-                    .current_floor
-                    .select_cell(&mut dungeon.rng, is_character)?;
-                Some(
-                    rogue::Address {
-                        level: dungeon.level,
-                        cd,
-                    }.into(),
-                )
-            }
+            Dungeon::Rogue(dungeon) => dungeon.select_cell(is_character),
             _ => unimplemented!(),
         }
     }
@@ -150,5 +140,11 @@ pub struct DungeonPath(Vec<i32>);
 impl From<rogue::Address> for DungeonPath {
     fn from(r: rogue::Address) -> DungeonPath {
         DungeonPath(vec![r.level as i32, r.cd.x.0, r.cd.y.0])
+    }
+}
+
+impl From<Vec<i32>> for DungeonPath {
+    fn from(v: Vec<i32>) -> DungeonPath {
+        DungeonPath(v)
     }
 }

@@ -247,6 +247,11 @@ impl Dungeon {
         };
         self.current_floor.move_player(cd).map(|_| address.into())
     }
+    pub(crate) fn select_cell(&mut self, is_character: bool) -> Option<DungeonPath> {
+        self.current_floor
+            .select_cell(&mut self.rng, is_character)
+            .map(|cd| vec![self.level as i32, cd.x.0, cd.y.0].into())
+    }
     pub(crate) fn draw<F, E>(&self, player_pos: Coord, mut drawer: F) -> Result<(), ChainedError<E>>
     where
         F: FnMut(Positioned<Tile>) -> Result<(), ChainedError<E>>,
