@@ -1,6 +1,7 @@
 #![allow(stable_features)]
 #![feature(dyn_trait, try_from, try_iterator)]
-#![cfg_attr(test, feature(test))]
+#![cfg_attr(test, feature(test, plugin))]
+#![cfg_attr(test, plugin(clippy))]
 
 #[macro_use]
 extern crate bitflags;
@@ -287,7 +288,7 @@ mod config_test {
         let game_config = GameConfig::default();
         let json = serde_json::to_string(&game_config).unwrap();
         let mut file = File::create("../data/config-default.json").unwrap();
-        file.write(json.as_bytes()).unwrap();
+        file.write_all(json.as_bytes()).unwrap();
     }
     #[test]
     fn default() {

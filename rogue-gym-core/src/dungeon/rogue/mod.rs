@@ -266,7 +266,7 @@ pub struct SerializedDungeon {
 
 /// Address in the dungeon.
 /// It's quite simple in rogue.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub(crate) struct Address {
     /// level
     pub(crate) level: u32,

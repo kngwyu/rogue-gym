@@ -1,14 +1,23 @@
 use fenwick::FenwickSet;
 use num_traits::PrimInt;
 pub(crate) use rand::Rng;
-use rand::{distributions::uniform::SampleUniform, thread_rng, Error as RndError, RngCore,
-           SeedableRng, XorShiftRng};
+use rand::{
+    distributions::uniform::SampleUniform, thread_rng, Error as RndError, RngCore, SeedableRng,
+    XorShiftRng,
+};
+#[cfg(test)]
 use std::convert;
 use std::fmt::Debug;
 use std::ops::Range;
 /// wrapper of XorShiftRng
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RngHandle(XorShiftRng);
+
+impl Default for RngHandle {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 pub fn gen_seed() -> u64 {
     let mut rng = thread_rng();

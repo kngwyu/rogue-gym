@@ -78,7 +78,7 @@ pub struct Item {
 }
 
 impl Item {
-    fn merge<F>(self, other: Self, attr_merger: Option<F>) -> Self
+    fn merge<F>(self, other: &Self, attr_merger: Option<F>) -> Self
     where
         F: FnOnce(ItemAttr, ItemAttr) -> ItemAttr,
     {

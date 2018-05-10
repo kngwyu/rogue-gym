@@ -329,12 +329,12 @@ mod test {
         let buffer = to_buffer();
         print_impl(&buffer);
     }
-    fn print_impl(buffer: &Vec<Vec<Surface>>) {
+    fn print_impl(buffer: &[Vec<Surface>]) {
         for v in buffer {
             for x in v {
                 print!("{}", x.tile())
             }
-            println!("");
+            println!();
         }
     }
     #[test]

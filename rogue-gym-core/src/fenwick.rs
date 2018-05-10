@@ -1,4 +1,6 @@
-use rng::{Rng, RngHandle};
+use rng::Rng;
+#[cfg(test)]
+use rng::RngHandle;
 use std::ops::Range;
 
 /// a set implementation using Fenwick Tree
@@ -19,7 +21,7 @@ impl FenwickSet {
     /// create a new set with capacity [0..n)
     pub fn with_capacity(n: usize) -> Self {
         assert!(
-            n <= 5_000_000_0,
+            n <= 50_000_000,
             "We can't construct too big FenwickSet: size {}",
             n
         );
@@ -32,9 +34,8 @@ impl FenwickSet {
     /// create a new set from range `range` with the capacity [0..range.end)
     /// and already have elements [range.start..range.end)
     pub fn from_range(range: Range<usize>) -> Self {
-        let (start, end) = (range.start, range.end);
-        let mut set = FenwickSet::with_capacity(end);
-        (start..end).for_each(|i| {
+        let mut set = FenwickSet::with_capacity(range.end);
+        range.for_each(|i| {
             set.insert(i);
         });
         set

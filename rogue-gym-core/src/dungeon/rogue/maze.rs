@@ -20,14 +20,14 @@ where
     register(start).chain_err("[dungeon::rogue::maze::dig_maze]")?;
     let mut used = HashSet::new();
     used.insert(start);
-    dig_impl(range, rng, &mut register, &mut used, start)
+    dig_impl(&range, rng, &mut register, &mut used, start)
         .chain_err("[dungeon::rogue::maze::dig_maze]")
 }
 
 /// implementation of maze digging by DFS
 // in this function we don't chain error, because this is sub function of dig_maze
 fn dig_impl<F>(
-    range: RectRange<i32>,
+    range: &RectRange<i32>,
     rng: &mut RngHandle,
     register: &mut F,
     used: &mut HashSet<Coord>,
@@ -37,7 +37,6 @@ where
     F: FnMut(Coord) -> GameResult<()>,
 {
     loop {
-        let range_cloned = range.clone();
         let dig_dir = Direction::iter_variants()
             .take(4)
             .filter(|dir| {
@@ -58,7 +57,7 @@ where
             }
         }
         let next = current_cd + dig_dir.to_cd().scale(2, 2);
-        dig_impl(range_cloned, rng, register, used, next)?;
+        dig_impl(&range, rng, register, used, next)?;
     }
     Ok(())
 }
@@ -90,7 +89,7 @@ mod test {
                     print!(" ");
                 }
             }
-            println!("");
+            println!();
         }
     }
 }

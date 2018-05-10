@@ -285,7 +285,7 @@ mod test {
                 };
                 print!("{}", tile);
                 if cd.x == X(79) {
-                    println!("");
+                    println!();
                 }
             });
     }

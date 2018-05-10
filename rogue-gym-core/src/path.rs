@@ -111,10 +111,7 @@ impl Interner {
         sym
     }
     fn get(&self, sym: Symbol) -> Option<&str> {
-        match self.strings.get(sym as usize) {
-            Some(ref s) => Some(s),
-            None => None,
-        }
+        self.strings.get(sym as usize).map(|s| s.as_ref())
     }
 }
 

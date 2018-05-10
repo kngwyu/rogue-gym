@@ -106,7 +106,7 @@ impl<S: Drawable> fmt::Display for Field<S> {
             for cell in v {
                 write!(f, "{}", cell.surface.tile())?;
             }
-            writeln!(f, "")?;
+            writeln!(f)?;
         }
         Ok(())
     }

@@ -1,4 +1,3 @@
-use dungeon::{X, Y};
 use error_chain_mini::ChainedError;
 pub(crate) use error_chain_mini::ErrorKind;
 pub(crate) use error_chain_mini::ResultExt;
@@ -13,14 +12,13 @@ pub enum ErrorId {
     InvalidInput(Key),
     #[msg(short = "ignored input", detailed = "code: {:?}", _0)]
     IgnoredInput(InputCode),
-    #[msg(short = "Incomplete input")]
     IncompleteInput,
-    #[msg(short = "Invalid Setting")]
+    #[msg(short = "Invalid value in setting")]
     InvalidSetting,
+    #[msg(short = "Logic Error(maybe bug)")]
+    LogicError,
     // STUB
     Unimplemented,
-    // it's intended to use only in 'immediate panic pattern'
-    LogicError,
 }
 
 impl From<IndexError> for ErrorId {

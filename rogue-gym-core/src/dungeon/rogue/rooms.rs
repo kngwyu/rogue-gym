@@ -81,7 +81,7 @@ impl Room {
                 ref passages,
             } => passages
                 .iter()
-                .try_for_each(|&cd| register(Positioned(cd.into(), Surface::Passage)))
+                .try_for_each(|&cd| register(Positioned(cd, Surface::Passage)))
                 .chain_err("[Room::draw]"),
             RoomKind::Empty { .. } => Ok(()),
         }
@@ -132,7 +132,7 @@ impl Room {
     fn select_cell_impl(&self, set: &FenwickSet, rng: &mut RngHandle) -> Option<Coord> {
         self.range().and_then(|range| {
             let cell_n = set.select(rng)?;
-            range.nth(cell_n).map(|t| Coord::from(t))
+            range.nth(cell_n).map(Coord::from)
         })
     }
     pub fn select_cell(&self, rng: &mut RngHandle, is_character: bool) -> Option<Coord> {
@@ -249,10 +249,7 @@ pub(crate) fn make_room(
                 Err(ErrorId::LogicError.into_with("dig_maze produced invalid Coordinate!"))
             }
         })?;
-        RoomKind::Maze {
-            range: range,
-            passages: passages,
-        }
+        RoomKind::Maze { range, passages }
     } else {
         // normal
         let size = {
@@ -301,7 +298,7 @@ pub(crate) mod test {
             for x in v {
                 print!("{}", x.tile())
             }
-            println!("");
+            println!();
         }
     }
     #[test]
