@@ -48,6 +48,7 @@ impl DungeonStyle {
 }
 
 /// Dungeon Implementation
+#[derive(Clone, Serialize, Deserialize)]
 pub enum Dungeon {
     Rogue(Box<rogue::Dungeon>),
     /// not implemented now

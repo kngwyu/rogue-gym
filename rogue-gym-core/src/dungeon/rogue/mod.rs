@@ -156,6 +156,8 @@ impl Surface {
     }
 }
 
+/// representation of rogue dungeon
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Dungeon {
     /// current level
     pub level: u32,
@@ -288,12 +290,6 @@ impl Dungeon {
 
         Ok(())
     }
-}
-
-// TODO
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct SerializedDungeon {
-    level: u32,
 }
 
 /// Address in the dungeon.

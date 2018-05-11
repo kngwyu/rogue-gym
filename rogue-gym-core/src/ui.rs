@@ -1,14 +1,14 @@
 use input::System;
 
 /// A representation of Ui transition
-#[derive(Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum UiState {
     Dungeon,
     Mordal(MordalKind),
 }
 
 /// mordals
-#[derive(Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum MordalKind {
     Quit,
 }

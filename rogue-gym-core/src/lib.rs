@@ -135,7 +135,7 @@ impl GameConfig {
 }
 
 /// API entry point of rogue core
-// TODO: maybe just reference is better than Weak?
+#[derive(Clone, Serialize, Deserialize)]
 pub struct RunTime {
     game_info: GameInfo,
     config: GlobalConfig,
@@ -237,13 +237,6 @@ pub enum GameMsg {
     CantMove,
     NoDownStair,
     Quit,
-}
-
-// TODO
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct SaveData {
-    game_info: GameInfo,
-    config: GlobalConfig,
 }
 
 /// Global configuration

@@ -60,7 +60,6 @@ impl Room {
         R: FnMut(Positioned<Surface>) -> GameResult<()>,
     {
         match self.kind {
-            // TODO: door
             RoomKind::Normal { ref range } => range
                 .iter()
                 .try_for_each(|cd| {

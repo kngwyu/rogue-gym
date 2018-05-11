@@ -64,9 +64,9 @@ impl Serialize for KeyMap {
         S: Serializer,
     {
         let mut map = serializer.serialize_map(Some(self.inner.len()))?;
-        for (k, v) in &self.inner {
-            map.serialize_entry(&k.to_str(), v)?;
-        }
+        self.inner
+            .iter()
+            .try_for_each(|(k, v)| map.serialize_entry(&k.to_str(), v))?;
         map.end()
     }
 }

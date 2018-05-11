@@ -100,7 +100,7 @@ impl Item {
 }
 
 /// generate and management all items
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct ItemHandler {
     /// stores all items in the game
     items: BTreeMap<ItemId, Item>,

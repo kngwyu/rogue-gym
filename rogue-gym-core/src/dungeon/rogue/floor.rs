@@ -7,7 +7,7 @@ use rect_iter::{Get2D, GetMut2D};
 use rng::RngHandle;
 use std::collections::HashSet;
 /// representation of 'floor'
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Floor {
     /// rooms
     pub rooms: Vec<Room>,
@@ -115,11 +115,9 @@ impl Floor {
         }
         Ok(())
     }
-    fn can_move_impl(&self, cd: Coord, direction: Direction, is_enemy: bool) -> GameResult<bool> {
-        let cur_cell = self.field.try_get_p(cd).into_chained("")?;
-        let nxt_cell = self.field
-            .try_get_p(cd + direction.to_cd())
-            .into_chained("")?;
+    fn can_move_impl(&self, cd: Coord, direction: Direction, is_enemy: bool) -> Option<bool> {
+        let cur_cell = self.field.try_get_p(cd).ok()?;
+        let nxt_cell = self.field.try_get_p(cd + direction.to_cd()).ok()?;
         // TODO: trap
         let mut res = match cur_cell.surface {
             Surface::Floor => match nxt_cell.surface {
@@ -145,14 +143,10 @@ impl Floor {
         };
         res &= nxt_cell.surface.can_walk();
         res &= !nxt_cell.attr.is_hidden();
-        Ok(res)
+        Some(res)
     }
     pub(crate) fn can_move_player(&self, cd: Coord, direction: Direction) -> bool {
-        if let Ok(b) = self.can_move_impl(cd, direction, false) {
-            b
-        } else {
-            false
-        }
+        self.can_move_impl(cd, direction, false).unwrap_or(false)
     }
     fn cd_to_room_id(&self, cd: Coord) -> Option<usize> {
         self.rooms
