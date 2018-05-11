@@ -15,8 +15,7 @@ pub enum ErrorId {
     IncompleteInput,
     #[msg(short = "Invalid value in setting")]
     InvalidSetting,
-    #[msg(short = "Logic Error(maybe bug)")]
-    LogicError,
+    MaybeBug,
     // STUB
     Unimplemented,
 }

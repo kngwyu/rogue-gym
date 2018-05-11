@@ -17,16 +17,25 @@ pub struct Coord {
 }
 
 impl Coord {
+    /// create new Coord
     pub fn new<T: Into<X>, U: Into<Y>>(x: T, y: U) -> Self {
         Coord {
             x: x.into(),
             y: y.into(),
         }
     }
+    /// calc euclidian distance of two points
     pub fn euc_dist(self, other: Coord) -> f64 {
         let (x, y) = ((self.x - other.x).0, (self.y - other.y).0);
         let f: f64 = (x, y).map(|i| i * i).sum().into();
         f.sqrt()
+    }
+    /// calc time step needto move from self to other,
+    /// with the situation where both of two coordinates are in a same room.
+    pub fn move_dist(self, other: Coord) -> i32 {
+        ((self.x - other.x).0, (self.y - other.y).0)
+            .map(|i| i.abs())
+            .tmax()
     }
     #[inline]
     pub fn scale<T: Into<i32>>(mut self, x: T, y: T) -> Self {

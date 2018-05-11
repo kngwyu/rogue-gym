@@ -34,7 +34,6 @@ pub mod error;
 mod fenwick;
 pub mod input;
 pub mod item;
-mod path;
 mod rng;
 mod tile;
 mod ui;
@@ -68,6 +67,7 @@ pub struct GameConfig {
     /// keymap configuration
     #[serde(default)]
     pub keymap: KeyMap,
+    /// player configuration
     #[serde(default)]
     pub player: PlayerConfig,
 }

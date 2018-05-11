@@ -1,9 +1,10 @@
 //! module for item
+use dungeon::DungeonPath;
+use error::{GameResult, ResultExt};
 use rng::{Rng, RngHandle};
-use std::cell::RefCell;
-use std::collections::BTreeMap;
-use std::rc::{Rc, Weak};
+use std::collections::{BTreeMap, HashMap};
 use tile::{Drawable, Tile};
+
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum ItemKind {
     Gold,
@@ -52,11 +53,11 @@ bitflags!{
     #[derive(Serialize, Deserialize)]
     pub struct ItemAttr: u32 {
         /// the item is cursed or not
-        const IS_CURSED = 0b00000001;
+        const IS_CURSED = 0b00_000_001;
         /// we can throw that item or not
-        const CAN_THROW = 0b00000010;
+        const CAN_THROW = 0b00_000_010;
         /// we can merge 2 sets of the item or not
-        const IS_MANY   = 0b00000100;
+        const IS_MANY   = 0b00_000_100;
     }
 }
 
@@ -98,24 +99,13 @@ impl Item {
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct ItemRc {
-    pub id: ItemId,
-    item: Rc<RefCell<Item>>,
-}
-
-impl Drawable for ItemRc {
-    fn tile(&self) -> Tile {
-        self.item.borrow().kind.tile()
-    }
-}
-
 /// generate and management all items
 #[derive(Clone)]
 pub struct ItemHandler {
     /// stores all items in the game
-    // TODO: do we really need this
-    items: BTreeMap<ItemId, Weak<RefCell<Item>>>,
+    items: BTreeMap<ItemId, Item>,
+    /// items placed in the dungeon
+    placed_items: HashMap<DungeonPath, ItemId>,
     config: ItemConfig,
     rng: RngHandle,
     next_id: ItemId,
@@ -125,34 +115,35 @@ impl ItemHandler {
     pub fn new(config: ItemConfig, seed: u64) -> Self {
         ItemHandler {
             items: BTreeMap::new(),
+            placed_items: HashMap::new(),
             config,
             rng: RngHandle::from_seed(seed),
             next_id: ItemId(0),
         }
     }
     /// generate and register an item
-    pub fn gen_item<F>(&mut self, itemgen: F) -> ItemRc
+    pub fn gen_item<F>(&mut self, itemgen: F) -> ItemId
     where
         F: FnOnce() -> Item,
     {
         let item = itemgen();
         let id = self.next_id.clone();
-        let item = Rc::new(RefCell::new(item));
-        let weak_item = Rc::downgrade(&item);
         // register the generated item
-        self.items.insert(id.clone(), weak_item);
+        self.items.insert(id.clone(), item);
         self.next_id.increment();
-        ItemRc { id, item }
+        id
     }
     /// setup gold for 1 room
-    pub fn setup_gold<F>(&mut self, level: u32, mut register: F)
+    pub fn setup_gold<F>(&mut self, level: u32, mut empty_cell: F) -> GameResult<()>
     where
-        F: FnMut(ItemRc),
+        F: FnMut() -> GameResult<DungeonPath>,
     {
         if let Some(num) = self.gen_gold(level) {
-            let item_rc = self.gen_item(|| ItemKind::Gold.numbered(num).many());
-            register(item_rc)
+            let item_id = self.gen_item(|| ItemKind::Gold.numbered(num).many());
+            let place = empty_cell().chain_err("[ItemHandler::setup_gold]")?;
+            self.placed_items.insert(place, item_id);
         }
+        Ok(())
     }
     /// setup gold for 1 room
     fn gen_gold(&mut self, level: u32) -> Option<ItemNum> {

@@ -75,7 +75,7 @@ mod test {
         let mut buffer = vec![vec![false; 80]; 24];
         dig_maze(range.clone(), &mut rng, |cd| {
             if !range.contains(cd) {
-                Err(ErrorId::LogicError.into_with("dig_maze produced invalid Coordinate!"))
+                Err(ErrorId::MaybeBug.into_with("dig_maze produced invalid Coordinate!"))
             } else {
                 *buffer.get_mut_p(cd) = true;
                 Ok(())

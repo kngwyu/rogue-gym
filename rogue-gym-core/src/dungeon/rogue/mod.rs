@@ -9,8 +9,9 @@ use super::{Coord, Direction, DungeonPath, Positioned, X, Y};
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
 use error_chain_mini::ChainedError;
 use item::ItemHandler;
-use rect_iter::Get2D;
+use rect_iter::{Get2D, GetMut2D};
 use rng::RngHandle;
+use std::cell::RefCell;
 use tile::{Drawable, Tile};
 use {GameInfo, GlobalConfig};
 
@@ -162,8 +163,7 @@ pub struct Dungeon {
     pub max_level: u32,
     /// current floor
     pub current_floor: Floor,
-    /// configurations are constant
-    /// dungeon specific configuration
+    /// dungeon specific configuration(constant)
     pub config: Config,
     /// global configuration(constant)
     pub config_global: GlobalConfig,
@@ -207,11 +207,13 @@ impl Dungeon {
             self.max_level = level;
         }
         let (width, height) = (self.config_global.width, self.config_global.height);
-        let mut floor = Floor::with_no_item(level, &self.config, width, height, &mut self.rng)
+        let floor = Floor::gen_floor(level, &self.config, width, height, &mut self.rng)
             .chain_err("[Dungeon::new_floor]")?;
         // setup gold
         let set_gold = game_info.is_cleared || level >= self.max_level;
-        floor.setup_items(level, item_handle, set_gold, &mut self.rng);
+        self.current_floor
+            .setup_items(level, item_handle, set_gold, &mut self.rng)
+            .chain_err("[Dungeon::new_floor]")?;
         self.current_floor = floor;
         Ok(())
     }
@@ -236,9 +238,8 @@ impl Dungeon {
         address: Address,
         direction: Direction,
     ) -> GameResult<DungeonPath> {
-        let logic_err = || Err(ErrorId::LogicError.into_with("[rogue::Dungeon::move_player]"));
         if address.level != self.level {
-            return logic_err();
+            return Err(ErrorId::MaybeBug.into_with("[rogue::Dungeon::move_player]"));
         }
         let cd = address.cd + direction.to_cd();
         let address = Address {
@@ -252,13 +253,39 @@ impl Dungeon {
             .select_cell(&mut self.rng, is_character)
             .map(|cd| vec![self.level as i32, cd.x.0, cd.y.0].into())
     }
-    pub(crate) fn draw<F, E>(&self, player_pos: Coord, mut drawer: F) -> Result<(), ChainedError<E>>
+    pub(crate) fn draw<F, E>(
+        &mut self,
+        player_pos: Coord,
+        mut callback: F,
+    ) -> Result<(), ChainedError<E>>
     where
-        F: FnMut(Positioned<Tile>) -> Result<(), ChainedError<E>>,
+        F: FnMut(Positioned<Tile>) -> Result<(), E>,
         E: From<ErrorId> + ErrorKind,
     {
+        const ERR_STR: &str = "[rogue::Dungeon::move_player]";
+        let range = self.current_floor
+            .field
+            .size()
+            .ok_or_else(|| E::from(ErrorId::MaybeBug).into_with(ERR_STR))?;
         // first, draw field
-        let range = self.current_floor.field.size();
+        range
+            .into_iter()
+            .try_for_each(|cd| {
+                let cell = self.current_floor
+                    .field
+                    .try_get_mut_p(cd)
+                    .map_err(|e| E::from(ErrorId::from(e)))?;
+                let cd = Coord::from(cd);
+                match cd.move_dist(player_pos) {
+                    0 => cell.visit(),
+                    1 => cell.approached_by_player(),
+                    _ => {}
+                }
+                let tile = cell.tile();
+                callback(Positioned(cd, tile))
+            })
+            .into_chained(ERR_STR)?;
+
         Ok(())
     }
 }

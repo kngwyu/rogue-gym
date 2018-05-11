@@ -54,6 +54,6 @@ pub(crate) fn new_level(
     }
     player.pos = dungeon
         .select_cell(true)
-        .ok_or_else(|| ErrorId::LogicError.into_with("[action::new_level] No space for player!"))?;
+        .ok_or_else(|| ErrorId::MaybeBug.into_with("[action::new_level] No space for player!"))?;
     dungeon.enter_room(player.pos.clone())
 }

@@ -246,7 +246,7 @@ pub(crate) fn make_room(
                 passages.insert(cd);
                 Ok(())
             } else {
-                Err(ErrorId::LogicError.into_with("dig_maze produced invalid Coordinate!"))
+                Err(ErrorId::MaybeBug.into_with("dig_maze produced invalid Coordinate!"))
             }
         })?;
         RoomKind::Maze { range, passages }

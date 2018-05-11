@@ -3,17 +3,14 @@ use dungeon::{Cell, CellAttr, Coord, Direction, Field, Positioned, X, Y};
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
 use fenwick::FenwickSet;
 use item::ItemHandler;
-use item::ItemRc;
 use rect_iter::{Get2D, GetMut2D};
 use rng::RngHandle;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 /// representation of 'floor'
 #[derive(Clone, Debug, Default)]
 pub struct Floor {
     /// rooms
     pub rooms: Vec<Room>,
-    /// items set in the floor
-    pub items: HashMap<Coord, ItemRc>,
     /// Coordinates of doors
     pub doors: HashSet<Coord>,
     /// field (level map)
@@ -23,8 +20,8 @@ pub struct Floor {
 }
 
 impl Floor {
-    pub fn new(rooms: Vec<Room>, doors: HashSet<Coord>, field: Field<Surface>) -> Self {
-        let non_emptys = rooms.iter().fold(0, |acc, room| {
+    fn new(rooms: Vec<Room>, doors: HashSet<Coord>, field: Field<Surface>) -> Self {
+        let num_non_empty = rooms.iter().fold(0, |acc, room| {
             let plus = if room.is_empty() { 0 } else { 1 };
             acc + plus
         });
@@ -32,13 +29,12 @@ impl Floor {
             rooms,
             doors,
             field,
-            items: HashMap::new(),
-            non_empty_rooms: FenwickSet::from_range(0..non_emptys),
+            non_empty_rooms: FenwickSet::from_range(0..num_non_empty),
         }
     }
 
     /// generate a new floor without items
-    pub fn with_no_item(
+    pub fn gen_floor(
         level: u32,
         config: &Config,
         width: X,
@@ -101,23 +97,23 @@ impl Floor {
         item_handle: &mut ItemHandler,
         set_gold: bool,
         rng: &mut RngHandle,
-    ) {
-        let mut items = HashMap::new();
+    ) -> GameResult<()> {
         // setup gold
         if set_gold {
             self.rooms
                 .iter_mut()
                 .filter(|room| !room.is_empty())
-                .for_each(|room| {
-                    item_handle.setup_gold(level, |item_rc| {
-                        if let Some(cell) = room.select_cell(rng, false) {
-                            items.insert(cell, item_rc);
-                            room.fill_cell(cell, false);
-                        }
+                .try_for_each(|room| {
+                    item_handle.setup_gold(level, || {
+                        let cd = room.select_cell(rng, false).ok_or_else(|| {
+                            ErrorId::MaybeBug.into_with("[rogue::Dungeon::setup_items]")
+                        })?;
+                        room.fill_cell(cd, false);
+                        Ok(vec![level as i32, cd.x.0, cd.y.0].into())
                     })
-                });
+                })?;
         }
-        self.items = items;
+        Ok(())
     }
     fn can_move_impl(&self, cd: Coord, direction: Direction, is_enemy: bool) -> GameResult<bool> {
         let cur_cell = self.field.try_get_p(cd).into_chained("")?;
@@ -169,7 +165,7 @@ impl Floor {
         let room_num = match self.cd_to_room_id(cd) {
             Some(u) => u,
             None => {
-                return Err(ErrorId::LogicError.into_with("[Floor::enter_room] no room for given cd"))
+                return Err(ErrorId::MaybeBug.into_with("[Floor::enter_room] no room for given cd"))
             }
         };
         let range = {
@@ -248,46 +244,17 @@ fn attr_gen(surface: Surface, rng: &mut RngHandle, level: u32, config: &Config) 
     attr
 }
 
+#[cfg(test)]
 mod test {
     use super::*;
-    use item::ItemConfig;
-    use rect_iter::{Get2D, RectRange};
-    use rng::Rng;
-    use tile::Drawable;
+    use rect_iter::RectRange;
     #[test]
     #[ignore]
     fn print_floor() {
         let config = Config::default();
         let mut rng = RngHandle::new();
-        let floor = Floor::with_no_item(10, &config, X(80), Y(24), &mut rng).unwrap();
+        let floor = Floor::gen_floor(10, &config, X(80), Y(24), &mut rng).unwrap();
         println!("{}", floor.field);
-    }
-    #[test]
-    #[ignore]
-    fn print_item_floor() {
-        let config = Config::default();
-        let mut rng = RngHandle::new();
-        let mut floor = Floor::with_no_item(10, &config, X(80), Y(24), &mut rng).unwrap();
-        let item_config = ItemConfig::default();
-        let mut rng = RngHandle::new();
-        let mut item_handle = ItemHandler::new(item_config, rng.gen());
-        floor.setup_items(10, &mut item_handle, true, &mut rng);
-        println!("{}", floor.field);
-        RectRange::zero_start(80, 24)
-            .unwrap()
-            .into_iter()
-            .for_each(|cd| {
-                let cd: Coord = cd.into();
-                let tile = if let Some(item) = floor.items.get(&cd) {
-                    item.tile()
-                } else {
-                    floor.field.get_p(cd).surface.tile()
-                };
-                print!("{}", tile);
-                if cd.x == X(79) {
-                    println!();
-                }
-            });
     }
     #[test]
     fn secret_door() {
@@ -298,7 +265,7 @@ mod test {
         for i in 1..10 {
             let mut hidden = 0;
             for _ in 0..100 {
-                let floor = Floor::with_no_item(i, &config, X(w), Y(h), &mut rng).unwrap();
+                let floor = Floor::gen_floor(i, &config, X(w), Y(h), &mut rng).unwrap();
                 hidden += RectRange::zero_start(w, h)
                     .unwrap()
                     .into_iter()
@@ -318,7 +285,7 @@ mod test {
         let config = Config::default();
         let mut rng = RngHandle::new();
         let (w, h) = (80, 24);
-        let mut floor = Floor::with_no_item(10, &config, X(w), Y(h), &mut rng).unwrap();
+        let mut floor = Floor::gen_floor(10, &config, X(w), Y(h), &mut rng).unwrap();
         let mut cnt = 0;
         for _ in 0..1000 {
             let cd = floor.select_cell(&mut rng, false);

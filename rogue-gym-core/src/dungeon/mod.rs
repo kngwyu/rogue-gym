@@ -116,12 +116,12 @@ impl Dungeon {
         }
     }
     pub(crate) fn draw<F, E>(
-        &self,
+        &mut self,
         player_pos: DungeonPath,
         drawer: F,
     ) -> Result<(), ChainedError<E>>
     where
-        F: FnMut(Positioned<Tile>) -> Result<(), ChainedError<E>>,
+        F: FnMut(Positioned<Tile>) -> Result<(), E>,
         E: From<ErrorId> + ErrorKind,
     {
         match self {
