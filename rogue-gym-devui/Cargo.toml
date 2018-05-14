@@ -1,0 +1,12 @@
+[package]
+name = "rogue-gym-devui"
+version = "0.0.1"
+authors = ["kngwyu <yuji.kngw.80s.revive@gmail.com>"]
+
+[dependencies]
+termion = "1.5.1"
+
+[dependencies.rogue-gym-core]
+features = ["termion"]
+path = "../rogue-gym-core/"
+version = "0.0.1"

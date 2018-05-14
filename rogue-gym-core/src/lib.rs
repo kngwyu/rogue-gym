@@ -1,7 +1,6 @@
 #![allow(stable_features)]
 #![feature(dyn_trait, try_from, try_iterator)]
-#![cfg_attr(test, feature(test, plugin))]
-#![cfg_attr(test, plugin(clippy))]
+#![cfg_attr(test, feature(test))]
 
 #[macro_use]
 extern crate bitflags;
