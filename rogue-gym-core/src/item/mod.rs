@@ -99,6 +99,12 @@ impl Item {
     }
 }
 
+impl Drawable for Item {
+    fn tile(&self) -> Tile {
+        self.kind.tile()
+    }
+}
+
 /// generate and management all items
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ItemHandler {
@@ -120,6 +126,10 @@ impl ItemHandler {
             rng: RngHandle::from_seed(seed),
             next_id: ItemId(0),
         }
+    }
+    pub fn get_ref(&self, path: &DungeonPath) -> Option<&Item> {
+        let id = self.placed_items.get(path)?;
+        self.items.get(id)
     }
     /// generate and register an item
     pub fn gen_item<F>(&mut self, itemgen: F) -> ItemId

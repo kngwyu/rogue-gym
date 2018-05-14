@@ -183,15 +183,28 @@ impl Floor {
                 .into_chained("[Floor::enter_room]")
         })
     }
-    pub(crate) fn move_player(&mut self, cd: Coord) -> GameResult<()> {
+    pub(crate) fn player_in(&mut self, cd: Coord) -> GameResult<()> {
         if self.doors.contains(&cd) {
-            self.enter_room(cd).chain_err("[Floor::move_player]")?;
+            self.enter_room(cd).chain_err("[Floor::player_in]")?;
         }
-        if let Ok(cell) = self.field.try_get_mut_p(cd) {
-            cell.attr |= CellAttr::IS_VISITED;
-        }
+        self.field
+            .try_get_mut_p(cd)
+            .into_chained("[Floor::player_in] Cannot move")?
+            .visit();
+        Direction::iter_variants().take(4).for_each(|d| {
+            let cd = cd + d.to_cd();
+            if let Ok(cell) = self.field.try_get_mut_p(cd) {
+                cell.approached_by_player();
+            }
+        });
         Ok(())
     }
+
+    // STUB
+    pub(crate) fn player_out(&mut self, cd: Coord) -> GameResult<()> {
+        Ok(())
+    }
+
     pub(crate) fn fill_cell(&mut self, cd: Coord, is_character: bool) -> bool {
         fn fill_cell_impl(rooms: &mut Vec<Room>, cd: Coord, is_character: bool) -> Option<bool> {
             let room = rooms.iter_mut().find(|room| room.contains(cd))?;

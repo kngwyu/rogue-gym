@@ -1,6 +1,6 @@
 use super::{Defense, Exp, HitPoint, Maxed, Strength};
 use dungeon::{Direction, DungeonPath};
-
+use tile::{Drawable, Tile};
 /// Player configuration
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct PlayerConfig {
@@ -37,6 +37,12 @@ pub struct Player {
     pub(crate) status: PlayerStatus,
     /// configuration
     pub(crate) config: PlayerConfig,
+}
+
+impl Drawable for Player {
+    fn tile(&self) -> Tile {
+        b'@'.into()
+    }
 }
 
 /// Player status

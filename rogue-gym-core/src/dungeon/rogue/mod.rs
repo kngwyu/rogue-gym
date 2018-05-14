@@ -9,9 +9,8 @@ use super::{Coord, Direction, DungeonPath, Positioned, X, Y};
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
 use error_chain_mini::ChainedError;
 use item::ItemHandler;
-use rect_iter::{Get2D, GetMut2D};
+use rect_iter::{Get2D, RectRange};
 use rng::RngHandle;
-use std::cell::RefCell;
 use tile::{Drawable, Tile};
 use {GameInfo, GlobalConfig};
 
@@ -196,6 +195,16 @@ impl Dungeon {
             .chain_err("[rogue::Dungeon::new]")?;
         Ok(dungeon)
     }
+    pub fn draw_ranges(&self) -> impl Iterator<Item = DungeonPath> {
+        let level = self.level;
+        let xmax = self.config_global.width.0;
+        let ymax = self.config_global.height.0 - 1;
+        RectRange::from_ranges(0..xmax, 1..ymax)
+            .unwrap()
+            .into_iter()
+            .map(move |cd| vec![level as i32, cd.0, cd.1].into())
+    }
+    /// setup next floor
     pub fn new_level(
         &mut self,
         game_info: &GameInfo,
@@ -219,6 +228,7 @@ impl Dungeon {
         self.current_floor = floor;
         Ok(())
     }
+    /// takes addrees and judge if thers's a stair at that address
     pub(crate) fn is_downstair(&self, address: Address) -> bool {
         if address.level != self.level {
             return false;
@@ -229,37 +239,42 @@ impl Dungeon {
             false
         }
     }
+    /// judge if the player can move from the address in the direction
     pub(crate) fn can_move_player(&self, address: Address, direction: Direction) -> bool {
         if address.level != self.level {
             return false;
         }
         self.current_floor.can_move_player(address.cd, direction)
     }
+    /// move the player from the address in the direction
     pub(crate) fn move_player(
         &mut self,
         address: Address,
         direction: Direction,
     ) -> GameResult<DungeonPath> {
+        const ERR_STR: &str = "[rogue::Dungeon::move_player]";
         if address.level != self.level {
-            return Err(ErrorId::MaybeBug.into_with("[rogue::Dungeon::move_player]"));
+            return Err(ErrorId::MaybeBug.into_with(ERR_STR));
         }
+        self.current_floor
+            .player_out(address.cd)
+            .chain_err(ERR_STR)?;
         let cd = address.cd + direction.to_cd();
         let address = Address {
             level: self.level,
             cd,
         };
-        self.current_floor.move_player(cd).map(|_| address.into())
+        self.current_floor.player_in(cd).chain_err(ERR_STR)?;
+        Ok(address.into())
     }
+    /// select an empty cell randomly
     pub(crate) fn select_cell(&mut self, is_character: bool) -> Option<DungeonPath> {
         self.current_floor
             .select_cell(&mut self.rng, is_character)
             .map(|cd| vec![self.level as i32, cd.x.0, cd.y.0].into())
     }
-    pub(crate) fn draw<F, E>(
-        &mut self,
-        player_pos: Coord,
-        mut callback: F,
-    ) -> Result<(), ChainedError<E>>
+    /// draw dungeon to screen by callback
+    pub(crate) fn draw<F, E>(&self, drawer: &mut F) -> Result<(), ChainedError<E>>
     where
         F: FnMut(Positioned<Tile>) -> Result<(), E>,
         E: From<ErrorId> + ErrorKind,
@@ -269,26 +284,18 @@ impl Dungeon {
             .field
             .size()
             .ok_or_else(|| E::from(ErrorId::MaybeBug).into_with(ERR_STR))?;
-        // first, draw field
         range
             .into_iter()
             .try_for_each(|cd| {
                 let cell = self.current_floor
                     .field
-                    .try_get_mut_p(cd)
+                    .try_get_p(cd)
                     .map_err(|e| E::from(ErrorId::from(e)))?;
                 let cd = Coord::from(cd);
-                match cd.move_dist(player_pos) {
-                    0 => cell.visit(),
-                    1 => cell.approached_by_player(),
-                    _ => {}
-                }
                 let tile = cell.tile();
-                callback(Positioned(cd, tile))
+                drawer(Positioned(cd, tile))
             })
-            .into_chained(ERR_STR)?;
-
-        Ok(())
+            .into_chained(ERR_STR)
     }
 }
 

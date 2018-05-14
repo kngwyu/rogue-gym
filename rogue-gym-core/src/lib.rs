@@ -44,7 +44,7 @@ use error::{ErrorId, ErrorKind, GameResult, ResultExt};
 use error_chain_mini::ChainedError;
 use input::{InputCode, Key, KeyMap};
 use item::{ItemConfig, ItemHandler};
-pub use tile::Tile;
+use tile::{Drawable, Tile};
 use ui::{MordalKind, MordalMsg, UiState};
 /// Game configuration
 /// it's inteded to construct from json
@@ -162,14 +162,27 @@ impl RunTime {
                 .into_with("[rogue_gym_core::RunTime::check_interuppting]")),
         }
     }
-    pub fn draw_screen<F, E>(&self, drawer: F) -> Result<(), ChainedError<E>>
+    pub fn draw_screen<F, E>(&self, mut drawer: F) -> Result<(), ChainedError<E>>
     where
-        F: FnMut(Positioned<Tile>) -> Result<(), ChainedError<E>>,
+        F: FnMut(Positioned<Tile>) -> Result<(), E>,
         E: From<ErrorId> + ErrorKind,
     {
-        // floor => item => character
-
-        Ok(())
+        const ERR_STR: &str = "[rogue_gym_core::RunTime::draw_screen]";
+        // floor => item & character
+        self.dungeon.draw(&mut drawer).chain_err(ERR_STR)?;
+        self.dungeon
+            .draw_ranges()
+            .try_for_each(|path| {
+                let cd = self.dungeon.path_to_cd(&path);
+                if self.player.pos == path {
+                    return drawer(Positioned(cd, self.player.tile()));
+                };
+                if let Some(item) = self.item.get_ref(&path) {
+                    return drawer(Positioned(cd, item.tile()));
+                }
+                Ok(())
+            })
+            .into_chained(ERR_STR)
     }
     pub fn react_to_input(&mut self, input: InputCode) -> GameResult<Vec<Reaction>> {
         let (next_ui, res) = match self.ui {

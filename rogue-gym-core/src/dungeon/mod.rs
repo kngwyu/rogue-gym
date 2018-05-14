@@ -111,25 +111,30 @@ impl Dungeon {
         match self {
             Dungeon::Rogue(dungeon) => {
                 let address = rogue::Address::from(path);
-                dungeon.current_floor.move_player(address.cd)
+                dungeon.current_floor.player_in(address.cd)
             }
             _ => unimplemented!(),
         }
     }
-    pub(crate) fn draw<F, E>(
-        &mut self,
-        player_pos: DungeonPath,
-        drawer: F,
-    ) -> Result<(), ChainedError<E>>
+    pub(crate) fn draw<F, E>(&self, drawer: &mut F) -> Result<(), ChainedError<E>>
     where
         F: FnMut(Positioned<Tile>) -> Result<(), E>,
         E: From<ErrorId> + ErrorKind,
     {
         match self {
-            Dungeon::Rogue(dungeon) => {
-                let address = rogue::Address::from(player_pos);
-                dungeon.draw(address.cd, drawer)
-            }
+            Dungeon::Rogue(dungeon) => dungeon.draw(drawer),
+            _ => unimplemented!(),
+        }
+    }
+    pub(crate) fn draw_ranges(&self) -> impl Iterator<Item = DungeonPath> {
+        match self {
+            Dungeon::Rogue(dungeon) => dungeon.draw_ranges(),
+            _ => unimplemented!(),
+        }
+    }
+    pub(crate) fn path_to_cd(&self, path: &DungeonPath) -> Coord {
+        match self {
+            Dungeon::Rogue(dungeon) => Coord::new(path.0[1], path.0[2]),
             _ => unimplemented!(),
         }
     }
