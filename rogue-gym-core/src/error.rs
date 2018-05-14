@@ -4,7 +4,7 @@ pub(crate) use error_chain_mini::ResultExt;
 use input::{InputCode, Key};
 use rect_iter::IndexError;
 /// Our own ErrorKind type
-#[derive(Clone, Debug, ErrorKind)]
+#[derive(Clone, ErrorKind)]
 pub enum ErrorId {
     #[msg(short = "Invalid index access", detailed = "{:?}", _0)]
     Index(IndexError),

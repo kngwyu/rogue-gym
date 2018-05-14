@@ -241,7 +241,7 @@ mod keymap_test {
 }
 
 #[cfg(feature = "termion")]
-use error::{ErrorId, GameError};
+use error::{ErrorId, ErrorKind, GameError};
 
 #[cfg(feature = "termion")]
 use std::convert::TryFrom;
@@ -252,10 +252,10 @@ use termion::event::Key as TermionKey;
 #[cfg(feature = "termion")]
 impl TryFrom<TermionKey> for Key {
     type Error = GameError;
-    fn from(key: TermionKey) -> Result<Key, GameError> {
+    fn try_from(key: TermionKey) -> Result<Key, GameError> {
         use self::TermionKey::*;
-        match key {
-            TermionKey::__IsNotComplete => Err(ErrorId::IncompleteInput.into_err()),
+        Ok(match key {
+            TermionKey::__IsNotComplete => return Err(ErrorId::IncompleteInput.into_err()),
             Backspace => Key::Backspace,
             Left => Key::Left,
             Right => Key::Right,
@@ -273,7 +273,7 @@ impl TryFrom<TermionKey> for Key {
             Ctrl(x) => Key::Ctrl(x),
             Null => Key::Null,
             Esc => Key::Esc,
-        }
+        })
     }
 }
 

@@ -27,15 +27,15 @@ extern crate test;
 extern crate tuple_map;
 
 mod action;
-mod character;
+pub mod character;
 pub mod dungeon;
 pub mod error;
 mod fenwick;
 pub mod input;
 pub mod item;
 mod rng;
-mod tile;
-mod ui;
+pub mod tile;
+pub mod ui;
 
 use character::{Player, PlayerConfig};
 use dungeon::{Dungeon, DungeonStyle, Positioned, X, Y};

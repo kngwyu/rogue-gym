@@ -5,6 +5,8 @@ authors = ["kngwyu <yuji.kngw.80s.revive@gmail.com>"]
 
 [dependencies]
 termion = "1.5.1"
+error-chain-mini-derive = "0.0.4"
+error-chain-mini = "0.0.4"
 
 [dependencies.rogue-gym-core]
 features = ["termion"]
