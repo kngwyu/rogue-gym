@@ -192,7 +192,7 @@ impl Dungeon {
         };
         dungeon
             .new_level(game_info, item_handle)
-            .chain_err("[rogue::Dungeon::new]")?;
+            .chain_err("rogue::Dungeon::new")?;
         Ok(dungeon)
     }
     pub fn draw_ranges(&self) -> impl Iterator<Item = DungeonPath> {
@@ -219,12 +219,12 @@ impl Dungeon {
         }
         let (width, height) = (self.config_global.width, self.config_global.height);
         let floor = Floor::gen_floor(level, &self.config, width, height, &mut self.rng)
-            .chain_err("[Dungeon::new_floor]")?;
+            .chain_err("Dungeon::new_floor")?;
         // setup gold
         let set_gold = game_info.is_cleared || level >= self.max_level;
         self.current_floor
             .setup_items(level, item_handle, set_gold, &mut self.rng)
-            .chain_err("[Dungeon::new_floor]")?;
+            .chain_err("Dungeon::new_floor")?;
         self.current_floor = floor;
         Ok(())
     }

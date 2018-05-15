@@ -42,7 +42,7 @@ impl Floor {
         rng: &mut RngHandle,
     ) -> GameResult<Self> {
         let rooms = rooms::gen_rooms(level, config, width, height, rng)
-            .chain_err("[dugeon::floor::Floor::new]")?;
+            .chain_err("dugeon::floor::Floor::new")?;
         let mut field = Field::new(width, height, Cell::with_default_attr(Surface::None));
         // in this phase, we can draw surfaces 'as is'
         rooms.iter().try_for_each(|room| {
@@ -53,7 +53,7 @@ impl Floor {
                         mut_cell.surface = surface;
                         mut_cell.attr = attr_gen(surface, rng, level, config);
                     })
-                    .into_chained("[Floor::new]")
+                    .into_chained("Floor::new")
             })
         })?;
         // sometimes door is hidden randomly so first we store positions to avoid borrow restriction
@@ -86,7 +86,7 @@ impl Floor {
                         }
                         mut_cell.attr = attr;
                     })
-                    .into_chained("[Floor::new] dig_passges returned invalid index")
+                    .into_chained("Floor::new dig_passges returned invalid index")
             })?;
         Ok(Floor::new(rooms, doors, field))
     }
@@ -106,7 +106,7 @@ impl Floor {
                 .try_for_each(|room| {
                     item_handle.setup_gold(level, || {
                         let cd = room.select_cell(rng, false).ok_or_else(|| {
-                            ErrorId::MaybeBug.into_with("[rogue::Dungeon::setup_items]")
+                            ErrorId::MaybeBug.into_with("rogue::Dungeon::setup_items")
                         })?;
                         room.fill_cell(cd, false);
                         Ok(vec![level as i32, cd.x.0, cd.y.0].into())
@@ -180,16 +180,16 @@ impl Floor {
                     mut_cell.attr |= CellAttr::IS_DRAWN;
                     mut_cell.attr |= CellAttr::IS_VISIBLE;
                 })
-                .into_chained("[Floor::enter_room]")
+                .into_chained("Floor::enter_room")
         })
     }
     pub(crate) fn player_in(&mut self, cd: Coord) -> GameResult<()> {
         if self.doors.contains(&cd) {
-            self.enter_room(cd).chain_err("[Floor::player_in]")?;
+            self.enter_room(cd).chain_err("Floor::player_in")?;
         }
         self.field
             .try_get_mut_p(cd)
-            .into_chained("[Floor::player_in] Cannot move")?
+            .into_chained("Floor::player_in Cannot move")?
             .visit();
         Direction::iter_variants().take(4).for_each(|d| {
             let cd = cd + d.to_cd();

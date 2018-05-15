@@ -74,14 +74,14 @@ impl Room {
                     };
                     register(Positioned(cd.into(), surface))
                 })
-                .chain_err("[Room::draw]"),
+                .chain_err("Room::draw"),
             RoomKind::Maze {
                 range: _,
                 ref passages,
             } => passages
                 .iter()
                 .try_for_each(|&cd| register(Positioned(cd, Surface::Passage)))
-                .chain_err("[Room::draw]"),
+                .chain_err("Room::draw"),
             RoomKind::Empty { .. } => Ok(()),
         }
     }

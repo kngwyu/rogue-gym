@@ -6,8 +6,10 @@ use std::io::Error as IoError;
 pub enum ErrorID {
     #[msg(short = "core error", detailed = "{}", _0)]
     Core(CoreError),
-    #[msg(short = "io error(from termion)", detailed = "{}", _0)]
+    #[msg(short = "io error", detailed = "{}", _0)]
     Io(IoError),
+    #[msg(short = "Invalid Command Args")]
+    InvalidArg,
 }
 
 impl From<CoreError> for ErrorID {

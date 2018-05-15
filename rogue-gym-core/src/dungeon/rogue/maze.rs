@@ -17,11 +17,11 @@ where
     F: FnMut(Coord) -> GameResult<()>,
 {
     let start: Coord = range.upper_left().into();
-    register(start).chain_err("[dungeon::rogue::maze::dig_maze]")?;
+    register(start).chain_err("dungeon::rogue::maze::dig_maze")?;
     let mut used = HashSet::new();
     used.insert(start);
     dig_impl(&range, rng, &mut register, &mut used, start)
-        .chain_err("[dungeon::rogue::maze::dig_maze]")
+        .chain_err("dungeon::rogue::maze::dig_maze")
 }
 
 /// implementation of maze digging by DFS

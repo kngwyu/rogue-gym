@@ -3,8 +3,9 @@ pub(crate) use error_chain_mini::ErrorKind;
 pub(crate) use error_chain_mini::ResultExt;
 use input::{InputCode, Key};
 use rect_iter::IndexError;
+use serde_json::Error as JsonError;
 /// Our own ErrorKind type
-#[derive(Clone, ErrorKind)]
+#[derive(ErrorKind)]
 pub enum ErrorId {
     #[msg(short = "Invalid index access", detailed = "{:?}", _0)]
     Index(IndexError),
@@ -15,6 +16,8 @@ pub enum ErrorId {
     IncompleteInput,
     #[msg(short = "Invalid value in setting")]
     InvalidSetting,
+    #[msg(short = "json", detailed = "{}", _0)]
+    Json(JsonError),
     MaybeBug,
     // STUB
     Unimplemented,
@@ -23,6 +26,12 @@ pub enum ErrorId {
 impl From<IndexError> for ErrorId {
     fn from(e: IndexError) -> Self {
         ErrorId::Index(e)
+    }
+}
+
+impl From<JsonError> for ErrorId {
+    fn from(e: JsonError) -> Self {
+        ErrorId::Json(e)
     }
 }
 

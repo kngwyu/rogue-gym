@@ -150,7 +150,7 @@ impl ItemHandler {
     {
         if let Some(num) = self.gen_gold(level) {
             let item_id = self.gen_item(|| ItemKind::Gold.numbered(num).many());
-            let place = empty_cell().chain_err("[ItemHandler::setup_gold]")?;
+            let place = empty_cell().chain_err("ItemHandler::setup_gold")?;
             self.placed_items.insert(place, item_id);
         }
         Ok(())

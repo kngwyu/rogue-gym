@@ -25,24 +25,12 @@
         "gold_per_level": 10
     },
     "keymap": {
-        "b": {
-            "Act": {
-                "Move": "LeftDown"
-            }
+        "Esc": {
+            "Sys": "Cancel"
         },
-        "Right": {
-            "Act": {
-                "Move": "Right"
-            }
-        },
-        "Left": {
+        "h": {
             "Act": {
                 "Move": "Left"
-            }
-        },
-        "l": {
-            "Act": {
-                "Move": "Right"
             }
         },
         "y": {
@@ -53,28 +41,51 @@
                 "sys": "Yes"
             }
         },
-        "S": {
-            "Sys": "Save"
+        "Up": {
+            "Act": {
+                "Move": "Up"
+            }
         },
         "k": {
             "Act": {
                 "Move": "Up"
             }
         },
-        "u": {
+        "l": {
             "Act": {
-                "Move": "RightUp"
-            }
-        },
-        "Up": {
-            "Act": {
-                "Move": "Up"
+                "Move": "Right"
             }
         },
         "j": {
             "Act": {
                 "Move": "Down"
             }
+        },
+        "Left": {
+            "Act": {
+                "Move": "Left"
+            }
+        },
+        "b": {
+            "Act": {
+                "Move": "LeftDown"
+            }
+        },
+        "Right": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "Q": {
+            "Sys": "Quit"
+        },
+        "u": {
+            "Act": {
+                "Move": "RightUp"
+            }
+        },
+        "S": {
+            "Sys": "Save"
         },
         "n": {
             "Both": {
@@ -88,19 +99,9 @@
             "Act": {
                 "Move": "Down"
             }
-        },
-        "Q": {
-            "Sys": "Quit"
-        },
-        "h": {
-            "Act": {
-                "Move": "Left"
-            }
         }
     },
     "player": {
-        "init_hp": 12,
-        "init_strength": 16,
         "level": {
             "exps": [
                 10,
@@ -125,6 +126,7 @@
                 8000000,
                 0
             ]
-        }
+        },
+        "hunger_time": 1300
     }
 }

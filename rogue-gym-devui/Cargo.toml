@@ -4,9 +4,10 @@ version = "0.0.1"
 authors = ["kngwyu <yuji.kngw.80s.revive@gmail.com>"]
 
 [dependencies]
-termion = "1.5.1"
-error-chain-mini-derive = "0.0.4"
-error-chain-mini = "0.0.4"
+clap = "2.31"
+error-chain-mini = "0.1.1"
+error-chain-mini-derive = "0.1.1"
+termion = "1.5"
 
 [dependencies.rogue-gym-core]
 features = ["termion"]

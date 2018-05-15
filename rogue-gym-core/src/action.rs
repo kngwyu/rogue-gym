@@ -17,8 +17,7 @@ pub(crate) fn process_action(
     match action {
         Action::DownStair => {
             if dungeon.is_downstair(player.pos.clone()) {
-                new_level(info, dungeon, item, player, false)
-                    .chain_err("[action::process_action]")?;
+                new_level(info, dungeon, item, player, false).chain_err("action::process_action")?;
                 Ok(vec![Reaction::Redraw])
             } else {
                 Ok(vec![Reaction::Notify(GameMsg::NoDownStair)])
@@ -33,7 +32,7 @@ pub(crate) fn process_action(
             }
             let new_pos = dungeon
                 .move_player(player.pos.clone(), d)
-                .chain_err("[action::process_action]")?;
+                .chain_err("action::process_action")?;
             player.pos = new_pos;
             Ok(vec![Reaction::Redraw])
         }
@@ -50,10 +49,10 @@ pub(crate) fn new_level(
     if !is_init {
         dungeon
             .new_level(info, item)
-            .chain_err("[action::process_action]")?;
+            .chain_err("action::process_action")?;
     }
     player.pos = dungeon
         .select_cell(true)
-        .ok_or_else(|| ErrorId::MaybeBug.into_with("[action::new_level] No space for player!"))?;
+        .ok_or_else(|| ErrorId::MaybeBug.into_with("action::new_level No space for player!"))?;
     dungeon.enter_room(player.pos.clone())
 }

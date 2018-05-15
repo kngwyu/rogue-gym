@@ -90,6 +90,10 @@ const MAX_WIDTH: i32 = MIN_WIDTH * 2;
 const MIN_HEIGHT: i32 = 24;
 const MAX_HEIGHT: i32 = MIN_HEIGHT * 2;
 impl GameConfig {
+    /// construct Game configuration from json string
+    pub fn from_json(json: &str) -> GameResult<Self> {
+        serde_json::from_str(json).into_chained("GameConfig::from_json")
+    }
     fn to_global(&self) -> GameResult<GlobalConfig> {
         let seed = self.seed.unwrap_or_else(rng::gen_seed);
         let (w, h) = (self.width, self.height);
@@ -113,13 +117,13 @@ impl GameConfig {
     }
     pub fn build(self) -> GameResult<RunTime> {
         let game_info = GameInfo::new();
-        let config = self.to_global().chain_err("[GameConfig::build]")?;
+        let config = self.to_global().chain_err("GameConfig::build")?;
         // TODO: invalid checking
         let mut item = ItemHandler::new(self.item.clone(), config.seed);
         // TODO: invalid checking
         let dungeon = self.dungeon
             .build(&config, &mut item, &game_info, config.seed)
-            .chain_err("[GameConfig::build]")?;
+            .chain_err("GameConfig::build")?;
         let player = self.player.build();
         Ok(RunTime {
             game_info,
@@ -158,7 +162,7 @@ impl RunTime {
                 "[rogue_gym_core::RunTime::check_interuppting]quit command is unimplemented",
             )),
             _ => Err(ErrorId::IgnoredInput(InputCode::Sys(input))
-                .into_with("[rogue_gym_core::RunTime::check_interuppting]")),
+                .into_with("rogue_gym_core::RunTime::check_interuppting")),
         }
     }
     pub fn draw_screen<F, E>(&self, mut drawer: F) -> Result<(), ChainedError<E>>
@@ -227,7 +231,7 @@ impl RunTime {
         match self.keymap.get(key) {
             Some(i) => self.react_to_input(i),
             None => {
-                Err(ErrorId::InvalidInput(key).into_with("[rogue_gym_core::RunTime::react_to_key]"))
+                Err(ErrorId::InvalidInput(key).into_with("rogue_gym_core::RunTime::react_to_key"))
             }
         }
     }
