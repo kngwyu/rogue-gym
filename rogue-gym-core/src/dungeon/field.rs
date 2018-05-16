@@ -13,11 +13,18 @@ pub struct Cell<S> {
 }
 
 impl<S> Cell<S> {
-    pub fn approached_by_player(&mut self) {
+    /// now player is near the cell
+    pub fn approached(&mut self) {
         if self.attr.contains(CellAttr::IS_LOCKED) || self.attr.contains(CellAttr::IS_HIDDEN) {
             return;
         }
         self.attr |= CellAttr::IS_VISIBLE;
+    }
+    /// now player leaves neighbor cell
+    pub fn left(&mut self) {
+        if self.attr.contains(CellAttr::IS_DARK) {
+            self.attr &= !CellAttr::IS_VISIBLE;
+        }
     }
     /// if the cell is visible or not
     pub fn is_visible(&self) -> bool {
@@ -59,6 +66,8 @@ bitflags! {
         const IS_DRAWN   = 0b00_001_000;
         /// the cell is locked
         const IS_LOCKED  = 0b00_010_000;
+        /// the cell is in dark room
+        const IS_DARK    = 0b00_100_000;
     }
 }
 

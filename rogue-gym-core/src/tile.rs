@@ -22,10 +22,6 @@ pub trait Drawable {
     fn color(&self) -> Color {
         Color(0)
     }
-    // STUB
-    fn draw_order(&self) -> u32 {
-        u32::max_value()
-    }
 }
 
 /// color representation

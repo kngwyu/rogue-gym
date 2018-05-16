@@ -1,4 +1,4 @@
-use super::{passages, rooms, Config, Room, Surface};
+use super::{passages, rooms, Config, Room, RoomKind, Surface};
 use dungeon::{Cell, CellAttr, Coord, Direction, Field, Positioned, X, Y};
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
 use fenwick::FenwickSet;
@@ -34,6 +34,7 @@ impl Floor {
     }
 
     /// generate a new floor without items
+    // TODO: trap
     pub fn gen_floor(
         level: u32,
         config: &Config,
@@ -51,7 +52,7 @@ impl Floor {
                     .try_get_mut_p(cd)
                     .map(|mut_cell| {
                         mut_cell.surface = surface;
-                        mut_cell.attr = attr_gen(surface, rng, level, config);
+                        mut_cell.attr = gen_attr(surface, room.is_dark, rng, level, config);
                     })
                     .into_chained("Floor::new")
             })
@@ -76,7 +77,7 @@ impl Floor {
                 field
                     .try_get_mut_p(cd)
                     .map(|mut_cell| {
-                        let attr = attr_gen(surface, rng, level, config);
+                        let attr = gen_attr(surface, false, rng, level, config);
                         // if the door is hiddden, don't draw it
                         if !mut_cell.attr.is_hidden() {
                             mut_cell.surface = surface;
@@ -115,6 +116,7 @@ impl Floor {
         }
         Ok(())
     }
+
     fn can_move_impl(&self, cd: Coord, direction: Direction, is_enemy: bool) -> Option<bool> {
         let cur_cell = self.field.try_get_p(cd).ok()?;
         let nxt_cell = self.field.try_get_p(cd + direction.to_cd()).ok()?;
@@ -145,9 +147,12 @@ impl Floor {
         res &= !nxt_cell.attr.is_hidden();
         Some(res)
     }
+
+    /// judge if the player can move from `cd` in `direction`
     pub(crate) fn can_move_player(&self, cd: Coord, direction: Direction) -> bool {
         self.can_move_impl(cd, direction, false).unwrap_or(false)
     }
+
     fn cd_to_room_id(&self, cd: Coord) -> Option<usize> {
         self.rooms
             .iter()
@@ -155,6 +160,8 @@ impl Floor {
             .find(|(_, room)| room.assigned_area.contains(cd))
             .map(|t| t.0)
     }
+
+    /// player enters room
     pub(crate) fn enter_room(&mut self, cd: Coord) -> GameResult<()> {
         let room_num = match self.cd_to_room_id(cd) {
             Some(u) => u,
@@ -180,6 +187,8 @@ impl Floor {
                 .into_chained("Floor::enter_room")
         })
     }
+
+    /// player walks in the cell
     pub(crate) fn player_in(&mut self, cd: Coord, init: bool) -> GameResult<()> {
         if init || self.doors.contains(&cd) {
             self.enter_room(cd).chain_err("Floor::player_in")?;
@@ -191,17 +200,35 @@ impl Floor {
         Direction::iter_variants().take(4).for_each(|d| {
             let cd = cd + d.to_cd();
             if let Ok(cell) = self.field.try_get_mut_p(cd) {
-                cell.approached_by_player();
+                cell.approached();
             }
         });
         Ok(())
     }
 
+    /// player leaves the room
     // STUB
-    pub(crate) fn player_out(&mut self, cd: Coord) -> GameResult<()> {
+    pub(crate) fn leaves_room(&mut self, cd: Coord) -> GameResult<()> {
         Ok(())
     }
 
+    /// player leaves the cell
+    pub(crate) fn player_out(&mut self, cd: Coord) -> GameResult<()> {
+        if self.doors.contains(&cd) {
+            self.leaves_room(cd).chain_err("Floor::player_out")?;
+        }
+        Direction::iter_variants().take(4).for_each(|d| {
+            let cd = cd + d.to_cd();
+            if let Ok(cell) = self.field.try_get_mut_p(cd) {
+                if cell.surface != Surface::Floor {
+                    cell.left();
+                }
+            }
+        });
+        Ok(())
+    }
+
+    /// register an object to cell
     pub(crate) fn fill_cell(&mut self, cd: Coord, is_character: bool) -> bool {
         fn fill_cell_impl(rooms: &mut Vec<Room>, cd: Coord, is_character: bool) -> Option<bool> {
             let room = rooms.iter_mut().find(|room| room.contains(cd))?;
@@ -209,6 +236,8 @@ impl Floor {
         }
         fill_cell_impl(&mut self.rooms, cd, is_character) == Some(true)
     }
+
+    /// select an empty cell randomly
     pub(crate) fn select_cell(&self, rng: &mut RngHandle, is_character: bool) -> Option<Coord> {
         let mut candidates = self.non_empty_rooms.clone();
         while candidates.len() > 0 {
@@ -226,7 +255,13 @@ impl Floor {
 }
 
 // generate initial attribute of cell
-fn attr_gen(surface: Surface, rng: &mut RngHandle, level: u32, config: &Config) -> CellAttr {
+fn gen_attr(
+    surface: Surface,
+    is_dark: bool,
+    rng: &mut RngHandle,
+    level: u32,
+    config: &Config,
+) -> CellAttr {
     let mut attr = CellAttr::default();
     match surface {
         Surface::Passage => {
@@ -241,6 +276,11 @@ fn attr_gen(surface: Surface, rng: &mut RngHandle, level: u32, config: &Config) 
                 && rng.does_happen(config.locked_door_rate_inv)
             {
                 attr |= CellAttr::IS_LOCKED;
+            }
+        }
+        Surface::Floor => {
+            if is_dark {
+                attr |= CellAttr::IS_DARK
             }
         }
         _ => {}

@@ -5,6 +5,7 @@ use rng::{Rng, RngHandle};
 use std::collections::{BTreeMap, HashMap};
 use tile::{Drawable, Tile};
 
+// TODO: more items
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum ItemKind {
     Gold,
@@ -31,7 +32,6 @@ impl Drawable for ItemKind {
     fn tile(&self) -> Tile {
         match *self {
             ItemKind::Gold => b'*',
-            // STUB!!!
             ItemKind::Weapon => b')',
             ItemKind::Custom => unimplemented!(),
         }.into()
