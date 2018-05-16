@@ -18,6 +18,8 @@ use rogue_gym_core::{GameConfig, GameMsg, Reaction, RunTime};
 use screen::Screen;
 use std::fs::File;
 use std::io::{self, Read, Write};
+use std::thread;
+use std::time::Duration;
 use termion::input::TermRead;
 
 fn main() {
@@ -33,6 +35,8 @@ fn play_game() -> Result<()> {
     let mut screen = Screen::from_stdout(w, h)?;
     screen.welcome()?;
     let mut runtime = config.build().convert()?;
+    thread::sleep(Duration::from_secs(1));
+    draw_dungeon(&mut screen, &mut runtime)?;
     let stdin = io::stdin();
     // let's receive keyboard inputs(out main loop)
     for keys in stdin.keys() {
@@ -75,7 +79,7 @@ fn process_reaction(
     match reaction {
         Reaction::Notify(msg) => {
             match msg {
-                GameMsg::CantMove(d) => notify!(screen, "You can't move in {:?}", d),
+                GameMsg::CantMove(d) => notify!(screen, "Oh, you're {} way is obstructed", d),
                 GameMsg::NoDownStair => notify!(screen, "Hmm... there seems to be no downstair"),
                 GameMsg::Quit => {
                     notify!(screen, "Thank you for playing!")?;
@@ -85,9 +89,7 @@ fn process_reaction(
             Ok(None)
         }
         Reaction::Redraw => {
-            screen.clear_dungeon()?;
-            runtime.draw_screen(|Positioned(cd, tile)| screen.draw_tile(cd, tile))?;
-            screen.flush()?;
+            draw_dungeon(screen, runtime).chain_err("in process_action attempt to draw dungeon")?;
             Ok(None)
         }
         Reaction::UiTransition(ui_state) => {
@@ -100,6 +102,12 @@ fn process_reaction(
             }
         }
     }
+}
+
+fn draw_dungeon(screen: &mut Screen, runtime: &mut RunTime) -> Result<()> {
+    screen.clear_dungeon()?;
+    runtime.draw_screen(|Positioned(cd, tile)| screen.draw_tile(cd, tile))?;
+    screen.flush()
 }
 
 fn get_config() -> Result<GameConfig> {

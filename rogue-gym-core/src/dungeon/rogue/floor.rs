@@ -171,9 +171,6 @@ impl Floor {
             room.range().unwrap().to_owned()
         };
         range.iter().try_for_each(|cd| {
-            if range.is_edge(cd) {
-                return Ok(());
-            }
             self.field
                 .try_get_mut_p(cd)
                 .map(|mut_cell| {
@@ -183,8 +180,8 @@ impl Floor {
                 .into_chained("Floor::enter_room")
         })
     }
-    pub(crate) fn player_in(&mut self, cd: Coord) -> GameResult<()> {
-        if self.doors.contains(&cd) {
+    pub(crate) fn player_in(&mut self, cd: Coord, init: bool) -> GameResult<()> {
+        if init || self.doors.contains(&cd) {
             self.enter_room(cd).chain_err("Floor::player_in")?;
         }
         self.field

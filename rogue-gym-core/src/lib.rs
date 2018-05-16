@@ -121,10 +121,10 @@ impl GameConfig {
         let config = self.to_global().chain_err(ERR_STR)?;
         // TODO: invalid checking
         let mut item = ItemHandler::new(self.item.clone(), config.seed);
-        // TODO: invalid checking
         let mut dungeon = self.dungeon
             .build(&config, &mut item, &game_info, config.seed)
             .chain_err(ERR_STR)?;
+        // TODO: invalid checking
         let mut player = self.player.build();
         actions::new_level(&game_info, &mut dungeon, &mut item, &mut player, true)
             .chain_err(ERR_STR)?;

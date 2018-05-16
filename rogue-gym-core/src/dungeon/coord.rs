@@ -1,4 +1,5 @@
 use rect_iter::{FromTuple2, IntoTuple2};
+use std::fmt;
 use tuple_map::TupleMap2;
 
 #[derive(Clone, Copy, Debug, Default, Hash, PartialEq, PartialOrd, Ord, Eq, Add, Sub, Mul, Div,
@@ -116,6 +117,24 @@ pub enum Direction {
     LeftDown,
     RightDown,
     Stay,
+}
+
+impl fmt::Display for Direction {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use self::Direction::*;
+        let s = match self {
+            Up => "up",
+            Down => "down",
+            Left => "left",
+            Right => "right",
+            LeftUp => "left up",
+            RightUp => "right up",
+            LeftDown => "left down",
+            RightDown => "right down",
+            Stay => "stay",
+        };
+        write!(f, "{}", s)
+    }
 }
 
 impl Direction {

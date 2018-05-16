@@ -107,11 +107,11 @@ impl Dungeon {
             _ => unimplemented!(),
         }
     }
-    pub(crate) fn enter_room(&mut self, path: DungeonPath) -> GameResult<()> {
+    pub(crate) fn enter_room(&mut self, path: DungeonPath, init: bool) -> GameResult<()> {
         match self {
             Dungeon::Rogue(dungeon) => {
                 let address = rogue::Address::from(path);
-                dungeon.current_floor.player_in(address.cd)
+                dungeon.current_floor.player_in(address.cd, true)
             }
             _ => unimplemented!(),
         }

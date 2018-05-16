@@ -264,7 +264,7 @@ impl Dungeon {
             level: self.level,
             cd,
         };
-        self.current_floor.player_in(cd).chain_err(ERR_STR)?;
+        self.current_floor.player_in(cd, false).chain_err(ERR_STR)?;
         Ok(address.into())
     }
     /// select an empty cell randomly
