@@ -6,6 +6,9 @@ Highly customizable rogue-like implmentation for AI expmeriments
 # Python API
 Coming Soon
 
+# Acknowledgements
+[rogue5.4](https://github.com/kngwyu/rogue5.4.4)
+
 # License
 
 This project is licensed under either of
