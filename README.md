@@ -1,5 +1,5 @@
 # rogue-gym
-[![Buid Status](https://travis-ci.org/kngwyu/rogue-gym.svg?branch=master)]
+[![Buid Status](https://travis-ci.org/kngwyu/rogue-gym.svg?branch=master)](https://travis-ci.org/kngwyu/rogue-gym)
 
 Highly customizable rogue-like implmentation for AI expmeriments
 
