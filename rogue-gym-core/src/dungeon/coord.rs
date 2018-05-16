@@ -95,6 +95,13 @@ impl From<(i32, i32)> for Coord {
     }
 }
 
+#[cfg(feature = "termion")]
+impl Into<(u16, u16)> for Coord {
+    fn into(self) -> (u16, u16) {
+        (self.x.0, self.y.0).map(|i| i as u16).add((1, 1))
+    }
+}
+
 pub struct Positioned<T>(pub Coord, pub T);
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, PartialOrd, Ord, Eq, Serialize, Deserialize,

@@ -1,15 +1,20 @@
+//! our error types
 use error_chain_mini::{ChainedError, ErrorKind};
+use rogue_gym_core::dungeon::Coord;
 use rogue_gym_core::error::ErrorId as CoreError;
 use std::io::Error as IoError;
+pub(crate) type Result<T> = ::std::result::Result<T, ChainedError<ErrorID>>;
 
 #[derive(ErrorKind)]
-pub enum ErrorID {
+pub(crate) enum ErrorID {
     #[msg(short = "core error", detailed = "{}", _0)]
     Core(CoreError),
     #[msg(short = "io error", detailed = "{}", _0)]
     Io(IoError),
     #[msg(short = "Invalid Command Args")]
     InvalidArg,
+    #[msg(short = "Invalid screen size", detailed = "width: {} height: {}", _0, _1)]
+    InvalidScreenSize(u16, u16),
 }
 
 impl From<CoreError> for ErrorID {
@@ -23,5 +28,3 @@ impl From<IoError> for ErrorID {
         ErrorID::Io(e)
     }
 }
-
-pub type Result<T> = ::std::result::Result<T, ChainedError<ErrorID>>;

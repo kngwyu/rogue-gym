@@ -28,7 +28,7 @@ pub(crate) fn process_action(
         }
         Action::Move(d) => {
             if !dungeon.can_move_player(player.pos.clone(), d) {
-                return Ok(vec![Reaction::Notify(GameMsg::CantMove)]);
+                return Ok(vec![Reaction::Notify(GameMsg::CantMove(d))]);
             }
             let new_pos = dungeon
                 .move_player(player.pos.clone(), d)

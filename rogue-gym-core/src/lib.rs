@@ -1,5 +1,5 @@
 #![allow(stable_features)]
-#![feature(dyn_trait, try_from, try_iterator)]
+#![feature(dyn_trait, try_iterator)]
 #![cfg_attr(test, feature(test))]
 
 #[macro_use]
@@ -26,7 +26,7 @@ extern crate termion;
 extern crate test;
 extern crate tuple_map;
 
-mod action;
+mod actions;
 pub mod character;
 pub mod dungeon;
 pub mod error;
@@ -38,7 +38,7 @@ pub mod tile;
 pub mod ui;
 
 use character::{Player, PlayerConfig};
-use dungeon::{Dungeon, DungeonStyle, Positioned, X, Y};
+use dungeon::{Direction, Dungeon, DungeonStyle, Positioned, X, Y};
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
 use error_chain_mini::ChainedError;
 use input::{InputCode, Key, KeyMap};
@@ -116,15 +116,18 @@ impl GameConfig {
         })
     }
     pub fn build(self) -> GameResult<RunTime> {
+        const ERR_STR: &str = "GameConfig::build";
         let game_info = GameInfo::new();
-        let config = self.to_global().chain_err("GameConfig::build")?;
+        let config = self.to_global().chain_err(ERR_STR)?;
         // TODO: invalid checking
         let mut item = ItemHandler::new(self.item.clone(), config.seed);
         // TODO: invalid checking
-        let dungeon = self.dungeon
+        let mut dungeon = self.dungeon
             .build(&config, &mut item, &game_info, config.seed)
-            .chain_err("GameConfig::build")?;
-        let player = self.player.build();
+            .chain_err(ERR_STR)?;
+        let mut player = self.player.build();
+        actions::new_level(&game_info, &mut dungeon, &mut item, &mut player, true)
+            .chain_err(ERR_STR)?;
         Ok(RunTime {
             game_info,
             config,
@@ -153,13 +156,13 @@ impl RunTime {
     fn check_interrupting(&mut self, input: input::System) -> GameResult<Vec<Reaction>> {
         use input::System::*;
         match input {
-            Save => {
+            Quit => {
                 let ui = UiState::Mordal(MordalKind::Quit);
                 self.ui = ui.clone();
                 Ok(vec![Reaction::UiTransition(ui)])
             }
-            Quit => Err(ErrorId::Unimplemented.into_with(
-                "[rogue_gym_core::RunTime::check_interuppting]quit command is unimplemented",
+            Save => Err(ErrorId::Unimplemented.into_with(
+                "[rogue_gym_core::RunTime::check_interuppting] save command is unimplemented",
             )),
             _ => Err(ErrorId::IgnoredInput(InputCode::Sys(input))
                 .into_with("rogue_gym_core::RunTime::check_interuppting")),
@@ -167,25 +170,22 @@ impl RunTime {
     }
     pub fn draw_screen<F, E>(&self, mut drawer: F) -> Result<(), ChainedError<E>>
     where
-        F: FnMut(Positioned<Tile>) -> Result<(), E>,
+        F: FnMut(Positioned<Tile>) -> Result<(), ChainedError<E>>,
         E: From<ErrorId> + ErrorKind,
     {
         const ERR_STR: &str = "[rogue_gym_core::RunTime::draw_screen]";
         // floor => item & character
         self.dungeon.draw(&mut drawer).chain_err(ERR_STR)?;
-        self.dungeon
-            .draw_ranges()
-            .try_for_each(|path| {
-                let cd = self.dungeon.path_to_cd(&path);
-                if self.player.pos == path {
-                    return drawer(Positioned(cd, self.player.tile()));
-                };
-                if let Some(item) = self.item.get_ref(&path) {
-                    return drawer(Positioned(cd, item.tile()));
-                }
-                Ok(())
-            })
-            .into_chained(ERR_STR)
+        self.dungeon.draw_ranges().try_for_each(|path| {
+            let cd = self.dungeon.path_to_cd(&path);
+            if self.player.pos == path {
+                return drawer(Positioned(cd, self.player.tile()));
+            };
+            if let Some(item) = self.item.get_ref(&path) {
+                return drawer(Positioned(cd, item.tile()));
+            }
+            Ok(())
+        })
     }
     pub fn react_to_input(&mut self, input: InputCode) -> GameResult<Vec<Reaction>> {
         let (next_ui, res) = match self.ui {
@@ -193,7 +193,7 @@ impl RunTime {
                 None,
                 match input {
                     InputCode::Sys(sys) => self.check_interrupting(sys),
-                    InputCode::Act(act) | InputCode::Both { act, .. } => action::process_action(
+                    InputCode::Act(act) | InputCode::Both { act, .. } => actions::process_action(
                         act,
                         &self.config,
                         &mut self.game_info,
@@ -235,6 +235,9 @@ impl RunTime {
             }
         }
     }
+    pub fn screen_size(&self) -> (X, Y) {
+        (self.config.width, self.config.height)
+    }
 }
 
 /// Reaction to user input
@@ -250,7 +253,7 @@ pub enum Reaction {
 
 #[derive(Clone, Debug)]
 pub enum GameMsg {
-    CantMove,
+    CantMove(Direction),
     NoDownStair,
     Quit,
 }

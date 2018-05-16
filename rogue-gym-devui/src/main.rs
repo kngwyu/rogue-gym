@@ -2,23 +2,116 @@ extern crate clap;
 extern crate error_chain_mini;
 extern crate rogue_gym_core;
 extern crate termion;
+extern crate tuple_map;
 #[macro_use]
 extern crate error_chain_mini_derive;
 
 mod error;
+#[macro_use]
+mod screen;
 use clap::ArgMatches;
 use error::{ErrorID, Result};
 use error_chain_mini::{ErrorKind, ResultExt};
-use rogue_gym_core::{GameConfig, RunTime};
+use rogue_gym_core::dungeon::Positioned;
+use rogue_gym_core::ui::{MordalKind, UiState};
+use rogue_gym_core::{GameConfig, GameMsg, Reaction, RunTime};
+use screen::Screen;
 use std::fs::File;
-use std::io::Read;
-use termion::event::{Event, Key};
+use std::io::{self, Read, Write};
+use termion::input::TermRead;
 
 fn main() {
     if let Err(err) = play_game() {
         println!("Error! {}", err);
         std::process::exit(1);
     }
+}
+
+fn play_game() -> Result<()> {
+    let config = get_config()?;
+    let (w, h) = (config.width, config.height);
+    let mut screen = Screen::from_stdout(w, h)?;
+    screen.welcome()?;
+    let mut runtime = config.build().convert()?;
+    let stdin = io::stdin();
+    // let's receive keyboard inputs(out main loop)
+    for keys in stdin.keys() {
+        notify!(screen, "")?;
+        let key = keys.into_chained("in play_game")?;
+        let res = runtime.react_to_key(key.into());
+        let res = match res {
+            Ok(r) => r,
+            Err(e) => {
+                // STUB
+                notify!(screen, "{}", e.kind().short())?;
+                continue;
+            }
+        };
+
+        for reaction in res {
+            let result =
+                process_reaction(&mut screen, &mut runtime, reaction).chain_err("in play_game")?;
+            if let Some(transition) = result {
+                match transition {
+                    Transition::Exit => return Ok(()),
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum Transition {
+    Exit,
+}
+
+fn process_reaction(
+    screen: &mut Screen,
+    runtime: &mut RunTime,
+    reaction: Reaction,
+) -> Result<Option<Transition>> {
+    match reaction {
+        Reaction::Notify(msg) => {
+            match msg {
+                GameMsg::CantMove(d) => notify!(screen, "You can't move in {:?}", d),
+                GameMsg::NoDownStair => notify!(screen, "Hmm... there seems to be no downstair"),
+                GameMsg::Quit => {
+                    notify!(screen, "Thank you for playing!")?;
+                    return Ok(Some(Transition::Exit));
+                }
+            }.chain_err("in devui::process_reaction")?;
+            Ok(None)
+        }
+        Reaction::Redraw => {
+            screen.clear_dungeon()?;
+            runtime.draw_screen(|Positioned(cd, tile)| screen.draw_tile(cd, tile))?;
+            screen.flush()?;
+            Ok(None)
+        }
+        Reaction::UiTransition(ui_state) => {
+            if let UiState::Mordal(kind) = ui_state {
+                match kind {
+                    MordalKind::Quit => notify!(screen, "You really quit game?(y/n)").map(|_| None),
+                }
+            } else {
+                Ok(None)
+            }
+        }
+    }
+}
+
+fn get_config() -> Result<GameConfig> {
+    let args = parse_args();
+    let file_name = args.value_of("config").expect("No config file");
+    if !file_name.ends_with(".json") {
+        return Err(ErrorID::InvalidArg.into_with("Only .json file is allowed as configuration file"));
+    }
+    let mut file = File::open(file_name).into_chained("get_config")?;
+    let mut buf = String::new();
+    file.read_to_string(&mut buf).into_chained("get_config")?;
+    GameConfig::from_json(&buf).convert()
 }
 
 fn parse_args<'a>() -> ArgMatches<'a> {
@@ -36,21 +129,4 @@ fn parse_args<'a>() -> ArgMatches<'a> {
                 .takes_value(true),
         )
         .get_matches()
-}
-
-fn get_config() -> Result<GameConfig> {
-    let args = parse_args();
-    let file_name = args.value_of("config").expect("No config file");
-    if !file_name.ends_with(".json") {
-        return Err(ErrorID::InvalidArg.into_with("Only .json file is allowed as configuration file"));
-    }
-    let mut file = File::open(file_name).into_chained("get_config")?;
-    let mut buf = String::new();
-    file.read_to_string(&mut buf).into_chained("get_config")?;
-    GameConfig::from_json(&buf).map_err(|e| e.convert("get_config"))
-}
-
-fn play_game() -> Result<()> {
-    let config = get_config()?;
-    Ok(())
 }

@@ -241,21 +241,14 @@ mod keymap_test {
 }
 
 #[cfg(feature = "termion")]
-use error::{ErrorId, ErrorKind, GameError};
-
-#[cfg(feature = "termion")]
-use std::convert::TryFrom;
-
-#[cfg(feature = "termion")]
 use termion::event::Key as TermionKey;
 
 #[cfg(feature = "termion")]
-impl TryFrom<TermionKey> for Key {
-    type Error = GameError;
-    fn try_from(key: TermionKey) -> Result<Key, GameError> {
+impl From<TermionKey> for Key {
+    fn from(key: TermionKey) -> Key {
         use self::TermionKey::*;
-        Ok(match key {
-            TermionKey::__IsNotComplete => return Err(ErrorId::IncompleteInput.into_err()),
+        match key {
+            TermionKey::__IsNotComplete => panic!("Incomplete Input from termion"),
             Backspace => Key::Backspace,
             Left => Key::Left,
             Right => Key::Right,
@@ -273,32 +266,6 @@ impl TryFrom<TermionKey> for Key {
             Ctrl(x) => Key::Ctrl(x),
             Null => Key::Null,
             Esc => Key::Esc,
-        })
-    }
-}
-
-#[cfg(feature = "termion")]
-impl Into<TermionKey> for Key {
-    fn into(self) -> TermionKey {
-        use Key::*;
-        match self {
-            Backspace => TermionKey::Backspace,
-            Left => TermionKey::Left,
-            Right => TermionKey::Right,
-            Up => TermionKey::Up,
-            Down => TermionKey::Down,
-            Home => TermionKey::Home,
-            End => TermionKey::End,
-            PageUp => TermionKey::PageUp,
-            PageDown => TermionKey::PageDown,
-            Delete => TermionKey::Delete,
-            Insert => TermionKey::Insert,
-            F(x) => TermionKey::F(x),
-            Char(x) => TermionKey::Char(x),
-            Alt(x) => TermionKey::Alt(x),
-            Ctrl(x) => TermionKey::Ctrl(x),
-            Null => TermionKey::Null,
-            Esc => TermionKey::Esc,
         }
     }
 }

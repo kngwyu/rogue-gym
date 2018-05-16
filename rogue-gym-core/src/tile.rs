@@ -3,6 +3,12 @@ use std::fmt;
 #[derive(Clone, Debug, Hash, Eq, PartialEq, From, Serialize, Deserialize)]
 pub struct Tile(pub u8);
 
+impl Tile {
+    pub fn to_char(self) -> char {
+        self.0 as char
+    }
+}
+
 impl fmt::Display for Tile {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0 as char)

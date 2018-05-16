@@ -276,26 +276,24 @@ impl Dungeon {
     /// draw dungeon to screen by callback
     pub(crate) fn draw<F, E>(&self, drawer: &mut F) -> Result<(), ChainedError<E>>
     where
-        F: FnMut(Positioned<Tile>) -> Result<(), E>,
+        F: FnMut(Positioned<Tile>) -> Result<(), ChainedError<E>>,
         E: From<ErrorId> + ErrorKind,
     {
-        const ERR_STR: &str = "[rogue::Dungeon::move_player]";
+        const ERR_STR: &str = "in rogue::Dungeon::move_player";
         let range = self.current_floor
             .field
             .size()
             .ok_or_else(|| E::from(ErrorId::MaybeBug).into_with(ERR_STR))?;
-        range
-            .into_iter()
-            .try_for_each(|cd| {
-                let cell = self.current_floor
-                    .field
-                    .try_get_p(cd)
-                    .map_err(|e| E::from(ErrorId::from(e)))?;
-                let cd = Coord::from(cd);
-                let tile = cell.tile();
-                drawer(Positioned(cd, tile))
-            })
-            .into_chained(ERR_STR)
+        range.into_iter().try_for_each(|cd| {
+            let cell = self.current_floor
+                .field
+                .try_get_p(cd)
+                .into_chained(ERR_STR)
+                .convert()?;
+            let cd = Coord::from(cd);
+            let tile = cell.tile();
+            drawer(Positioned(cd, tile))
+        })
     }
 }
 
