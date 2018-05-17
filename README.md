@@ -3,11 +3,22 @@
 
 Highly customizable rogue-like implmentation for AI expmeriments
 
+# Play as human
+
+```
+git clone https://github.com/kngwyu/rogue-gym.git
+cd rogue-gym/rogue-gym-devui
+cargo run -- --config ../data/config-default.json
+```
+
 # Python API
 Coming Soon
 
 # Acknowledgements
 [rogue5.4](https://github.com/kngwyu/rogue5.4.4)
+
+# Required minimum version of rust
+1.27
 
 # License
 
