@@ -8,6 +8,7 @@ use tuple_map::TupleMap2;
 
 pub(crate) struct Screen {
     pub(crate) term: RawTerminal<Stdout>,
+    pub(crate) has_notification: bool,
     width: u16,
     height: u16,
 }
@@ -19,6 +20,24 @@ impl Screen {
             .into_chained("in Screen::clear")
     }
 
+    pub(crate) fn clean_notification(&mut self) -> Result<()> {
+        if self.has_notification {
+            self.has_notification = false;
+            write!(
+                self.term,
+                "{}{}",
+                ::termion::cursor::Goto(1, 1),
+                ::termion::clear::CurrentLine
+            )
+        } else {
+            Ok(())
+        }.into_chained("in Screen::clean_notification")
+    }
+
+    pub(crate) fn cursor<P: Into<(u16, u16)>>(&mut self, cd: P) -> Result<()> {
+        let (col, row) = cd.into();
+        write!(self.term, "{}", cursor::Goto(col, row)).into_chained("in Screen::draw_tile")
+    }
     pub(crate) fn draw_tile(&mut self, cd: Coord, tile: Tile) -> Result<()> {
         let (col, row) = cd.into();
         write!(self.term, "{}{}", cursor::Goto(col, row), tile.to_char())
@@ -49,6 +68,7 @@ impl Screen {
         }
         Ok(Screen {
             term,
+            has_notification: false,
             width,
             height,
         })
@@ -68,7 +88,8 @@ impl Screen {
 
 #[macro_export]
 macro_rules! notify {
-    ($screen: ident, $msg: expr) => {
+    ($screen: ident, $msg: expr) => {{
+        $screen.has_notification = true;
         if let Err(e) = write!($screen.term, "{}{}", ::termion::cursor::Goto(1, 1), ::termion::clear::CurrentLine) {
             Err(e).into_chained("in notify!")
         } else {
@@ -78,8 +99,9 @@ macro_rules! notify {
                 $screen.flush()
             }
         }
-    };
-    ($screen: ident, $fmt: expr, $($arg: tt)*) => {
+    }};
+    ($screen: ident, $fmt: expr, $($arg: tt)*) => {{
+        $screen.has_notification = true;
         if let Err(e) = write!($screen.term, "{}{}", ::termion::cursor::Goto(1, 1), ::termion::clear::CurrentLine) {
             Err(e).into_chained("in notify!")
         } else {
@@ -89,5 +111,5 @@ macro_rules! notify {
                 $screen.flush()
             }
         }
-    };
+    }};
 }

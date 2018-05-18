@@ -12,7 +12,7 @@ mod screen;
 use clap::ArgMatches;
 use error::{ErrorID, Result};
 use error_chain_mini::{ErrorKind, ResultExt};
-use rogue_gym_core::dungeon::Positioned;
+use rogue_gym_core::dungeon::{Coord, Positioned};
 use rogue_gym_core::ui::{MordalKind, UiState};
 use rogue_gym_core::{GameConfig, GameMsg, Reaction, RunTime};
 use screen::Screen;
@@ -40,7 +40,7 @@ fn play_game() -> Result<()> {
     let stdin = io::stdin();
     // let's receive keyboard inputs(out main loop)
     for keys in stdin.keys() {
-        notify!(screen, "")?;
+        screen.clean_notification()?;
         let key = keys.into_chained("in play_game")?;
         let res = runtime.react_to_key(key.into());
         let res = match res {
@@ -106,7 +106,16 @@ fn process_reaction(
 
 fn draw_dungeon(screen: &mut Screen, runtime: &mut RunTime) -> Result<()> {
     screen.clear_dungeon()?;
-    runtime.draw_screen(|Positioned(cd, tile)| screen.draw_tile(cd, tile))?;
+    let mut player_pos = None;
+    runtime.draw_screen(|Positioned(cd, tile)| {
+        if tile.to_byte() == b'@' {
+            player_pos = Some(cd);
+        }
+        screen.draw_tile(cd, tile)
+    })?;
+    if let Some(cd) = player_pos {
+        screen.cursor(cd)?;
+    }
     screen.flush()
 }
 

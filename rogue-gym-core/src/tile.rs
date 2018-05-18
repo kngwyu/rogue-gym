@@ -1,11 +1,14 @@
 /// Tile id
 use std::fmt;
-#[derive(Clone, Debug, Hash, Eq, PartialEq, From, Serialize, Deserialize)]
-pub struct Tile(pub u8);
+#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq, From, Serialize, Deserialize)]
+pub struct Tile(u8);
 
 impl Tile {
     pub fn to_char(self) -> char {
         self.0 as char
+    }
+    pub fn to_byte(self) -> u8 {
+        self.0
     }
 }
 
