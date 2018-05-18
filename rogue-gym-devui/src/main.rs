@@ -79,7 +79,7 @@ fn process_reaction(
     match reaction {
         Reaction::Notify(msg) => {
             match msg {
-                GameMsg::CantMove(d) => notify!(screen, "Oh, you're {} way is obstructed", d),
+                GameMsg::CantMove(_) => Ok(()),
                 GameMsg::NoDownStair => notify!(screen, "Hmm... there seems to be no downstair"),
                 GameMsg::Quit => {
                     notify!(screen, "Thank you for playing!")?;

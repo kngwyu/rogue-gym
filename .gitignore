@@ -6,3 +6,4 @@ Cargo.lock
 *.txt
 *.out
 *.scr
+config-debug.json

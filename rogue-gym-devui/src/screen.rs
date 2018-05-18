@@ -57,9 +57,10 @@ impl Screen {
     pub(crate) fn welcome(&mut self) -> Result<()> {
         write!(
             self.term,
-            "{}{} Welcome to rogue-gym!",
+            "{}{} Welcome to rogue-gym!{}Wait a minute while we're digging the dungeon...",
             clear::All,
-            cursor::Goto(1, 1)
+            cursor::Goto(1, 1),
+            cursor::Goto(1, 2)
         ).into_chained("in Screen::from_stdout")?;
         self.flush().chain_err("in Screen::from_stdout")
     }

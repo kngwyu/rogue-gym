@@ -15,20 +15,29 @@ pub struct Cell<S> {
 impl<S> Cell<S> {
     /// now player is near the cell
     pub fn approached(&mut self) {
-        if self.attr.contains(CellAttr::IS_LOCKED) || self.attr.contains(CellAttr::IS_HIDDEN) {
+        if self.attr.contains(CellAttr::IS_HIDDEN) {
             return;
         }
-        self.attr |= CellAttr::IS_VISIBLE;
+        self.visible(true);
     }
     /// now player leaves neighbor cell
     pub fn left(&mut self) {
         if self.attr.contains(CellAttr::IS_DARK) {
-            self.attr &= !CellAttr::IS_VISIBLE;
+            self.visible(false);
         }
     }
     /// if the cell is visible or not
     pub fn is_visible(&self) -> bool {
         self.attr.contains(CellAttr::IS_VISIBLE)
+    }
+    /// change the visibility of the cell
+    #[inline]
+    pub fn visible(&mut self, on: bool) {
+        if on {
+            self.attr |= CellAttr::IS_VISIBLE;
+        } else {
+            self.attr &= !CellAttr::IS_VISIBLE;
+        }
     }
     pub fn visit(&mut self) {
         self.attr |= CellAttr::IS_VISITED;
@@ -39,6 +48,12 @@ impl<S> Cell<S> {
             surface,
             attr: CellAttr::default(),
         }
+    }
+    pub fn is_hidden(&self) -> bool {
+        self.attr.contains(CellAttr::IS_HIDDEN)
+    }
+    pub fn is_locked(&self) -> bool {
+        self.attr.contains(CellAttr::IS_LOCKED)
     }
 }
 
@@ -68,12 +83,6 @@ bitflags! {
         const IS_LOCKED  = 0b00_010_000;
         /// the cell is in dark room
         const IS_DARK    = 0b00_100_000;
-    }
-}
-
-impl CellAttr {
-    pub fn is_hidden(&self) -> bool {
-        self.contains(CellAttr::IS_HIDDEN) || self.contains(CellAttr::IS_LOCKED)
     }
 }
 

@@ -153,6 +153,13 @@ impl Surface {
             _ => true,
         }
     }
+    fn wall(is_xdir: bool) -> Self {
+        if is_xdir {
+            Surface::WallX
+        } else {
+            Surface::WallY
+        }
+    }
 }
 
 /// representation of rogue dungeon

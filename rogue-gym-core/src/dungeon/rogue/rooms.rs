@@ -7,6 +7,7 @@ use rect_iter::{IntoTuple2, RectRange};
 use rng::RngHandle;
 use std::collections::HashSet;
 use tuple_map::TupleMap2;
+
 /// type of room
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum RoomKind {
@@ -63,12 +64,10 @@ impl Room {
             RoomKind::Normal { ref range } => range
                 .iter()
                 .try_for_each(|cd| {
-                    let surface = if range.is_edge(cd) {
-                        if cd.1 == range.upper_left().1 || cd.1 == range.lower_left().1 {
-                            Surface::WallX
-                        } else {
-                            Surface::WallY
-                        }
+                    let surface = if range.is_horiz_edge(cd) {
+                        Surface::WallX
+                    } else if range.is_vert_edge(cd) {
+                        Surface::WallY
                     } else {
                         Surface::Floor
                     };

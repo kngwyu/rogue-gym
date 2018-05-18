@@ -1,4 +1,4 @@
-use super::{passages, rooms, Config, Room, RoomKind, Surface};
+use super::{passages, rooms, Config, Room, Surface};
 use dungeon::{Cell, CellAttr, Coord, Direction, Field, Positioned, X, Y};
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
 use fenwick::FenwickSet;
@@ -74,18 +74,18 @@ impl Floor {
         passages
             .into_iter()
             .try_for_each(|Positioned(cd, surface)| {
+                if surface == Surface::Door {
+                    doors.insert(cd);
+                }
                 field
                     .try_get_mut_p(cd)
-                    .map(|mut_cell| {
+                    .map(|cell| {
                         let attr = gen_attr(surface, false, rng, level, config);
-                        // if the door is hiddden, don't draw it
-                        if !mut_cell.attr.is_hidden() {
-                            mut_cell.surface = surface;
+                        // if the passage is hiddden, don't draw it
+                        if !cell.is_hidden() || !cell.is_locked() {
+                            cell.surface = surface;
                         }
-                        if surface == Surface::Door {
-                            doors.insert(cd);
-                        }
-                        mut_cell.attr = attr;
+                        cell.attr = attr;
                     })
                     .into_chained("Floor::new dig_passges returned invalid index")
             })?;
@@ -144,7 +144,8 @@ impl Floor {
             _ => false,
         };
         res &= nxt_cell.surface.can_walk();
-        res &= !nxt_cell.attr.is_hidden();
+        res &= !nxt_cell.is_hidden();
+        res &= !nxt_cell.is_locked();
         Some(res)
     }
 
@@ -161,43 +162,72 @@ impl Floor {
             .map(|t| t.0)
     }
 
-    /// player enters room
-    pub(crate) fn enter_room(&mut self, cd: Coord) -> GameResult<()> {
-        let room_num = match self.cd_to_room_id(cd) {
+    fn with_current_room<S, M>(&mut self, cd: Coord, select: S, mut mark: M) -> GameResult<()>
+    where
+        S: FnOnce(&mut Room) -> bool,
+        M: FnMut(&mut Cell<Surface>, /* is_edge: */ bool),
+    {
+        let room_id = match self.cd_to_room_id(cd) {
             Some(u) => u,
-            None => {
-                return Err(ErrorId::MaybeBug.into_with("[Floor::enter_room] no room for given cd"))
-            }
+            None => return Err(ErrorId::MaybeBug.into_with("[Floor::with_current_room] no room for given coord")),
         };
-        let range = {
-            let room = &mut self.rooms[room_num];
-            if !room.is_normal() || room.is_visited || room.is_dark {
-                room.is_visited = true;
-                return Ok(());
-            }
-            room.range().unwrap().to_owned()
-        };
+        if !select(&mut self.rooms[room_id]) {
+            return Ok(());
+        }
+        let range = self.rooms[room_id]
+            .range()
+            .unwrap_or(&self.rooms[room_id].assigned_area)
+            .to_owned();
         range.iter().try_for_each(|cd| {
+            let is_edge = range.is_edge(cd);
             self.field
                 .try_get_mut_p(cd)
-                .map(|mut_cell| {
-                    mut_cell.attr |= CellAttr::IS_DRAWN;
-                    mut_cell.attr |= CellAttr::IS_VISIBLE;
-                })
-                .into_chained("Floor::enter_room")
+                .map(|mut_cell| mark(mut_cell, is_edge))
+                .into_chained("in Floor::with_current_room")
         })
+    }
+
+    /// player enters room
+    pub(crate) fn enters_room(&mut self, cd: Coord) -> GameResult<()> {
+        self.with_current_room(
+            cd,
+            |room| {
+                if room.is_visited {
+                    return false;
+                }
+                room.is_visited = true;
+                room.is_normal() && !room.is_dark
+            },
+            |cell, _| {
+                cell.attr |= CellAttr::IS_DRAWN;
+                cell.visible(true);
+            },
+        ).chain_err("Floor::enters_room")
+    }
+
+    /// player enters room
+    pub(crate) fn leaves_room(&mut self, cd: Coord) -> GameResult<()> {
+        self.with_current_room(
+            cd,
+            |room| room.is_visited && room.is_dark,
+            |cell, is_edge| {
+                if !is_edge {
+                    cell.visible(false);
+                }
+            },
+        ).chain_err("Floor::leaves_room")
     }
 
     /// player walks in the cell
     pub(crate) fn player_in(&mut self, cd: Coord, init: bool) -> GameResult<()> {
         if init || self.doors.contains(&cd) {
-            self.enter_room(cd).chain_err("Floor::player_in")?;
+            self.enters_room(cd).chain_err("Floor::player_in")?;
         }
         self.field
             .try_get_mut_p(cd)
             .into_chained("Floor::player_in Cannot move")?
             .visit();
-        Direction::iter_variants().take(4).for_each(|d| {
+        Direction::iter_variants().take(8).for_each(|d| {
             let cd = cd + d.to_cd();
             if let Ok(cell) = self.field.try_get_mut_p(cd) {
                 cell.approached();
@@ -206,21 +236,15 @@ impl Floor {
         Ok(())
     }
 
-    /// player leaves the room
-    // STUB
-    pub(crate) fn leaves_room(&mut self, cd: Coord) -> GameResult<()> {
-        Ok(())
-    }
-
     /// player leaves the cell
     pub(crate) fn player_out(&mut self, cd: Coord) -> GameResult<()> {
         if self.doors.contains(&cd) {
             self.leaves_room(cd).chain_err("Floor::player_out")?;
         }
-        Direction::iter_variants().take(4).for_each(|d| {
+        Direction::iter_variants().take(8).for_each(|d| {
             let cd = cd + d.to_cd();
             if let Ok(cell) = self.field.try_get_mut_p(cd) {
-                if cell.surface != Surface::Floor {
+                if cell.surface == Surface::Floor {
                     cell.left();
                 }
             }
