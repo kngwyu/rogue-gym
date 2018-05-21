@@ -1,4 +1,3 @@
 #!/bin/bash
 
-rm log.txt
 cargo run -- --config ../config-debug.json --log log.txt --filter debug

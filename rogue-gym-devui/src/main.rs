@@ -4,7 +4,6 @@ extern crate error_chain_mini;
 #[macro_use]
 extern crate error_chain_mini_derive;
 extern crate fern;
-#[macro_use]
 extern crate log;
 extern crate rogue_gym_core;
 extern crate termion;
@@ -20,7 +19,7 @@ use rogue_gym_core::dungeon::Positioned;
 use rogue_gym_core::ui::{MordalKind, UiState};
 use rogue_gym_core::{GameConfig, GameMsg, Reaction, RunTime};
 use screen::Screen;
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 use std::io::{self, Read, Write};
 use std::thread;
 use std::time::Duration;
@@ -168,9 +167,9 @@ fn parse_args<'a>() -> ArgMatches<'a> {
 
 fn setup_logger(args: &ArgMatches) -> Result<()> {
     if let Some(file) = args.value_of("log") {
-        println!("{}", file);
         let level = args.value_of("filter").unwrap_or("debug");
         let level = convert_log_level(level).unwrap_or(log::LevelFilter::Debug);
+        use std::str::Chars;
         fern::Dispatch::new()
             .format(|out, message, record| {
                 out.finish(format_args!(
@@ -182,7 +181,12 @@ fn setup_logger(args: &ArgMatches) -> Result<()> {
                 ))
             })
             .level(level)
-            .chain(fern::log_file(file).into_chained("error in getting log file")?)
+            .chain(OpenOptions::new()
+                .write(true)
+                .create(true)
+                .truncate(true)
+                .open(file)
+                .into_chained("error in getting log file")?)
             .apply()
             .into_chained("error in setup_log")?;
     }

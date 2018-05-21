@@ -139,7 +139,7 @@ impl ItemHandler {
     {
         let item = itemgen();
         let id = self.next_id.clone();
-        debug!("[gen_item] now new item {:?}", item);
+        debug!("[gen_item] now new item {:?} is generated", item);
         // register the generated item
         self.items.insert(id.clone(), item);
         self.next_id.increment();
@@ -153,7 +153,6 @@ impl ItemHandler {
     where
         F: FnMut() -> GameResult<DungeonPath>,
     {
-        debug!("[setup_gold] {:?}", level);
         if let Some(num) = self.gen_gold(level) {
             let item_id = self.gen_item(|| ItemKind::Gold.numbered(num).many());
             let place = empty_cell().chain_err("ItemHandler::setup_gold")?;
