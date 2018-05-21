@@ -1,5 +1,6 @@
 use super::{Defense, Exp, HitPoint, Maxed, Strength};
 use dungeon::{Direction, DungeonPath};
+use item::ItemId;
 use tile::{Drawable, Tile};
 /// Player configuration
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
@@ -24,6 +25,25 @@ impl PlayerConfig {
             pos: DungeonPath::default(),
             status,
             config: self,
+            items: ItemPack::default(),
+        }
+    }
+}
+
+// TODO: should this be configurable?
+const ITEM_MAX: usize = 26;
+
+/// player's item
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ItemPack {
+    inner: [Option<ItemId>; ITEM_MAX],
+}
+
+// TODO: use config file
+impl Default for ItemPack {
+    fn default() -> ItemPack {
+        ItemPack {
+            inner: [None; ITEM_MAX],
         }
     }
 }
@@ -37,6 +57,8 @@ pub struct Player {
     pub(crate) status: PlayerStatus,
     /// configuration
     pub(crate) config: PlayerConfig,
+    /// items
+    pub(crate) items: ItemPack,
 }
 
 impl Drawable for Player {

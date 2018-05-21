@@ -20,25 +20,24 @@
         "max_extra_edges": 5
     },
     "item": {
-        "gold_rate_inv": 2,
-        "gold_base": 50,
-        "gold_per_level": 10
+        "gold": {
+            "rate_inv": 2,
+            "base": 50,
+            "per_level": 10
+        }
     },
     "keymap": {
-        "Esc": {
-            "Sys": "Cancel"
-        },
-        "h": {
+        "b": {
             "Act": {
-                "Move": "Left"
+                "Move": "LeftDown"
             }
         },
-        "y": {
+        "n": {
             "Both": {
                 "act": {
-                    "Move": "LeftUp"
+                    "Move": "RightDown"
                 },
-                "sys": "Yes"
+                "sys": "No"
             }
         },
         "Up": {
@@ -46,15 +45,21 @@
                 "Move": "Up"
             }
         },
+        "Down": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
         "k": {
             "Act": {
                 "Move": "Up"
             }
         },
-        "l": {
-            "Act": {
-                "Move": "Right"
-            }
+        "S": {
+            "Sys": "Save"
+        },
+        "Esc": {
+            "Sys": "Cancel"
         },
         "j": {
             "Act": {
@@ -66,9 +71,25 @@
                 "Move": "Left"
             }
         },
-        "b": {
+        "l": {
             "Act": {
-                "Move": "LeftDown"
+                "Move": "Right"
+            }
+        },
+        "u": {
+            "Act": {
+                "Move": "RightUp"
+            }
+        },
+        "Q": {
+            "Sys": "Quit"
+        },
+        "y": {
+            "Both": {
+                "act": {
+                    "Move": "LeftUp"
+                },
+                "sys": "Yes"
             }
         },
         "Right": {
@@ -76,28 +97,9 @@
                 "Move": "Right"
             }
         },
-        "Q": {
-            "Sys": "Quit"
-        },
-        "u": {
+        "h": {
             "Act": {
-                "Move": "RightUp"
-            }
-        },
-        "S": {
-            "Sys": "Save"
-        },
-        "n": {
-            "Both": {
-                "act": {
-                    "Move": "RightDown"
-                },
-                "sys": "No"
-            }
-        },
-        "Down": {
-            "Act": {
-                "Move": "Down"
+                "Move": "Left"
             }
         }
     },

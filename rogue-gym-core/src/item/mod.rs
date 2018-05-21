@@ -1,16 +1,25 @@
 //! module for item
+
+mod food;
+mod gold;
+
 use dungeon::DungeonPath;
 use error::{GameResult, ResultExt};
-use rng::{Rng, RngHandle};
+use rng::RngHandle;
 use std::collections::BTreeMap;
 use tile::{Drawable, Tile};
 
-// TODO: more items
+/// item tag
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum ItemKind {
-    Gold,
-    Weapon,
+    Armor,
     Custom,
+    Gold,
+    Potion,
+    Ring,
+    Scroll,
+    Stick,
+    Weapon,
 }
 
 impl ItemKind {
@@ -33,7 +42,7 @@ impl Drawable for ItemKind {
         match *self {
             ItemKind::Gold => b'*',
             ItemKind::Weapon => b')',
-            ItemKind::Custom => unimplemented!(),
+            _ => unimplemented!(),
         }.into()
     }
 }
@@ -41,12 +50,6 @@ impl Drawable for ItemKind {
 #[derive(Clone, Copy, Debug, Default, Hash, PartialEq, PartialOrd, Eq, Add, Sub, Mul, Div,
          AddAssign, SubAssign, MulAssign, DivAssign, From, Into, Serialize, Deserialize)]
 pub struct ItemNum(pub u32);
-
-impl ItemNum {
-    fn max() -> Self {
-        ItemNum(u32::max_value())
-    }
-}
 
 // TODO: add more attribute
 bitflags!{
@@ -61,7 +64,7 @@ bitflags!{
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
 pub struct ItemId(u32);
 
 impl ItemId {
@@ -119,6 +122,7 @@ pub struct ItemHandler {
 }
 
 impl ItemHandler {
+    /// generate new ItemHandler
     pub fn new(config: ItemConfig, seed: u64) -> Self {
         ItemHandler {
             items: BTreeMap::new(),
@@ -128,6 +132,7 @@ impl ItemHandler {
             next_id: ItemId(0),
         }
     }
+    /// get reference to item by DungeonPath
     pub fn get_ref(&self, path: &DungeonPath) -> Option<&Item> {
         let id = self.placed_items.get(path)?;
         self.items.get(id)
@@ -138,10 +143,10 @@ impl ItemHandler {
         F: FnOnce() -> Item,
     {
         let item = itemgen();
-        let id = self.next_id.clone();
+        let id = self.next_id;
         debug!("[gen_item] now new item {:?} is generated", item);
         // register the generated item
-        self.items.insert(id.clone(), item);
+        self.items.insert(id, item);
         self.next_id.increment();
         id
     }
@@ -153,58 +158,18 @@ impl ItemHandler {
     where
         F: FnMut() -> GameResult<DungeonPath>,
     {
-        if let Some(num) = self.gen_gold(level) {
+        if let Some(num) = self.config.gold.gen(&mut self.rng, level) {
             let item_id = self.gen_item(|| ItemKind::Gold.numbered(num).many());
             let place = empty_cell().chain_err("ItemHandler::setup_gold")?;
             self.place_item(place, item_id);
         }
         Ok(())
     }
-    /// setup gold for 1 room
-    fn gen_gold(&mut self, level: u32) -> Option<ItemNum> {
-        if !self.rng.does_happen(self.config.gold_rate_inv) {
-            return None;
-        }
-        let val = self.rng.gen_range(
-            0,
-            self.config.gold_base + self.config.gold_per_level * level,
-        );
-        Some(ItemNum(val))
-    }
 }
 
 /// Item configuration
-// TODO: remove this struct and add configuration for each items
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename = "item-setting")]
 pub struct ItemConfig {
-    #[serde(default = "default_gold_rate")]
-    pub gold_rate_inv: u32,
-    #[serde(default = "default_gold_base")]
-    pub gold_base: u32,
-    #[serde(default = "default_gold_per_level")]
-    pub gold_per_level: u32,
-}
-
-#[inline]
-fn default_gold_rate() -> u32 {
-    2
-}
-#[inline]
-fn default_gold_base() -> u32 {
-    50
-}
-#[inline]
-fn default_gold_per_level() -> u32 {
-    10
-}
-
-impl Default for ItemConfig {
-    fn default() -> ItemConfig {
-        ItemConfig {
-            gold_rate_inv: default_gold_rate(),
-            gold_base: default_gold_base(),
-            gold_per_level: default_gold_per_level(),
-        }
-    }
+    gold: gold::Config,
 }

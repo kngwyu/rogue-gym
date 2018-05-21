@@ -213,7 +213,7 @@ impl Dungeon {
         RectRange::from_ranges(0..xmax, 1..ymax)
             .unwrap()
             .into_iter()
-            .filter(|&cd| self.current_floor.field.get_p(cd).is_visible())
+            .filter(|&cd| self.current_floor.field.get_p(cd).is_obj_visible())
             .map(|cd| vec![level as i32, cd.0, cd.1].into())
             .try_for_each(|cd| draw(cd))
     }

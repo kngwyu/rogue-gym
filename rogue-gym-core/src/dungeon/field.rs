@@ -14,22 +14,35 @@ pub struct Cell<S> {
 
 impl<S> Cell<S> {
     /// now player is near the cell
+    #[inline]
     pub fn approached(&mut self) {
         if self.attr.contains(CellAttr::IS_HIDDEN) {
             return;
         }
+        self.attr |= CellAttr::HAS_DRAWN;
         self.visible(true);
     }
+
     /// now player leaves neighbor cell
+    #[inline]
     pub fn left(&mut self) {
         if self.attr.contains(CellAttr::IS_DARK) {
             self.visible(false);
         }
     }
+
+    /// if the object on the cell is visible or not
+    #[inline]
+    pub fn is_obj_visible(&self) -> bool {
+        self.attr.contains(CellAttr::IS_VISIBLE) || self.attr.contains(CellAttr::HAS_DRAWN)
+    }
+
     /// if the cell is visible or not
+    #[inline]
     pub fn is_visible(&self) -> bool {
         self.attr.contains(CellAttr::IS_VISIBLE)
     }
+
     /// change the visibility of the cell
     #[inline]
     pub fn visible(&mut self, on: bool) {
@@ -39,19 +52,25 @@ impl<S> Cell<S> {
             self.attr &= !CellAttr::IS_VISIBLE;
         }
     }
+
+    #[inline]
     pub fn visit(&mut self) {
         self.attr |= CellAttr::IS_VISITED;
     }
+
     /// construct a cell with default attribute
+    #[inline]
     pub fn with_default_attr(surface: S) -> Cell<S> {
         Cell {
             surface,
             attr: CellAttr::default(),
         }
     }
+    #[inline]
     pub fn is_hidden(&self) -> bool {
         self.attr.contains(CellAttr::IS_HIDDEN)
     }
+    #[inline]
     pub fn is_locked(&self) -> bool {
         self.attr.contains(CellAttr::IS_LOCKED)
     }
@@ -78,7 +97,7 @@ bitflags! {
         const IS_VISIBLE = 0b00_000_100;
         /// In many rogue like, draw status can be changed by the cell has been drawn or not.
         /// So to record the cell has been drawn or not is very important.
-        const IS_DRAWN   = 0b00_001_000;
+        const HAS_DRAWN  = 0b00_001_000;
         /// the cell is locked
         const IS_LOCKED  = 0b00_010_000;
         /// the cell is in dark room

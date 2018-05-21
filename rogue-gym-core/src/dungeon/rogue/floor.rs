@@ -199,7 +199,7 @@ impl Floor {
                 room.is_normal() && !room.is_dark
             },
             |cell, _| {
-                cell.attr |= CellAttr::IS_DRAWN;
+                cell.attr |= CellAttr::HAS_DRAWN;
                 cell.visible(true);
             },
         ).chain_err("Floor::enters_room")
@@ -227,7 +227,7 @@ impl Floor {
             .try_get_mut_p(cd)
             .into_chained("Floor::player_in Cannot move")?
             .visit();
-        Direction::iter_variants().take(8).for_each(|d| {
+        Direction::iter_variants().take(9).for_each(|d| {
             let cd = cd + d.to_cd();
             if let Ok(cell) = self.field.try_get_mut_p(cd) {
                 cell.approached();
@@ -241,7 +241,7 @@ impl Floor {
         if self.doors.contains(&cd) {
             self.leaves_room(cd).chain_err("Floor::player_out")?;
         }
-        Direction::iter_variants().take(8).for_each(|d| {
+        Direction::iter_variants().take(9).for_each(|d| {
             let cd = cd + d.to_cd();
             if let Ok(cell) = self.field.try_get_mut_p(cd) {
                 if cell.surface == Surface::Floor {

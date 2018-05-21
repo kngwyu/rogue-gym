@@ -169,7 +169,6 @@ fn setup_logger(args: &ArgMatches) -> Result<()> {
     if let Some(file) = args.value_of("log") {
         let level = args.value_of("filter").unwrap_or("debug");
         let level = convert_log_level(level).unwrap_or(log::LevelFilter::Debug);
-        use std::str::Chars;
         fern::Dispatch::new()
             .format(|out, message, record| {
                 out.finish(format_args!(
