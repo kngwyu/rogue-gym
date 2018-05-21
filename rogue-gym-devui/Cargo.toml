@@ -7,8 +7,11 @@ authors = ["kngwyu <yuji.kngw.80s.revive@gmail.com>"]
 clap = "2.31"
 error-chain-mini = "0.1.2"
 error-chain-mini-derive = "0.1.2"
+fern = "0.5.5"
+log = "0.4.1"
 termion = "1.5"
 tuple-map = "0.4.0"
+chrono = "0.4.2"
 
 [dependencies.rogue-gym-core]
 features = ["termion"]

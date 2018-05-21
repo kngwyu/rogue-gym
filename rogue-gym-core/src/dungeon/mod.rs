@@ -126,21 +126,24 @@ impl Dungeon {
             _ => unimplemented!(),
         }
     }
-    pub(crate) fn draw_ranges(&self) -> impl Iterator<Item = DungeonPath> {
+    pub(crate) fn with_draw_ranges<E, F>(&self, mut draw: F) -> Result<(), E>
+    where
+        F: FnMut(DungeonPath) -> Result<(), E>,
+    {
         match self {
-            Dungeon::Rogue(dungeon) => dungeon.draw_ranges(),
+            Dungeon::Rogue(dungeon) => dungeon.with_draw_ranges(draw),
             _ => unimplemented!(),
         }
     }
     pub(crate) fn path_to_cd(&self, path: &DungeonPath) -> Coord {
         match self {
-            Dungeon::Rogue(dungeon) => Coord::new(path.0[1], path.0[2]),
+            Dungeon::Rogue(_) => Coord::new(path.0[1], path.0[2]),
             _ => unimplemented!(),
         }
     }
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize, Hash, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct DungeonPath(Vec<i32>);
 
 impl From<rogue::Address> for DungeonPath {

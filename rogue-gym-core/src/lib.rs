@@ -11,6 +11,8 @@ extern crate error_chain_mini;
 extern crate error_chain_mini_derive;
 extern crate fixedbitset;
 extern crate num_traits;
+#[macro_use]
+extern crate log;
 extern crate rand;
 extern crate rect_iter;
 extern crate regex;
@@ -174,7 +176,7 @@ impl RunTime {
         const ERR_STR: &str = "[rogue_gym_core::RunTime::draw_screen]";
         // floor => item & character
         self.dungeon.draw(&mut drawer).chain_err(ERR_STR)?;
-        self.dungeon.draw_ranges().try_for_each(|path| {
+        self.dungeon.with_draw_ranges(|path| {
             let cd = self.dungeon.path_to_cd(&path);
             if self.player.pos == path {
                 return drawer(Positioned(cd, self.player.tile()));
@@ -186,6 +188,7 @@ impl RunTime {
         })
     }
     pub fn react_to_input(&mut self, input: InputCode) -> GameResult<Vec<Reaction>> {
+        trace!("[react_to_input] input: {:?} ui: {:?}", input, self.ui);
         let (next_ui, res) = match self.ui {
             UiState::Dungeon => (
                 None,

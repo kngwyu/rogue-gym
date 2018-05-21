@@ -1,10 +1,14 @@
+extern crate chrono;
 extern crate clap;
 extern crate error_chain_mini;
+#[macro_use]
+extern crate error_chain_mini_derive;
+extern crate fern;
+#[macro_use]
+extern crate log;
 extern crate rogue_gym_core;
 extern crate termion;
 extern crate tuple_map;
-#[macro_use]
-extern crate error_chain_mini_derive;
 
 mod error;
 #[macro_use]
@@ -12,7 +16,7 @@ mod screen;
 use clap::ArgMatches;
 use error::{ErrorID, Result};
 use error_chain_mini::{ErrorKind, ResultExt};
-use rogue_gym_core::dungeon::{Coord, Positioned};
+use rogue_gym_core::dungeon::Positioned;
 use rogue_gym_core::ui::{MordalKind, UiState};
 use rogue_gym_core::{GameConfig, GameMsg, Reaction, RunTime};
 use screen::Screen;
@@ -22,15 +26,14 @@ use std::thread;
 use std::time::Duration;
 use termion::input::TermRead;
 
-fn main() {
-    if let Err(err) = play_game() {
-        println!("Error! {}", err);
-        std::process::exit(1);
-    }
+fn main() -> Result<()> {
+    let args = parse_args();
+    let config = get_config(&args)?;
+    setup_logger(&args)?;
+    play_game(config)
 }
 
-fn play_game() -> Result<()> {
-    let config = get_config()?;
+fn play_game(config: GameConfig) -> Result<()> {
     let (w, h) = (config.width, config.height);
     let mut screen = Screen::from_stdout(w, h)?;
     screen.welcome()?;
@@ -119,8 +122,7 @@ fn draw_dungeon(screen: &mut Screen, runtime: &mut RunTime) -> Result<()> {
     screen.flush()
 }
 
-fn get_config() -> Result<GameConfig> {
-    let args = parse_args();
+fn get_config(args: &ArgMatches) -> Result<GameConfig> {
     let file_name = args.value_of("config").expect("No config file");
     if !file_name.ends_with(".json") {
         return Err(ErrorID::InvalidArg.into_with("Only .json file is allowed as configuration file"));
@@ -145,5 +147,58 @@ fn parse_args<'a>() -> ArgMatches<'a> {
                 .required(true)
                 .takes_value(true),
         )
+        .arg(
+            clap::Arg::with_name("log")
+                .short("l")
+                .long("log")
+                .value_name("LOG")
+                .help("Enable logging to log file")
+                .takes_value(true),
+        )
+        .arg(
+            clap::Arg::with_name("filter")
+                .short("f")
+                .long("filter")
+                .value_name("FILTER")
+                .help("Sets up log level")
+                .takes_value(true),
+        )
         .get_matches()
+}
+
+fn setup_logger(args: &ArgMatches) -> Result<()> {
+    if let Some(file) = args.value_of("log") {
+        println!("{}", file);
+        let level = args.value_of("filter").unwrap_or("debug");
+        let level = convert_log_level(level).unwrap_or(log::LevelFilter::Debug);
+        fern::Dispatch::new()
+            .format(|out, message, record| {
+                out.finish(format_args!(
+                    "{}[{}][{}] {}",
+                    chrono::Local::now().format("[%Y-%m-%d][%H:%M:%S]"),
+                    record.target(),
+                    record.level(),
+                    message
+                ))
+            })
+            .level(level)
+            .chain(fern::log_file(file).into_chained("error in getting log file")?)
+            .apply()
+            .into_chained("error in setup_log")?;
+    }
+    Ok(())
+}
+
+fn convert_log_level(s: &str) -> Option<log::LevelFilter> {
+    use log::LevelFilter::*;
+    let s = s.to_lowercase();
+    match &*s {
+        "off" | "o" => Some(Off),
+        "error" | "e" => Some(Error),
+        "warn" | "w" => Some(Warn),
+        "info" | "i" => Some(Info),
+        "debug" | "d" => Some(Debug),
+        "trace" | "t" => Some(Trace),
+        _ => None,
+    }
 }

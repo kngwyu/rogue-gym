@@ -2,7 +2,7 @@
 use dungeon::DungeonPath;
 use error::{GameResult, ResultExt};
 use rng::{Rng, RngHandle};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use tile::{Drawable, Tile};
 
 // TODO: more items
@@ -111,7 +111,8 @@ pub struct ItemHandler {
     /// stores all items in the game
     items: BTreeMap<ItemId, Item>,
     /// items placed in the dungeon
-    placed_items: HashMap<DungeonPath, ItemId>,
+    // we use BtreeMap here, because we can expect locality of access
+    placed_items: BTreeMap<DungeonPath, ItemId>,
     config: ItemConfig,
     rng: RngHandle,
     next_id: ItemId,
@@ -121,7 +122,7 @@ impl ItemHandler {
     pub fn new(config: ItemConfig, seed: u64) -> Self {
         ItemHandler {
             items: BTreeMap::new(),
-            placed_items: HashMap::new(),
+            placed_items: BTreeMap::new(),
             config,
             rng: RngHandle::from_seed(seed),
             next_id: ItemId(0),
@@ -132,26 +133,31 @@ impl ItemHandler {
         self.items.get(id)
     }
     /// generate and register an item
-    pub fn gen_item<F>(&mut self, itemgen: F) -> ItemId
+    fn gen_item<F>(&mut self, itemgen: F) -> ItemId
     where
         F: FnOnce() -> Item,
     {
         let item = itemgen();
         let id = self.next_id.clone();
+        debug!("[gen_item] now new item {:?}", item);
         // register the generated item
         self.items.insert(id.clone(), item);
         self.next_id.increment();
         id
+    }
+    fn place_item(&mut self, place: DungeonPath, id: ItemId) {
+        self.placed_items.insert(place, id);
     }
     /// setup gold for 1 room
     pub fn setup_gold<F>(&mut self, level: u32, mut empty_cell: F) -> GameResult<()>
     where
         F: FnMut() -> GameResult<DungeonPath>,
     {
+        debug!("[setup_gold] {:?}", level);
         if let Some(num) = self.gen_gold(level) {
             let item_id = self.gen_item(|| ItemKind::Gold.numbered(num).many());
             let place = empty_cell().chain_err("ItemHandler::setup_gold")?;
-            self.placed_items.insert(place, item_id);
+            self.place_item(place, item_id);
         }
         Ok(())
     }
@@ -169,6 +175,7 @@ impl ItemHandler {
 }
 
 /// Item configuration
+// TODO: remove this struct and add configuration for each items
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename = "item-setting")]
 pub struct ItemConfig {

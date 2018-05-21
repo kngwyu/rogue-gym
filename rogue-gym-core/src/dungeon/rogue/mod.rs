@@ -202,14 +202,20 @@ impl Dungeon {
             .chain_err("rogue::Dungeon::new")?;
         Ok(dungeon)
     }
-    pub fn draw_ranges(&self) -> impl Iterator<Item = DungeonPath> {
+    /// returns the range to draw
+    pub(crate) fn with_draw_ranges<E, F>(&self, mut draw: F) -> Result<(), E>
+    where
+        F: FnMut(DungeonPath) -> Result<(), E>,
+    {
         let level = self.level;
         let xmax = self.config_global.width.0;
         let ymax = self.config_global.height.0 - 1;
         RectRange::from_ranges(0..xmax, 1..ymax)
             .unwrap()
             .into_iter()
-            .map(move |cd| vec![level as i32, cd.0, cd.1].into())
+            .filter(|&cd| self.current_floor.field.get_p(cd).is_visible())
+            .map(|cd| vec![level as i32, cd.0, cd.1].into())
+            .try_for_each(|cd| draw(cd))
     }
     /// setup next floor
     pub fn new_level(
@@ -225,11 +231,12 @@ impl Dungeon {
             self.max_level = level;
         }
         let (width, height) = (self.config_global.width, self.config_global.height);
-        let floor = Floor::gen_floor(level, &self.config, width, height, &mut self.rng)
+        let mut floor = Floor::gen_floor(level, &self.config, width, height, &mut self.rng)
             .chain_err("Dungeon::new_floor")?;
         // setup gold
-        let set_gold = game_info.is_cleared || level >= self.max_level;
-        self.current_floor
+        let set_gold = !game_info.is_cleared || level >= self.max_level;
+        debug!("[Dungeon::new_level] set_gold: {}", set_gold);
+        floor
             .setup_items(level, item_handle, set_gold, &mut self.rng)
             .chain_err("Dungeon::new_floor")?;
         self.current_floor = floor;
