@@ -1,6 +1,4 @@
-#![allow(stable_features)]
-#![feature(dyn_trait, try_iterator)]
-#![cfg_attr(test, feature(test))]
+#![cfg_attr(feature = "bench", feature(test))]
 
 #[macro_use]
 extern crate bitflags;
@@ -22,7 +20,7 @@ extern crate serde_derive;
 extern crate serde_json;
 #[cfg(feature = "termion")]
 extern crate termion;
-#[cfg(test)]
+#[cfg(feature = "bench")]
 extern crate test;
 extern crate tuple_map;
 

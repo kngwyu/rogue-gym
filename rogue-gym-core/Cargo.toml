@@ -29,3 +29,7 @@ features = ["serde1"]
 version = "0.1.9"
 default-features = false
 features = ["serde"]
+
+[features]
+default = []
+bench = []

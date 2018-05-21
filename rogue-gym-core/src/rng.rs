@@ -149,7 +149,6 @@ mod rng_test {
 mod selecter_test {
     use super::*;
     use fixedbitset::FixedBitSet;
-    use test::Bencher;
     #[test]
     fn rng_select_normal() {
         let mut rng = RngHandle::new();
@@ -171,6 +170,13 @@ mod selecter_test {
             assert!(l <= u && u < r);
         });
     }
+}
+
+#[cfg(feature = "bench")]
+mod selecter_bench {
+    use super::*;
+    use fixedbitset::FixedBitSet;
+    use test::Bencher;
     #[bench]
     fn select_bench(b: &mut Bencher) {
         const MAX: usize = 1_000_000;
