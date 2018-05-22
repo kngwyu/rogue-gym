@@ -120,6 +120,10 @@ impl Floor {
     fn can_move_impl(&self, cd: Coord, direction: Direction, is_enemy: bool) -> Option<bool> {
         let cur_cell = self.field.try_get_p(cd).ok()?;
         let nxt_cell = self.field.try_get_p(cd + direction.to_cd()).ok()?;
+        debug!(
+            "[can_move_impl] cur: {:?}, nxt: {:?}",
+            cur_cell.surface, nxt_cell.surface
+        );
         // TODO: trap
         let mut res = match cur_cell.surface {
             Surface::Floor => match nxt_cell.surface {
@@ -151,6 +155,7 @@ impl Floor {
 
     /// judge if the player can move from `cd` in `direction`
     pub(crate) fn can_move_player(&self, cd: Coord, direction: Direction) -> bool {
+        debug!("[can_move_player] cd: {:?}, direction: {}", cd, direction);
         self.can_move_impl(cd, direction, false).unwrap_or(false)
     }
 

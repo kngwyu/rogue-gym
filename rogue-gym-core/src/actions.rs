@@ -49,7 +49,7 @@ pub(crate) fn new_level(
     if !is_init {
         dungeon
             .new_level(info, item)
-            .chain_err("action::process_action")?;
+            .chain_err("action::new_level")?;
     }
     player.pos = dungeon
         .select_cell(true)

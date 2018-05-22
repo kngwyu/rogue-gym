@@ -5,19 +5,15 @@ use fenwick::FenwickSet;
 use fixedbitset::FixedBitSet;
 use rect_iter::{IntoTuple2, RectRange};
 use rng::RngHandle;
-use std::collections::HashSet;
 use tuple_map::TupleMap2;
 
 /// type of room
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum RoomKind {
     /// normal room
     Normal { range: RectRange<i32> },
     /// maze room
-    Maze {
-        range: RectRange<i32>,
-        passages: HashSet<Coord>,
-    },
+    Maze(Box<maze::Maze>),
     /// passage only(gone room)
     Empty { up_left: Coord },
 }
@@ -25,7 +21,7 @@ pub enum RoomKind {
 /// A data structure representing a room in the dungeon
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Room {
-    /// room kind
+    /// room kindQ
     pub kind: RoomKind,
     /// if the room is dark or not
     pub is_dark: bool,
@@ -74,12 +70,8 @@ impl Room {
                     register(Positioned(cd.into(), surface))
                 })
                 .chain_err("Room::draw"),
-            RoomKind::Maze {
-                range: _,
-                ref passages,
-            } => passages
-                .iter()
-                .try_for_each(|&cd| register(Positioned(cd, Surface::Passage)))
+            RoomKind::Maze(ref maze) => maze.passage_iter()
+                .try_for_each(|cd| register(Positioned(cd, Surface::Passage)))
                 .chain_err("Room::draw"),
             RoomKind::Empty { .. } => Ok(()),
         }
@@ -87,7 +79,8 @@ impl Room {
     /// return a range occupied by the room
     pub fn range(&self) -> Option<&RectRange<i32>> {
         match self.kind {
-            RoomKind::Normal { ref range } | RoomKind::Maze { ref range, .. } => Some(range),
+            RoomKind::Normal { ref range } => Some(range),
+            RoomKind::Maze(ref maze) => Some(&maze.range),
             _ => None,
         }
     }
@@ -154,17 +147,7 @@ fn gen_empty_cells(kind: &RoomKind) -> FenwickSet {
             });
             set
         }
-        RoomKind::Maze { range, passages } => {
-            let len = range.len();
-            let mut set = FenwickSet::with_capacity(len);
-            range.iter().enumerate().for_each(|(i, cd)| {
-                let cd: Coord = cd.into();
-                if !passages.contains(&cd) {
-                    set.insert(i);
-                }
-            });
-            set
-        }
+        RoomKind::Maze(ref maze) => maze.passages.clone(),
         RoomKind::Empty { .. } => FenwickSet::with_capacity(1),
     }
 }
@@ -238,16 +221,18 @@ pub(crate) fn make_room(
         // maze
         let range =
             RectRange::from_corners(upper_left, upper_left + room_size - Coord::new(1, 1)).unwrap();
-        let mut passages = HashSet::new();
+        let len = range.len();
+        let mut passages = FenwickSet::with_capacity(len);
         maze::dig_maze(range.clone(), rng, |cd| {
-            if range.contains(cd) {
-                passages.insert(cd);
+            if let Some(id) = range.index(cd) {
+                passages.insert(id);
                 Ok(())
             } else {
                 Err(ErrorId::MaybeBug.into_with("dig_maze produced invalid Coordinate!"))
             }
         })?;
-        RoomKind::Maze { range, passages }
+        let maze = maze::Maze { range, passages };
+        RoomKind::Maze(Box::new(maze))
     } else {
         // normal
         let size = {
@@ -272,7 +257,8 @@ pub(crate) mod test {
     use rect_iter::GetMut2D;
     use tile::Drawable;
     pub(crate) fn gen(level: u32) -> Vec<Room> {
-        let config = Config::default();
+        let mut config = Config::default();
+        config.maze_rate_inv = 3;
         let (w, h) = (X(80), Y(24));
         let mut rng = RngHandle::new();
         gen_rooms(level, &config, w, h, &mut rng).unwrap()
@@ -300,9 +286,9 @@ pub(crate) mod test {
         }
     }
     #[test]
-    fn check() {
+    fn pos_check() {
         let (xrooms, yrooms) = (3, 3);
-        for i in 0..1000 {
+        for i in 0..100 {
             let rooms = gen(i % 20);
             for (x, y) in RectRange::zero_start(xrooms, yrooms).unwrap() {
                 let room1 = &rooms[x + xrooms * y];

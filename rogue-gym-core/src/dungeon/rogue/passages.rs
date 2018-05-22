@@ -142,15 +142,12 @@ fn select_start_or_end(room: &Room, direction: Direction, rng: &mut RngHandle) -
             let candidates = edges(range, direction, true);
             *rng.choose(&candidates).unwrap()
         }
-        RoomKind::Maze {
-            ref range,
-            ref passages,
-        } => {
-            let mut range = range.clone();
+        RoomKind::Maze(ref maze) => {
+            let mut range = maze.range.clone();
             while range.is_valid() {
                 let candidates: Vec<_> = edges(&range, direction, false)
                     .into_iter()
-                    .filter(|cd| passages.contains(cd))
+                    .filter(|&cd| maze.has_cd(cd))
                     .collect();
                 if let Some(&cd) = rng.choose(&candidates) {
                     return cd;

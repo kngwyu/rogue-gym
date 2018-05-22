@@ -92,13 +92,20 @@ impl FenwickSet {
         let num = rng.gen_range(0, self.num_elements);
         self.nth(num)
     }
+    pub fn iter<'a>(&'a self) -> FwsIter<'a> {
+        FwsIter {
+            fwt: &self.inner,
+            current: 0,
+            before: 0,
+        }
+    }
 }
 
 impl IntoIterator for FenwickSet {
     type Item = usize;
-    type IntoIter = FenwickSetIter;
+    type IntoIter = FwsIntoIter;
     fn into_iter(self) -> Self::IntoIter {
-        FenwickSetIter {
+        FwsIntoIter {
             fwt: self.inner,
             current: 0,
             before: 0,
@@ -106,27 +113,46 @@ impl IntoIterator for FenwickSet {
     }
 }
 
-/// Iterator for FenwickSet
-pub struct FenwickSetIter {
+/// Iterator for FenwickSet which has entitty
+pub struct FwsIntoIter {
     fwt: FenwickTree,
     current: isize,
     before: i32,
 }
 
-impl Iterator for FenwickSetIter {
+impl Iterator for FwsIntoIter {
     type Item = usize;
     fn next(&mut self) -> Option<usize> {
-        while self.current < self.fwt.len {
-            self.current += 1;
-            let sum = self.fwt.sum(self.current as usize);
-            let diff = sum - self.before;
-            self.before = sum;
-            if diff == 1 {
-                return Some(self.current as usize - 1);
-            }
-        }
-        None
+        fws_iter_next(&self.fwt, &mut self.current, &mut self.before)
     }
+}
+
+/// Iterator for FenwickSet which has reference
+pub struct FwsIter<'a> {
+    fwt: &'a FenwickTree,
+    current: isize,
+    before: i32,
+}
+
+impl<'a> Iterator for FwsIter<'a> {
+    type Item = usize;
+    fn next(&mut self) -> Option<usize> {
+        fws_iter_next(&self.fwt, &mut self.current, &mut self.before)
+    }
+}
+
+#[inline]
+fn fws_iter_next(fwt: &FenwickTree, current: &mut isize, before: &mut i32) -> Option<usize> {
+    while *current < fwt.len {
+        *current += 1;
+        let sum = fwt.sum(*current as usize);
+        let diff = sum - *before;
+        *before = sum;
+        if diff == 1 {
+            return Some(*current as usize - 1);
+        }
+    }
+    None
 }
 
 /// simple 0-indexed fenwick tree
@@ -220,7 +246,7 @@ mod fenwick_set_test {
         assert_eq!(hash, hash_from_fws);
     }
     #[test]
-    fn iter() {
+    fn into_iter() {
         let max = 1_000_000;
         let mut fws = FenwickSet::with_capacity(max);
         let mut rng = RngHandle::new();
