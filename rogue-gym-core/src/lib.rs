@@ -176,16 +176,19 @@ impl RunTime {
         const ERR_STR: &str = "[rogue_gym_core::RunTime::draw_screen]";
         // floor => item & character
         self.dungeon.draw(&mut drawer).chain_err(ERR_STR)?;
-        self.dungeon.with_draw_ranges(|path| {
-            let cd = self.dungeon.path_to_cd(&path);
-            if self.player.pos == path {
-                return drawer(Positioned(cd, self.player.tile()));
-            };
-            if let Some(item) = self.item.get_ref(&path) {
-                return drawer(Positioned(cd, item.tile()));
-            }
-            Ok(())
-        })
+        self.dungeon
+            .draw_ranges()
+            .try_for_each(|path| {
+                let cd = self.dungeon.path_to_cd(&path);
+                if self.player.pos == path {
+                    return drawer(Positioned(cd, self.player.tile()));
+                };
+                if let Some(item) = self.item.get_ref(&path) {
+                    return drawer(Positioned(cd, item.tile()));
+                }
+                Ok(())
+            })
+            .chain_err(ERR_STR)
     }
     pub fn react_to_input(&mut self, input: InputCode) -> GameResult<Vec<Reaction>> {
         trace!("[react_to_input] input: {:?} ui: {:?}", input, self.ui);

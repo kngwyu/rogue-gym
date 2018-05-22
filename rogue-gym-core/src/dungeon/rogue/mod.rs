@@ -203,19 +203,15 @@ impl Dungeon {
         Ok(dungeon)
     }
     /// returns the range to draw
-    pub(crate) fn with_draw_ranges<E, F>(&self, mut draw: F) -> Result<(), E>
-    where
-        F: FnMut(DungeonPath) -> Result<(), E>,
-    {
+    pub(crate) fn draw_ranges<'a>(&'a self) -> impl 'a + Iterator<Item = DungeonPath> {
         let level = self.level;
         let xmax = self.config_global.width.0;
         let ymax = self.config_global.height.0 - 1;
         RectRange::from_ranges(0..xmax, 1..ymax)
             .unwrap()
             .into_iter()
-            .filter(|&cd| self.current_floor.field.get_p(cd).is_obj_visible())
-            .map(|cd| vec![level as i32, cd.0, cd.1].into())
-            .try_for_each(|cd| draw(cd))
+            .filter(move |&cd| self.current_floor.field.get_p(cd).is_obj_visible())
+            .map(move |cd| vec![level as i32, cd.0, cd.1].into())
     }
     /// setup next floor
     pub fn new_level(

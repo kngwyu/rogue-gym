@@ -126,12 +126,9 @@ impl Dungeon {
             _ => unimplemented!(),
         }
     }
-    pub(crate) fn with_draw_ranges<E, F>(&self, mut draw: F) -> Result<(), E>
-    where
-        F: FnMut(DungeonPath) -> Result<(), E>,
-    {
+    pub(crate) fn draw_ranges<'a>(&'a self) -> impl 'a + Iterator<Item = DungeonPath> {
         match self {
-            Dungeon::Rogue(dungeon) => dungeon.with_draw_ranges(draw),
+            Dungeon::Rogue(dungeon) => dungeon.draw_ranges(),
             _ => unimplemented!(),
         }
     }
