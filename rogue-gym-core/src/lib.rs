@@ -37,12 +37,12 @@ mod rng;
 pub mod tile;
 pub mod ui;
 
-use character::{Player, PlayerConfig};
+use character::{player, Player};
 use dungeon::{Direction, Dungeon, DungeonStyle, Positioned, X, Y};
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
 use error_chain_mini::ChainedError;
 use input::{InputCode, Key, KeyMap};
-use item::{ItemConfig, ItemHandler};
+use item::ItemHandler;
 use tile::{Drawable, Tile};
 use ui::{MordalKind, MordalMsg, UiState};
 /// Game configuration
@@ -62,13 +62,13 @@ pub struct GameConfig {
     pub dungeon: DungeonStyle,
     /// item configuration
     #[serde(default)]
-    pub item: ItemConfig,
+    pub item: item::Config,
     /// keymap configuration
     #[serde(default)]
     pub keymap: KeyMap,
     /// player configuration
     #[serde(default)]
-    pub player: PlayerConfig,
+    pub player: player::Config,
 }
 
 impl Default for GameConfig {
@@ -78,9 +78,9 @@ impl Default for GameConfig {
             height: MIN_HEIGHT,
             seed: None,
             dungeon: DungeonStyle::rogue(),
-            item: ItemConfig::default(),
+            item: item::Config::default(),
             keymap: KeyMap::default(),
-            player: PlayerConfig::default(),
+            player: player::Config::default(),
         }
     }
 }

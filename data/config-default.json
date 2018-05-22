@@ -27,17 +27,9 @@
         }
     },
     "keymap": {
-        "b": {
+        "l": {
             "Act": {
-                "Move": "LeftDown"
-            }
-        },
-        "n": {
-            "Both": {
-                "act": {
-                    "Move": "RightDown"
-                },
-                "sys": "No"
+                "Move": "Right"
             }
         },
         "Up": {
@@ -45,44 +37,15 @@
                 "Move": "Up"
             }
         },
-        "Down": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
         "k": {
             "Act": {
                 "Move": "Up"
             }
         },
-        "S": {
-            "Sys": "Save"
-        },
-        "Esc": {
-            "Sys": "Cancel"
-        },
-        "j": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
-        "Left": {
+        "h": {
             "Act": {
                 "Move": "Left"
             }
-        },
-        "l": {
-            "Act": {
-                "Move": "Right"
-            }
-        },
-        "u": {
-            "Act": {
-                "Move": "RightUp"
-            }
-        },
-        "Q": {
-            "Sys": "Quit"
         },
         "y": {
             "Both": {
@@ -92,43 +55,80 @@
                 "sys": "Yes"
             }
         },
+        "S": {
+            "Sys": "Save"
+        },
+        "n": {
+            "Both": {
+                "act": {
+                    "Move": "RightDown"
+                },
+                "sys": "No"
+            }
+        },
+        "b": {
+            "Act": {
+                "Move": "LeftDown"
+            }
+        },
         "Right": {
             "Act": {
                 "Move": "Right"
             }
         },
-        "h": {
+        "u": {
+            "Act": {
+                "Move": "RightUp"
+            }
+        },
+        "Down": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "Esc": {
+            "Sys": "Cancel"
+        },
+        "Q": {
+            "Sys": "Quit"
+        },
+        "Left": {
             "Act": {
                 "Move": "Left"
+            }
+        },
+        "j": {
+            "Act": {
+                "Move": "Down"
             }
         }
     },
     "player": {
-        "level": {
-            "exps": [
-                10,
-                20,
-                40,
-                80,
-                160,
-                320,
-                640,
-                1300,
-                2600,
-                5200,
-                13000,
-                26000,
-                50000,
-                100000,
-                200000,
-                400000,
-                800000,
-                2000000,
-                4000000,
-                8000000,
-                0
-            ]
-        },
-        "hunger_time": 1300
+        "exps": [
+            10,
+            20,
+            40,
+            80,
+            160,
+            320,
+            640,
+            1300,
+            2600,
+            5200,
+            13000,
+            26000,
+            50000,
+            100000,
+            200000,
+            400000,
+            800000,
+            2000000,
+            4000000,
+            8000000,
+            0
+        ],
+        "hunger_time": 1300,
+        "init_hp": 12,
+        "init_str": 16
     }
 }

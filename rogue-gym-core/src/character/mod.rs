@@ -1,6 +1,6 @@
-mod player;
+pub mod player;
 
-pub use self::player::{Action, Hunger, Leveling, Player, PlayerConfig, PlayerStatus};
+pub use self::player::{Action, Hunger, Leveling, Player, PlayerStatus};
 /// values compatible with Hit Point
 #[derive(Clone, Copy, Debug, Default, Hash, PartialEq, PartialOrd, Ord, Eq, Add, Sub, Mul, Div,
          Neg, AddAssign, SubAssign, MulAssign, DivAssign, From, Into, Serialize, Deserialize)]

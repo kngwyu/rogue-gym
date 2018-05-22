@@ -2,25 +2,49 @@ use super::{Defense, Exp, HitPoint, Maxed, Strength};
 use dungeon::{Direction, DungeonPath};
 use item::ItemId;
 use tile::{Drawable, Tile};
+
 /// Player configuration
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
-pub struct PlayerConfig {
+pub struct Config {
+    #[serde(default, flatten)]
     level: Leveling,
+    #[serde(default = "default_hunger_time")]
     hunger_time: u32,
+    #[serde(default = "default_init_hp")]
+    init_hp: HitPoint,
+    #[serde(default = "default_init_str")]
+    init_str: Strength,
 }
 
-impl Default for PlayerConfig {
+impl Default for Config {
     fn default() -> Self {
-        PlayerConfig {
+        Config {
             level: Leveling::default(),
-            hunger_time: 1300,
+            hunger_time: default_hunger_time(),
+            init_hp: default_init_hp(),
+            init_str: default_init_str(),
         }
     }
 }
 
-impl PlayerConfig {
+#[inline]
+fn default_hunger_time() -> u32 {
+    1300
+}
+
+#[inline]
+fn default_init_hp() -> HitPoint {
+    HitPoint(12)
+}
+
+#[inline]
+fn default_init_str() -> Strength {
+    Strength(16)
+}
+
+impl Config {
     pub fn build(self) -> Player {
-        let status = PlayerStatus::new(&self);
+        let status = StatusInner::from_config(&self);
         Player {
             pos: DungeonPath::default(),
             status,
@@ -54,9 +78,9 @@ pub struct Player {
     /// player position
     pub(crate) pos: DungeonPath,
     /// player status(for drawing)
-    pub(crate) status: PlayerStatus,
+    pub(crate) status: StatusInner,
     /// configuration
-    pub(crate) config: PlayerConfig,
+    pub(crate) config: Config,
     /// items
     pub(crate) items: ItemPack,
 }
@@ -67,40 +91,31 @@ impl Drawable for Player {
     }
 }
 
-/// Player status
-/// it's same as what's diplayed
+/// statuses only for internal
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct PlayerStatus {
+pub(crate) struct StatusInner {
     /// hit point
     hp: Maxed<HitPoint>,
     /// strength
     strength: Maxed<Strength>,
-    /// defense
-    defense: Defense,
-    /// current experience point
+    /// exp
     exp: Exp,
-    /// player level
+    /// level
     level: u32,
-    /// hungry level
-    hunger: Hunger,
+    /// count down to death
+    hunger_time: u32,
 }
 
-impl PlayerStatus {
-    fn new(config: &PlayerConfig) -> Self {
-        PlayerStatus {
-            hp: Maxed::max(HitPoint(12)),       // STUB
-            strength: Maxed::max(Strength(16)), // STUB
-            defense: 10.into(),                 // STUB
+impl StatusInner {
+    fn from_config(config: &Config) -> Self {
+        StatusInner {
+            hp: Maxed::max(config.init_hp),
+            strength: Maxed::max(Strength(16)),
             exp: Exp(0),
             level: 1,
-            hunger: Hunger::Normal,
+            hunger_time: config.hunger_time,
         }
     }
-}
-
-/// statuses only for internal
-pub struct StatusInner {
-    hunger_time: u32,
 }
 
 /// possible player actions
@@ -112,16 +127,7 @@ pub enum Action {
     DownStair,
 }
 
-/// Hunger level
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum Hunger {
-    Normal,
-    Hungry,
-    Weak,
-}
-
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
-// TODO: mapping to strength
 pub struct Leveling {
     /// necesarry exp for level up
     exps: Vec<Exp>,
@@ -143,4 +149,29 @@ impl Leveling {
     fn exp(&self, level: u32) -> Option<Exp> {
         self.exps.get((level - 1) as usize).cloned()
     }
+}
+
+/// Hunger level
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub enum Hunger {
+    Normal,
+    Hungry,
+    Weak,
+}
+
+/// Player status for displaying
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct PlayerStatus {
+    /// hit point
+    hp: Maxed<HitPoint>,
+    /// strength
+    strength: Maxed<Strength>,
+    /// defense
+    defense: Defense,
+    /// current experience point
+    exp: Exp,
+    /// player level
+    level: u32,
+    /// hungry level
+    hunger: Hunger,
 }

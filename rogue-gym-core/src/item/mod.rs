@@ -9,6 +9,12 @@ use rng::RngHandle;
 use std::collections::BTreeMap;
 use tile::{Drawable, Tile};
 
+/// Item configuration
+#[derive(Clone, Debug, Default, Serialize, Deserialize, Eq, PartialEq)]
+pub struct Config {
+    gold: gold::Config,
+}
+
 /// item tag
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum ItemKind {
@@ -116,14 +122,14 @@ pub struct ItemHandler {
     /// items placed in the dungeon
     // we use BtreeMap here, because we can expect locality of access
     placed_items: BTreeMap<DungeonPath, ItemId>,
-    config: ItemConfig,
+    config: Config,
     rng: RngHandle,
     next_id: ItemId,
 }
 
 impl ItemHandler {
     /// generate new ItemHandler
-    pub fn new(config: ItemConfig, seed: u64) -> Self {
+    pub fn new(config: Config, seed: u64) -> Self {
         ItemHandler {
             items: BTreeMap::new(),
             placed_items: BTreeMap::new(),
@@ -165,11 +171,4 @@ impl ItemHandler {
         }
         Ok(())
     }
-}
-
-/// Item configuration
-#[derive(Clone, Debug, Default, Serialize, Deserialize, Eq, PartialEq)]
-#[serde(rename = "item-setting")]
-pub struct ItemConfig {
-    gold: gold::Config,
 }

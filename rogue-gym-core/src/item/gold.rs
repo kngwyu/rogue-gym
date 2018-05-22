@@ -3,7 +3,6 @@ use rng::RngHandle;
 
 /// Item configuration
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
-#[serde(rename = "gold-setting")]
 pub struct Config {
     #[serde(default = "default_gold_rate")]
     pub rate_inv: u32,
