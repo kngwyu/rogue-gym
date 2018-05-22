@@ -83,6 +83,8 @@ fn process_reaction(
             match msg {
                 // GameMsg::CantMove(d) => notify!(screen, "your {} way is blocked", d),
                 GameMsg::CantMove(_) => Ok(()),
+                // TODO: Display for ItemKind
+                GameMsg::CantGetItem(kind) => notify!(screen, "You walk onto {:?}", kind),
                 GameMsg::NoDownStair => notify!(screen, "Hmm... there seems to be no downstair"),
                 GameMsg::Quit => {
                     notify!(screen, "Thank you for playing!")?;
