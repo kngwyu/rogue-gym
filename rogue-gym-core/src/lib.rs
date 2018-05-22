@@ -42,9 +42,10 @@ use dungeon::{Direction, Dungeon, DungeonStyle, Positioned, X, Y};
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
 use error_chain_mini::ChainedError;
 use input::{InputCode, Key, KeyMap};
-use item::ItemHandler;
+use item::{ItemHandler, ItemKind};
 use tile::{Drawable, Tile};
 use ui::{MordalKind, MordalMsg, UiState};
+
 /// Game configuration
 /// it's inteded to construct from json
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
@@ -258,6 +259,8 @@ pub enum Reaction {
 #[derive(Clone, Debug)]
 pub enum GameMsg {
     CantMove(Direction),
+    // STUB: show not only kind,
+    CantGetItem(ItemKind),
     NoDownStair,
     Quit,
 }

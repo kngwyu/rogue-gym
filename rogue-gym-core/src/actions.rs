@@ -56,3 +56,15 @@ pub(crate) fn new_level(
         .ok_or_else(|| ErrorId::MaybeBug.into_with("action::new_level No space for player!"))?;
     dungeon.enter_room(player.pos.clone(), true)
 }
+
+pub(crate) fn get_item(
+    player: &mut Player,
+    item_handle: &mut ItemHandler,
+    dungeon: &mut Dungeon,
+) -> GameResult<Option<GameMsg>> {
+    let item_id = match item_handle.remove_from_path(&player.pos) {
+        Some(i) => i,
+        None => return Ok(None),
+    };
+    Ok(None)
+}

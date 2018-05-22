@@ -11,10 +11,14 @@ use tuple_map::TupleMap2;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum RoomKind {
     /// normal room
+    // 16byte
     Normal { range: RectRange<i32> },
     /// maze room
+    // boxed -> 8 byte
+    // not -> 64 byte
     Maze(Box<maze::Maze>),
     /// passage only(gone room)
+    // 8 byte
     Empty { up_left: Coord },
 }
 

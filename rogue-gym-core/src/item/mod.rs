@@ -1,8 +1,10 @@
 //! module for item
 
-mod food;
+pub mod food;
 mod gold;
 
+use self::food::Food;
+use character::player::{self, ItemPack};
 use dungeon::DungeonPath;
 use error::{GameResult, ResultExt};
 use rng::RngHandle;
@@ -19,12 +21,12 @@ pub struct Config {
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum ItemKind {
     Armor,
-    Custom,
+    Food(Food),
     Gold,
     Potion,
     Ring,
     Scroll,
-    Stick,
+    Wand,
     Weapon,
 }
 
@@ -46,9 +48,14 @@ impl ItemKind {
 impl Drawable for ItemKind {
     fn tile(&self) -> Tile {
         match *self {
+            ItemKind::Armor => b']',
+            ItemKind::Food(_) => b':',
             ItemKind::Gold => b'*',
+            ItemKind::Potion => b'!',
+            ItemKind::Ring => b'=',
+            ItemKind::Scroll => b'?',
+            ItemKind::Wand => b'/',
             ItemKind::Weapon => b')',
-            _ => unimplemented!(),
         }.into()
     }
 }
@@ -59,7 +66,7 @@ pub struct ItemNum(pub u32);
 
 // TODO: add more attribute
 bitflags!{
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, Default)]
     pub struct ItemAttr: u32 {
         /// the item is cursed or not
         const IS_CURSED = 0b00_000_001;
@@ -80,7 +87,7 @@ impl ItemId {
 }
 
 /// Unique item
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Item {
     pub kind: ItemKind,
     pub how_many: ItemNum,
@@ -88,21 +95,25 @@ pub struct Item {
 }
 
 impl Item {
-    fn merge<F>(self, other: &Self, attr_merger: Option<F>) -> Self
+    pub(crate) fn new<N: Into<ItemNum>>(kind: ItemKind, num: N) -> Self {
+        Item {
+            kind,
+            how_many: num.into(),
+            attr: ItemAttr::default(),
+        }
+    }
+    pub(crate) fn merge<F>(self, other: &Self, attr_merger: F) -> Self
     where
         F: FnOnce(ItemAttr, ItemAttr) -> ItemAttr,
     {
-        let attr = match attr_merger {
-            Some(f) => f(self.attr, other.attr),
-            None => self.attr | other.attr,
-        };
+        let attr = attr_merger(self.attr, other.attr);
         Item {
             kind: self.kind,
             how_many: self.how_many + other.how_many,
             attr,
         }
     }
-    fn many(mut self) -> Self {
+    pub(crate) fn many(mut self) -> Self {
         self.attr |= ItemAttr::IS_MANY;
         self
     }
@@ -156,10 +167,13 @@ impl ItemHandler {
         self.next_id.increment();
         id
     }
-    fn place_item(&mut self, place: DungeonPath, id: ItemId) {
+    pub fn remove_from_path(&mut self, path: &DungeonPath) -> Option<ItemId> {
+        self.placed_items.remove(&path)
+    }
+    pub fn place_to_path(&mut self, place: DungeonPath, id: ItemId) {
         self.placed_items.insert(place, id);
     }
-    /// setup gold for 1 room
+    /// Sets up gold for 1 room
     pub fn setup_gold<F>(&mut self, level: u32, mut empty_cell: F) -> GameResult<()>
     where
         F: FnMut() -> GameResult<DungeonPath>,
@@ -167,8 +181,16 @@ impl ItemHandler {
         if let Some(num) = self.config.gold.gen(&mut self.rng, level) {
             let item_id = self.gen_item(|| ItemKind::Gold.numbered(num).many());
             let place = empty_cell().chain_err("ItemHandler::setup_gold")?;
-            self.place_item(place, item_id);
+            self.place_to_path(place, item_id);
         }
+        Ok(())
+    }
+    /// Sets up player items
+    pub fn init_player_items(
+        &mut self,
+        pack: &mut ItemPack,
+        config: &player::Config,
+    ) -> GameResult<()> {
         Ok(())
     }
 }

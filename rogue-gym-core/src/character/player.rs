@@ -1,6 +1,7 @@
 use super::{Defense, Exp, HitPoint, Maxed, Strength};
 use dungeon::{Direction, DungeonPath};
-use item::ItemId;
+use item::{food::Food, Item, ItemId, ItemKind};
+use std::collections::BTreeSet;
 use tile::{Drawable, Tile};
 
 /// Player configuration
@@ -14,6 +15,10 @@ pub struct Config {
     init_hp: HitPoint,
     #[serde(default = "default_init_str")]
     init_str: Strength,
+    #[serde(default = "default_max_items")]
+    max_items: usize,
+    #[serde(default = "default_init_items")]
+    init_items: Vec<Item>,
 }
 
 impl Default for Config {
@@ -23,6 +28,8 @@ impl Default for Config {
             hunger_time: default_hunger_time(),
             init_hp: default_init_hp(),
             init_str: default_init_str(),
+            max_items: default_max_items(),
+            init_items: default_init_items(),
         }
     }
 }
@@ -42,6 +49,19 @@ fn default_init_str() -> Strength {
     Strength(16)
 }
 
+#[inline]
+fn default_max_items() -> usize {
+    27
+}
+
+// TODO: more items
+#[inline]
+fn default_init_items() -> Vec<Item> {
+    let money = Item::new(ItemKind::Gold, 0).many();
+    let food = Item::new(ItemKind::Food(Food::Ration), 1).many();
+    vec![money, food]
+}
+
 impl Config {
     pub fn build(self) -> Player {
         let status = StatusInner::from_config(&self);
@@ -54,20 +74,16 @@ impl Config {
     }
 }
 
-// TODO: should this be configurable?
-const ITEM_MAX: usize = 26;
-
 /// player's item
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ItemPack {
-    inner: [Option<ItemId>; ITEM_MAX],
+    inner: BTreeSet<ItemId>,
 }
 
-// TODO: use config file
 impl Default for ItemPack {
     fn default() -> ItemPack {
         ItemPack {
-            inner: [None; ITEM_MAX],
+            inner: BTreeSet::new(),
         }
     }
 }
@@ -157,21 +173,4 @@ pub enum Hunger {
     Normal,
     Hungry,
     Weak,
-}
-
-/// Player status for displaying
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct PlayerStatus {
-    /// hit point
-    hp: Maxed<HitPoint>,
-    /// strength
-    strength: Maxed<Strength>,
-    /// defense
-    defense: Defense,
-    /// current experience point
-    exp: Exp,
-    /// player level
-    level: u32,
-    /// hungry level
-    hunger: Hunger,
 }
