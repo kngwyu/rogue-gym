@@ -186,11 +186,10 @@ impl ItemHandler {
         Ok(())
     }
     /// Sets up player items
-    pub fn init_player_items(
-        &mut self,
-        pack: &mut ItemPack,
-        config: &player::Config,
-    ) -> GameResult<()> {
+    pub fn init_player_items(&mut self, pack: &mut ItemPack, items: &[Item]) -> GameResult<()> {
+        items.iter().for_each(|item| {
+            let item = self.gen_item(|| item.clone());
+        });
         Ok(())
     }
 }

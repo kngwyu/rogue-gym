@@ -75,16 +75,14 @@ impl Config {
 }
 
 /// player's item
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct ItemPack {
     inner: BTreeSet<ItemId>,
 }
 
-impl Default for ItemPack {
-    fn default() -> ItemPack {
-        ItemPack {
-            inner: BTreeSet::new(),
-        }
+impl ItemPack {
+    pub fn add(&mut self, id: ItemId) -> bool {
+        self.inner.insert(id)
     }
 }
 
