@@ -1,7 +1,8 @@
 use super::{Defense, Exp, HitPoint, Maxed, Strength};
 use dungeon::{Direction, DungeonPath};
+use fenwick::FenwickSet;
 use item::{food::Food, Item, ItemId, ItemKind};
-use std::collections::BTreeSet;
+use std::collections::BTreeMap;
 use tile::{Drawable, Tile};
 
 /// Player configuration
@@ -68,21 +69,34 @@ impl Config {
         Player {
             pos: DungeonPath::default(),
             status,
+            items: ItemPack::from_max_len(self.max_items),
             config: self,
-            items: ItemPack::default(),
         }
     }
 }
 
 /// player's item
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ItemPack {
-    inner: BTreeSet<ItemId>,
+    empty_ids: FenwickSet,
+    items: BTreeMap<u8, ItemId>,
 }
 
 impl ItemPack {
+    pub fn from_max_len(max_len: usize) -> Self {
+        ItemPack {
+            empty_ids: FenwickSet::from_range(0..max_len),
+            items: BTreeMap::new(),
+        }
+    }
     pub fn add(&mut self, id: ItemId) -> bool {
-        self.inner.insert(id)
+        let ch = match self.empty_ids.nth(0) {
+            Some(id) => id,
+            None => return false,
+        };
+        self.empty_ids.insert(ch);
+        self.items.insert(ch as u8, id);
+        false
     }
 }
 

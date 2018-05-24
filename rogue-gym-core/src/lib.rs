@@ -122,7 +122,8 @@ impl GameConfig {
         let config = self.to_global().chain_err(ERR_STR)?;
         // TODO: invalid checking
         let mut item = ItemHandler::new(self.item.clone(), config.seed);
-        let mut dungeon = self.dungeon
+        let mut dungeon = self
+            .dungeon
             .build(&config, &mut item, &game_info, config.seed)
             .chain_err(ERR_STR)?;
         // TODO: invalid checking
@@ -259,7 +260,7 @@ pub enum Reaction {
 #[derive(Clone, Debug)]
 pub enum GameMsg {
     CantMove(Direction),
-    // STUB: show not only kind,
+    // TODO: show not only kind,
     CantGetItem(ItemKind),
     NoDownStair,
     Quit,

@@ -115,7 +115,8 @@ impl<'a, T: PrimInt> Iterator for RandomSelecter<'a, T> {
             return None;
         }
         let n = self.rng.gen_range(0, num_rests);
-        let res = self.selected
+        let res = self
+            .selected
             .nth(n)
             .expect("[RandomSelecter::next] no nth element(maybe logic bug)");
         self.selected.remove(res);
@@ -180,7 +181,7 @@ mod selecter_bench {
     #[bench]
     fn select_bench(b: &mut Bencher) {
         const MAX: usize = 1_000_000;
-        let mut bs = FixedBitSet::with_capacity(MAX);
+        let mut bs = FixedBitSet::from_capacity(MAX);
         b.iter(|| {
             let mut rng = RngHandle::new();
             let u = rng.select(0..MAX).nth(MAX / 2).unwrap();

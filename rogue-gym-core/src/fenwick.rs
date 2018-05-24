@@ -13,13 +13,13 @@ pub struct FenwickSet {
 
 impl Default for FenwickSet {
     fn default() -> Self {
-        FenwickSet::with_capacity(10)
+        FenwickSet::from_capacity(10)
     }
 }
 
 impl FenwickSet {
     /// create a new set with capacity [0..n)
-    pub fn with_capacity(n: usize) -> Self {
+    pub fn from_capacity(n: usize) -> Self {
         assert!(
             n <= 50_000_000,
             "We can't construct too big FenwickSet: size {}",
@@ -34,7 +34,7 @@ impl FenwickSet {
     /// create a new set from range `range` with the capacity [0..range.end)
     /// and already have elements [range.start..range.end)
     pub fn from_range(range: Range<usize>) -> Self {
-        let mut set = FenwickSet::with_capacity(range.end);
+        let mut set = FenwickSet::from_capacity(range.end);
         range.for_each(|i| {
             set.insert(i);
         });
@@ -232,7 +232,7 @@ mod fenwick_set_test {
     fn same_as_hashset() {
         let mut rng = RngHandle::new();
         let max = 1_000_000;
-        let mut fws = FenwickSet::with_capacity(max);
+        let mut fws = FenwickSet::from_capacity(max);
         let mut hash = HashSet::new();
         for _ in 0..100000 {
             let num = rng.range(0..max);
@@ -248,7 +248,7 @@ mod fenwick_set_test {
     #[test]
     fn into_iter() {
         let max = 1_000_000;
-        let mut fws = FenwickSet::with_capacity(max);
+        let mut fws = FenwickSet::from_capacity(max);
         let mut rng = RngHandle::new();
         let mut bts = BTreeSet::new();
         for _ in 0..1000 {
@@ -261,7 +261,7 @@ mod fenwick_set_test {
     #[test]
     fn nth() {
         let max = 1_000_000;
-        let mut fws = FenwickSet::with_capacity(max);
+        let mut fws = FenwickSet::from_capacity(max);
         for i in (0..1000).filter(|&i| i % 2 == 1) {
             fws.insert(i);
         }
@@ -272,7 +272,7 @@ mod fenwick_set_test {
     #[test]
     fn select() {
         let max = 1_000_000;
-        let mut fws = FenwickSet::with_capacity(max);
+        let mut fws = FenwickSet::from_capacity(max);
         let mut rng = RngHandle::new();
         assert_eq!(fws.select(&mut rng), None);
         for _ in 0..1000 {
@@ -287,7 +287,7 @@ mod fenwick_set_test {
     #[test]
     fn invalid_value() {
         let max = 1_000_000;
-        let mut fws = FenwickSet::with_capacity(max);
+        let mut fws = FenwickSet::from_capacity(max);
         for i in max..max + 10 {
             assert!(!fws.insert(i));
             assert!(!fws.remove(i));

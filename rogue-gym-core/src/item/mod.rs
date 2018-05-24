@@ -4,13 +4,12 @@ pub mod food;
 mod gold;
 
 use self::food::Food;
-use character::player::{self, ItemPack};
+use character::player::ItemPack;
 use dungeon::DungeonPath;
-use error::{GameResult, ResultExt};
+use error::{ErrorId, ErrorKind, GameResult, ResultExt};
 use rng::RngHandle;
 use std::collections::BTreeMap;
 use tile::{Drawable, Tile};
-
 /// Item configuration
 #[derive(Clone, Debug, Default, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Config {
@@ -187,9 +186,17 @@ impl ItemHandler {
     }
     /// Sets up player items
     pub fn init_player_items(&mut self, pack: &mut ItemPack, items: &[Item]) -> GameResult<()> {
-        items.iter().for_each(|item| {
-            let item = self.gen_item(|| item.clone());
-        });
-        Ok(())
+        items
+            .iter()
+            .try_for_each(|item| {
+                let item = self.gen_item(|| item.clone());
+                if pack.add(item) {
+                    Ok(())
+                } else {
+                    let item_num = items.len();
+                    Err(ErrorId::InvalidSetting.into_with(format!("")))
+                }
+            })
+            .chain_err("in ItemHandler::init_player_items")
     }
 }

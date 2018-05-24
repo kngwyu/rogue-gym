@@ -22,7 +22,7 @@ where
 {
     let mut graph = RoomGraph::new(xrooms, yrooms);
     let num_rooms = rooms.len();
-    let mut selected = FenwickSet::with_capacity(num_rooms);
+    let mut selected = FenwickSet::from_capacity(num_rooms);
     let mut cur_room = rng.range(0..num_rooms);
     selected.insert(cur_room);
     // Connect all rooms

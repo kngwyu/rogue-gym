@@ -74,7 +74,8 @@ impl Room {
                     register(Positioned(cd.into(), surface))
                 })
                 .chain_err("Room::draw"),
-            RoomKind::Maze(ref maze) => maze.passage_iter()
+            RoomKind::Maze(ref maze) => maze
+                .passage_iter()
                 .try_for_each(|cd| register(Positioned(cd, Surface::Passage)))
                 .chain_err("Room::draw"),
             RoomKind::Empty { .. } => Ok(()),
@@ -143,7 +144,7 @@ fn gen_empty_cells(kind: &RoomKind) -> FenwickSet {
     match kind {
         RoomKind::Normal { range } => {
             let len = range.len();
-            let mut set = FenwickSet::with_capacity(len);
+            let mut set = FenwickSet::from_capacity(len);
             range.iter().enumerate().for_each(|(i, cd)| {
                 if !range.is_edge(cd) {
                     set.insert(i);
@@ -152,7 +153,7 @@ fn gen_empty_cells(kind: &RoomKind) -> FenwickSet {
             set
         }
         RoomKind::Maze(ref maze) => maze.passages.clone(),
-        RoomKind::Empty { .. } => FenwickSet::with_capacity(1),
+        RoomKind::Empty { .. } => FenwickSet::from_capacity(1),
     }
 }
 
@@ -226,7 +227,7 @@ pub(crate) fn make_room(
         let range =
             RectRange::from_corners(upper_left, upper_left + room_size - Coord::new(1, 1)).unwrap();
         let len = range.len();
-        let mut passages = FenwickSet::with_capacity(len);
+        let mut passages = FenwickSet::from_capacity(len);
         maze::dig_maze(range.clone(), rng, |cd| {
             if let Some(id) = range.index(cd) {
                 passages.insert(id);
