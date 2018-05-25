@@ -179,7 +179,7 @@ impl ItemHandler {
     {
         if let Some(num) = self.config.gold.gen(&mut self.rng, level) {
             let item_id = self.gen_item(|| ItemKind::Gold.numbered(num).many());
-            let place = empty_cell().chain_err("ItemHandler::setup_gold")?;
+            let place = empty_cell().chain_err(|| "ItemHandler::setup_gold")?;
             self.place_to_path(place, item_id);
         }
         Ok(())
@@ -194,9 +194,9 @@ impl ItemHandler {
                     Ok(())
                 } else {
                     let item_num = items.len();
-                    Err(ErrorId::InvalidSetting.into_with(format!("")))
+                    Err(ErrorId::InvalidSetting.into_with(|| format!("")))
                 }
             })
-            .chain_err("in ItemHandler::init_player_items")
+            .chain_err(|| "in ItemHandler::init_player_items")
     }
 }

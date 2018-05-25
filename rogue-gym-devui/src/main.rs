@@ -43,7 +43,7 @@ fn play_game(config: GameConfig) -> Result<()> {
     // let's receive keyboard inputs(out main loop)
     for keys in stdin.keys() {
         screen.clean_notification()?;
-        let key = keys.into_chained("in play_game")?;
+        let key = keys.into_chained(|| "in play_game")?;
         let res = runtime.react_to_key(key.into());
         let res = match res {
             Ok(r) => r,
@@ -56,7 +56,7 @@ fn play_game(config: GameConfig) -> Result<()> {
 
         for reaction in res {
             let result =
-                process_reaction(&mut screen, &mut runtime, reaction).chain_err("in play_game")?;
+                process_reaction(&mut screen, &mut runtime, reaction).chain_err(|| "in play_game")?;
             if let Some(transition) = result {
                 match transition {
                     Transition::Exit => return Ok(()),
@@ -90,11 +90,12 @@ fn process_reaction(
                     notify!(screen, "Thank you for playing!")?;
                     return Ok(Some(Transition::Exit));
                 }
-            }.chain_err("in devui::process_reaction")?;
+            }.chain_err(|| "in devui::process_reaction")?;
             Ok(None)
         }
         Reaction::Redraw => {
-            draw_dungeon(screen, runtime).chain_err("in process_action attempt to draw dungeon")?;
+            draw_dungeon(screen, runtime)
+                .chain_err(|| "in process_action attempt to draw dungeon")?;
             Ok(None)
         }
         Reaction::UiTransition(ui_state) => {
@@ -127,11 +128,13 @@ fn draw_dungeon(screen: &mut Screen, runtime: &mut RunTime) -> Result<()> {
 fn get_config(args: &ArgMatches) -> Result<GameConfig> {
     let file_name = args.value_of("config").expect("No config file");
     if !file_name.ends_with(".json") {
-        return Err(ErrorID::InvalidArg.into_with("Only .json file is allowed as configuration file"));
+        return Err(
+            ErrorID::InvalidArg.into_with(|| "Only .json file is allowed as configuration file")
+        );
     }
-    let mut file = File::open(file_name).into_chained("get_config")?;
+    let mut file = File::open(file_name).into_chained(|| "get_config")?;
     let mut buf = String::new();
-    file.read_to_string(&mut buf).into_chained("get_config")?;
+    file.read_to_string(&mut buf).into_chained(|| "get_config")?;
     GameConfig::from_json(&buf).convert()
 }
 
@@ -188,9 +191,9 @@ fn setup_logger(args: &ArgMatches) -> Result<()> {
                 .create(true)
                 .truncate(true)
                 .open(file)
-                .into_chained("error in getting log file")?)
+                .into_chained(|| "error in getting log file")?)
             .apply()
-            .into_chained("error in setup_log")?;
+            .into_chained(|| "error in setup_log")?;
     }
     Ok(())
 }

@@ -199,7 +199,7 @@ impl Dungeon {
         };
         dungeon
             .new_level(game_info, item_handle)
-            .chain_err("rogue::Dungeon::new")?;
+            .chain_err(|| "rogue::Dungeon::new")?;
         Ok(dungeon)
     }
     /// returns the range to draw
@@ -228,13 +228,13 @@ impl Dungeon {
         }
         let (width, height) = (self.config_global.width, self.config_global.height);
         let mut floor = Floor::gen_floor(level, &self.config, width, height, &mut self.rng)
-            .chain_err("Dungeon::new_floor")?;
+            .chain_err(|| "Dungeon::new_floor")?;
         // setup gold
         let set_gold = !game_info.is_cleared || level >= self.max_level;
         debug!("[Dungeon::new_level] set_gold: {}", set_gold);
         floor
             .setup_items(level, item_handle, set_gold, &mut self.rng)
-            .chain_err("Dungeon::new_floor")?;
+            .chain_err(|| "Dungeon::new_floor")?;
         self.current_floor = floor;
         Ok(())
     }
@@ -264,17 +264,19 @@ impl Dungeon {
     ) -> GameResult<DungeonPath> {
         const ERR_STR: &str = "[rogue::Dungeon::move_player]";
         if address.level != self.level {
-            return Err(ErrorId::MaybeBug.into_with(ERR_STR));
+            return Err(ErrorId::MaybeBug.into_with(|| ERR_STR));
         }
         self.current_floor
             .player_out(address.cd)
-            .chain_err(ERR_STR)?;
+            .chain_err(|| ERR_STR)?;
         let cd = address.cd + direction.to_cd();
         let address = Address {
             level: self.level,
             cd,
         };
-        self.current_floor.player_in(cd, false).chain_err(ERR_STR)?;
+        self.current_floor
+            .player_in(cd, false)
+            .chain_err(|| ERR_STR)?;
         Ok(address.into())
     }
     /// select an empty cell randomly
@@ -290,15 +292,17 @@ impl Dungeon {
         E: From<ErrorId> + ErrorKind,
     {
         const ERR_STR: &str = "in rogue::Dungeon::move_player";
-        let range = self.current_floor
+        let range = self
+            .current_floor
             .field
             .size()
-            .ok_or_else(|| E::from(ErrorId::MaybeBug).into_with(ERR_STR))?;
+            .ok_or_else(|| E::from(ErrorId::MaybeBug).into_with(|| ERR_STR))?;
         range.into_iter().try_for_each(|cd| {
-            let cell = self.current_floor
+            let cell = self
+                .current_floor
                 .field
                 .try_get_p(cd)
-                .into_chained(ERR_STR)
+                .into_chained(|| ERR_STR)
                 .convert()?;
             let cd = Coord::from(cd);
             let tile = cell.tile();

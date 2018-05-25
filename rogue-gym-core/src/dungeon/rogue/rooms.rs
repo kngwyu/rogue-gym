@@ -73,11 +73,11 @@ impl Room {
                     };
                     register(Positioned(cd.into(), surface))
                 })
-                .chain_err("Room::draw"),
+                .chain_err(|| "Room::draw"),
             RoomKind::Maze(ref maze) => maze
                 .passage_iter()
                 .try_for_each(|cd| register(Positioned(cd, Surface::Passage)))
-                .chain_err("Room::draw"),
+                .chain_err(|| "Room::draw"),
             RoomKind::Empty { .. } => Ok(()),
         }
     }
@@ -233,7 +233,7 @@ pub(crate) fn make_room(
                 passages.insert(id);
                 Ok(())
             } else {
-                Err(ErrorId::MaybeBug.into_with("dig_maze produced invalid Coordinate!"))
+                Err(ErrorId::MaybeBug.into_with(|| "dig_maze produced invalid Coordinate!"))
             }
         })?;
         let maze = maze::Maze { range, passages };
@@ -263,7 +263,7 @@ pub(crate) mod test {
     use tile::Drawable;
     pub(crate) fn gen(level: u32) -> Vec<Room> {
         let mut config = Config::default();
-        config.maze_rate_inv = 3;
+        config.maze_rate_inv = 5;
         let (w, h) = (X(80), Y(24));
         let mut rng = RngHandle::new();
         gen_rooms(level, &config, w, h, &mut rng).unwrap()

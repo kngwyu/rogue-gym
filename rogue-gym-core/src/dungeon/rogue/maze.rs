@@ -42,11 +42,11 @@ where
     F: FnMut(Coord) -> GameResult<()>,
 {
     let start: Coord = range.upper_left().into();
-    register(start).chain_err("dungeon::rogue::maze::dig_maze")?;
+    register(start).chain_err(|| "dungeon::rogue::maze::dig_maze")?;
     let mut used = HashSet::new();
     used.insert(start);
     dig_impl(&range, rng, &mut register, &mut used, start)
-        .chain_err("dungeon::rogue::maze::dig_maze")
+        .chain_err(|| "dungeon::rogue::maze::dig_maze")
 }
 
 /// implementation of maze digging by DFS
@@ -100,7 +100,7 @@ mod test {
         let mut buffer = vec![vec![false; 80]; 24];
         dig_maze(range.clone(), &mut rng, |cd| {
             if !range.contains(cd) {
-                Err(ErrorId::MaybeBug.into_with("dig_maze produced invalid Coordinate!"))
+                Err(ErrorId::MaybeBug.into_with(|| "dig_maze produced invalid Coordinate!"))
             } else {
                 *buffer.get_mut_p(cd) = true;
                 Ok(())

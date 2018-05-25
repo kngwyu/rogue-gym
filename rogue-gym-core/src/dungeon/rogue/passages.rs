@@ -37,7 +37,7 @@ where
                 direction,
                 rng,
                 &mut register,
-            ).chain_err("passages::dig_passges")?;
+            ).chain_err(|| "passages::dig_passges")?;
         } else {
             cur_room = selected.select(rng).unwrap();
         }
@@ -51,7 +51,7 @@ where
         if let Some((room2, direction)) = selected {
             graph.coonect(room1, room2);
             connect_2rooms(&rooms[room1], &rooms[room2], direction, rng, &mut register)
-                .chain_err("passages::dig_passages")?;
+                .chain_err(|| "passages::dig_passages")?;
         }
     }
     Ok(())
@@ -125,7 +125,7 @@ where
         .chain(turn_start.direc_iter(turn_dir, |cd| cd != turn_end))
         .chain(turn_end.direc_iter(direction, |cd| cd != end))
         .try_for_each(|cd| register(Positioned(cd, Surface::Passage)))
-        .chain_err("passages::connect_2rooms")
+        .chain_err(|| "passages::connect_2rooms")
 }
 
 fn door_kind(room: &Room) -> Surface {
@@ -315,7 +315,7 @@ mod test {
                         *buf = surface;
                         Ok(())
                     })
-                    .into_chained("passages::test::to_buffer")
+                    .into_chained(|| "passages::test::to_buffer")
             },
         ).unwrap();
         buffer
@@ -343,8 +343,11 @@ mod test {
                 .unwrap()
                 .into_iter()
                 .find(|&t| *buffer.get_p(t) == Surface::Floor)
-                .map(|t| Coord::new(t.0 as i32, t.1 as i32))
-                .unwrap();
+                .map(|t| Coord::new(t.0 as i32, t.1 as i32));
+            let start = match start {
+                Some(s) => s,
+                None => continue, // all floor is maze
+            };
             let mut visited = vec![vec![false; xlen]; ylen];
             *visited.get_mut_p(start) = true;
             let mut queue = VecDeque::new();

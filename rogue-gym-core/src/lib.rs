@@ -93,22 +93,22 @@ const MAX_HEIGHT: i32 = MIN_HEIGHT * 2;
 impl GameConfig {
     /// construct Game configuration from json string
     pub fn from_json(json: &str) -> GameResult<Self> {
-        serde_json::from_str(json).into_chained("GameConfig::from_json")
+        serde_json::from_str(json).into_chained(|| "GameConfig::from_json")
     }
     fn to_global(&self) -> GameResult<GlobalConfig> {
         let seed = self.seed.unwrap_or_else(rng::gen_seed);
         let (w, h) = (self.width, self.height);
         if w < MIN_WIDTH {
-            return Err(ErrorId::InvalidSetting.into_with("screen width is too narrow"));
+            return Err(ErrorId::InvalidSetting.into_with(|| "screen width is too narrow"));
         }
         if w > MAX_WIDTH {
-            return Err(ErrorId::InvalidSetting.into_with("screen width is too wide"));
+            return Err(ErrorId::InvalidSetting.into_with(|| "screen width is too wide"));
         }
         if h < MIN_HEIGHT {
-            return Err(ErrorId::InvalidSetting.into_with("screen height is too narrow"));
+            return Err(ErrorId::InvalidSetting.into_with(|| "screen height is too narrow"));
         }
         if h > MAX_HEIGHT {
-            return Err(ErrorId::InvalidSetting.into_with("screen height is too wide"));
+            return Err(ErrorId::InvalidSetting.into_with(|| "screen height is too wide"));
         }
         Ok(GlobalConfig {
             width: w.into(),
@@ -119,19 +119,19 @@ impl GameConfig {
     pub fn build(self) -> GameResult<RunTime> {
         const ERR_STR: &str = "GameConfig::build";
         let game_info = GameInfo::new();
-        let config = self.to_global().chain_err(ERR_STR)?;
+        let config = self.to_global().chain_err(|| ERR_STR)?;
         // TODO: invalid checking
         let mut item = ItemHandler::new(self.item.clone(), config.seed);
         let mut dungeon = self
             .dungeon
             .build(&config, &mut item, &game_info, config.seed)
-            .chain_err(ERR_STR)?;
+            .chain_err(|| ERR_STR)?;
         // TODO: invalid checking
         let mut player = self.player.build();
         item.init_player_items(&mut player.items, &player.config.init_items)
-            .chain_err(ERR_STR)?;
+            .chain_err(|| ERR_STR)?;
         actions::new_level(&game_info, &mut dungeon, &mut item, &mut player, true)
-            .chain_err(ERR_STR)?;
+            .chain_err(|| ERR_STR)?;
         Ok(RunTime {
             game_info,
             config,
@@ -165,11 +165,11 @@ impl RunTime {
                 self.ui = ui.clone();
                 Ok(vec![Reaction::UiTransition(ui)])
             }
-            Save => Err(ErrorId::Unimplemented.into_with(
-                "[rogue_gym_core::RunTime::check_interuppting] save command is unimplemented",
-            )),
+            Save => Err(ErrorId::Unimplemented.into_with(|| {
+                "[rogue_gym_core::RunTime::check_interuppting] save command is unimplemented"
+            })),
             _ => Err(ErrorId::IgnoredInput(InputCode::Sys(input))
-                .into_with("rogue_gym_core::RunTime::check_interuppting")),
+                .into_with(|| "rogue_gym_core::RunTime::check_interuppting")),
         }
     }
     pub fn draw_screen<F, E>(&self, mut drawer: F) -> Result<(), ChainedError<E>>
@@ -179,7 +179,7 @@ impl RunTime {
     {
         const ERR_STR: &str = "[rogue_gym_core::RunTime::draw_screen]";
         // floor => item & character
-        self.dungeon.draw(&mut drawer).chain_err(ERR_STR)?;
+        self.dungeon.draw(&mut drawer).chain_err(|| ERR_STR)?;
         self.dungeon
             .draw_ranges()
             .try_for_each(|path| {
@@ -192,7 +192,7 @@ impl RunTime {
                 }
                 Ok(())
             })
-            .chain_err(ERR_STR)
+            .chain_err(|| ERR_STR)
     }
     pub fn react_to_input(&mut self, input: InputCode) -> GameResult<Vec<Reaction>> {
         trace!("[react_to_input] input: {:?} ui: {:?}", input, self.ui);
@@ -221,7 +221,8 @@ impl RunTime {
                         ),
                         MordalMsg::Save => (
                             Some(UiState::Dungeon),
-                            Err(ErrorId::Unimplemented.into_with("Save command is unimplemented")),
+                            Err(ErrorId::Unimplemented
+                                .into_with(|| "Save command is unimplemented")),
                         ),
                         MordalMsg::Quit => (None, Ok(vec![Reaction::Notify(GameMsg::Quit)])),
                         MordalMsg::None => (None, Ok(vec![])),
@@ -238,9 +239,9 @@ impl RunTime {
     pub fn react_to_key(&mut self, key: Key) -> GameResult<Vec<Reaction>> {
         match self.keymap.get(key) {
             Some(i) => self.react_to_input(i),
-            None => {
-                Err(ErrorId::InvalidInput(key).into_with("rogue_gym_core::RunTime::react_to_key"))
-            }
+            None => Err(
+                ErrorId::InvalidInput(key).into_with(|| "rogue_gym_core::RunTime::react_to_key")
+            ),
         }
     }
     pub fn screen_size(&self) -> (X, Y) {

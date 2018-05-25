@@ -39,7 +39,7 @@ impl DungeonStyle {
             DungeonStyle::Rogue(config) => {
                 let dungeon =
                     rogue::Dungeon::new(config, config_global, game_info, item_handle, seed)
-                        .chain_err("DungeonStyle::build")?;
+                        .chain_err(|| "DungeonStyle::build")?;
                 Ok(Dungeon::Rogue(Box::new(dungeon)))
             }
             _ => unimplemented!(),

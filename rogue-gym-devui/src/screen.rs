@@ -17,7 +17,7 @@ impl Screen {
     pub(crate) fn clear_dungeon(&mut self) -> Result<()> {
         (2..self.height)
             .try_for_each(|row| write!(self.term, "{}{}", cursor::Goto(1, row), clear::CurrentLine))
-            .into_chained("in Screen::clear")
+            .into_chained(|| "in Screen::clear")
     }
 
     pub(crate) fn clean_notification(&mut self) -> Result<()> {
@@ -31,40 +31,38 @@ impl Screen {
             )
         } else {
             Ok(())
-        }.into_chained("in Screen::clean_notification")
+        }.into_chained(|| "in Screen::clean_notification")
     }
 
     pub(crate) fn cursor<P: Into<(u16, u16)>>(&mut self, cd: P) -> Result<()> {
         let (col, row) = cd.into();
-        write!(self.term, "{}", cursor::Goto(col, row)).into_chained("in Screen::draw_tile")
+        write!(self.term, "{}", cursor::Goto(col, row)).into_chained(|| "in Screen::draw_tile")
     }
     pub(crate) fn draw_tile(&mut self, cd: Coord, tile: Tile) -> Result<()> {
         let (col, row) = cd.into();
         write!(self.term, "{}{}", cursor::Goto(col, row), tile.to_char())
-            .into_chained("in Screen::draw_tile")
+            .into_chained(|| "in Screen::draw_tile")
     }
 
     pub(crate) fn flush(&mut self) -> Result<()> {
-        self.term.flush().into_chained("Screen::flush")
+        self.term.flush().into_chained(|| "Screen::flush")
     }
 
     pub(crate) fn from_stdout(w: i32, h: i32) -> Result<Self> {
         let stdout = io::stdout();
         let term = stdout
             .into_raw_mode()
-            .into_chained("[Screen::from_stdout] attempt to get raw mode terminal")?;
+            .into_chained(|| "[Screen::from_stdout] attempt to get raw mode terminal")?;
         let (width, height) =
-            terminal_size().into_chained("[Screen::from_stdout] attempt to get terminal size")?;
+            terminal_size().into_chained(|| "[Screen::from_stdout] attempt to get terminal size")?;
         let (w, h) = (w, h).map(|i| i as u16);
         if width < w {
             return Err(ErrorID::InvalidScreenSize(width, height)
-                .into_with(format!("Screen width must be larger than {} characters", w)));
+                .into_with(|| format!("Screen width must be larger than {} characters", w)));
         }
         if height < h {
-            return Err(ErrorID::InvalidScreenSize(width, height).into_with(format!(
-                "Screen height must be larger than {} characters",
-                h
-            )));
+            return Err(ErrorID::InvalidScreenSize(width, height)
+                .into_with(|| format!("Screen height must be larger than {} characters", h)));
         }
         Ok(Screen {
             term,
@@ -81,8 +79,8 @@ impl Screen {
             clear::All,
             cursor::Goto(1, 1),
             cursor::Goto(1, 2)
-        ).into_chained("in Screen::from_stdout")?;
-        self.flush().chain_err("in Screen::from_stdout")
+        ).into_chained(|| "in Screen::from_stdout")?;
+        self.flush().chain_err(|| "in Screen::from_stdout")
     }
 }
 
@@ -91,10 +89,10 @@ macro_rules! notify {
     ($screen: ident, $msg: expr) => {{
         $screen.has_notification = true;
         if let Err(e) = write!($screen.term, "{}{}", ::termion::cursor::Goto(1, 1), ::termion::clear::CurrentLine) {
-            Err(e).into_chained("in notify!")
+            Err(e).into_chained(||"in notify!")
         } else {
             if let Err(e) = write!($screen.term, $msg) {
-                Err(e).into_chained("in notify!")
+                Err(e).into_chained(||"in notify!")
             } else {
                 $screen.flush()
             }
@@ -103,10 +101,10 @@ macro_rules! notify {
     ($screen: ident, $fmt: expr, $($arg: tt)*) => {{
         $screen.has_notification = true;
         if let Err(e) = write!($screen.term, "{}{}", ::termion::cursor::Goto(1, 1), ::termion::clear::CurrentLine) {
-            Err(e).into_chained("in notify!")
+            Err(e).into_chained(||"in notify!")
         } else {
             if let Err(e) = write!($screen.term, $fmt, $($arg)*) {
-                Err(e).into_chained("in notify!")
+                Err(e).into_chained(||"in notify!")
             } else {
                 $screen.flush()
             }
