@@ -187,7 +187,7 @@ impl RunTime {
                 if self.player.pos == path {
                     return drawer(Positioned(cd, self.player.tile()));
                 };
-                if let Some(item) = self.item.get_ref(&path) {
+                if let Some(item) = self.item.get_by_path(&path) {
                     return drawer(Positioned(cd, item.tile()));
                 }
                 Ok(())
@@ -265,6 +265,7 @@ pub enum GameMsg {
     CantMove(Direction),
     // TODO: show not only kind,
     CantGetItem(ItemKind),
+    GotItem { kind: ItemKind, num: u32 },
     NoDownStair,
     Quit,
 }

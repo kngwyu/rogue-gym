@@ -104,6 +104,17 @@ impl Room {
             false
         }
     }
+    /// modifiy the a cell's condition to 'unfilled'
+    pub fn unfill_cell(&mut self, cd: Coord, is_character: bool) -> bool {
+        if let Some(id) = self.get_cell_id(cd) {
+            if is_character {
+                self.nocharacter_cells.insert(id);
+            }
+            self.empty_cells.insert(id)
+        } else {
+            false
+        }
+    }
     pub fn is_normal(&self) -> bool {
         match self.kind {
             RoomKind::Normal { .. } => true,

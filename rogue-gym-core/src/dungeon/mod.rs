@@ -90,12 +90,12 @@ impl Dungeon {
     }
     pub(crate) fn move_player(
         &mut self,
-        path: DungeonPath,
+        path: &DungeonPath,
         direction: Direction,
     ) -> GameResult<DungeonPath> {
         match self {
             Dungeon::Rogue(dungeon) => {
-                let address = rogue::Address::from(path);
+                let address = path.to_rogue()?;
                 dungeon.move_player(address, direction)
             }
             _ => unimplemented!(),
@@ -107,10 +107,10 @@ impl Dungeon {
             _ => unimplemented!(),
         }
     }
-    pub(crate) fn enter_room(&mut self, path: DungeonPath, init: bool) -> GameResult<()> {
+    pub(crate) fn enter_room(&mut self, path: &DungeonPath) -> GameResult<()> {
         match self {
             Dungeon::Rogue(dungeon) => {
-                let address = rogue::Address::from(path);
+                let address = path.to_rogue()?;
                 dungeon.current_floor.player_in(address.cd, true)
             }
             _ => unimplemented!(),
@@ -138,10 +138,38 @@ impl Dungeon {
             _ => unimplemented!(),
         }
     }
+    pub(crate) fn remove_object(
+        &mut self,
+        path: &DungeonPath,
+        is_character: bool,
+    ) -> GameResult<bool> {
+        match self {
+            Dungeon::Rogue(dungeon) => {
+                let address = path.to_rogue()?;
+                Ok(dungeon.remove_object(address, is_character))
+            }
+            _ => unimplemented!(),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct DungeonPath(Vec<i32>);
+
+impl DungeonPath {
+    fn to_rogue(&self) -> GameResult<rogue::Address> {
+        let res = || {
+            Some(rogue::Address {
+                level: *self.0.get(0)? as u32,
+                cd: Coord::new(*self.0.get(1)?, *self.0.get(2)?),
+            })
+        };
+        res().ok_or_else(|| {
+            ErrorId::InvalidConversion
+                .into_with(|| format!("We can't DungeonPath {:?} to rogue::Address", self))
+        })
+    }
+}
 
 impl From<rogue::Address> for DungeonPath {
     fn from(r: rogue::Address) -> DungeonPath {

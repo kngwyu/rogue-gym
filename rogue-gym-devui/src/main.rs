@@ -49,7 +49,7 @@ fn play_game(config: GameConfig) -> Result<()> {
             Ok(r) => r,
             Err(e) => {
                 // STUB
-                notify!(screen, "{}", e.kind().short())?;
+                notify!(screen, "{}", e.kind().full())?;
                 continue;
             }
         };
@@ -86,6 +86,9 @@ fn process_reaction(
                 // TODO: Display for ItemKind
                 GameMsg::CantGetItem(kind) => notify!(screen, "You walk onto {:?}", kind),
                 GameMsg::NoDownStair => notify!(screen, "Hmm... there seems to be no downstair"),
+                GameMsg::GotItem { kind, num } => {
+                    notify!(screen, "Now you have {} {:?}", num, kind)
+                }
                 GameMsg::Quit => {
                     notify!(screen, "Thank you for playing!")?;
                     return Ok(Some(Transition::Exit));

@@ -27,14 +27,61 @@
         }
     },
     "keymap": {
+        "u": {
+            "Act": {
+                "Move": "RightUp"
+            }
+        },
+        "y": {
+            "Both": {
+                "act": {
+                    "Move": "LeftUp"
+                },
+                "sys": "Yes"
+            }
+        },
         "l": {
             "Act": {
                 "Move": "Right"
             }
         },
+        "Q": {
+            "Sys": "Quit"
+        },
+        "n": {
+            "Both": {
+                "act": {
+                    "Move": "RightDown"
+                },
+                "sys": "No"
+            }
+        },
+        "Esc": {
+            "Sys": "Cancel"
+        },
+        "j": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
         "Up": {
             "Act": {
                 "Move": "Up"
+            }
+        },
+        "b": {
+            "Act": {
+                "Move": "LeftDown"
+            }
+        },
+        "Down": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "Left": {
+            "Act": {
+                "Move": "Left"
             }
         },
         "k": {
@@ -47,60 +94,13 @@
                 "Move": "Left"
             }
         },
-        "y": {
-            "Both": {
-                "act": {
-                    "Move": "LeftUp"
-                },
-                "sys": "Yes"
-            }
-        },
-        "S": {
-            "Sys": "Save"
-        },
-        "n": {
-            "Both": {
-                "act": {
-                    "Move": "RightDown"
-                },
-                "sys": "No"
-            }
-        },
-        "b": {
-            "Act": {
-                "Move": "LeftDown"
-            }
-        },
         "Right": {
             "Act": {
                 "Move": "Right"
             }
         },
-        "u": {
-            "Act": {
-                "Move": "RightUp"
-            }
-        },
-        "Down": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
-        "Esc": {
-            "Sys": "Cancel"
-        },
-        "Q": {
-            "Sys": "Quit"
-        },
-        "Left": {
-            "Act": {
-                "Move": "Left"
-            }
-        },
-        "j": {
-            "Act": {
-                "Move": "Down"
-            }
+        "S": {
+            "Sys": "Save"
         }
     },
     "player": {
@@ -129,6 +129,25 @@
         ],
         "hunger_time": 1300,
         "init_hp": 12,
-        "init_str": 16
+        "init_str": 16,
+        "max_items": 27,
+        "init_items": [
+            {
+                "kind": "Gold",
+                "how_many": 0,
+                "attr": {
+                    "bits": 4
+                }
+            },
+            {
+                "kind": {
+                    "Food": "Ration"
+                },
+                "how_many": 1,
+                "attr": {
+                    "bits": 4
+                }
+            }
+        ]
     }
 }

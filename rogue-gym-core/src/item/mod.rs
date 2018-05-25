@@ -2,9 +2,10 @@
 
 pub mod food;
 mod gold;
+pub mod pack;
 
 use self::food::Food;
-use character::player::ItemPack;
+use self::pack::ItemPack;
 use dungeon::DungeonPath;
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
 use rng::RngHandle;
@@ -101,20 +102,19 @@ impl Item {
             attr: ItemAttr::default(),
         }
     }
-    pub(crate) fn merge<F>(self, other: &Self, attr_merger: F) -> Self
+    pub(crate) fn merge<F>(&mut self, other: Self, attr_merger: F)
     where
         F: FnOnce(ItemAttr, ItemAttr) -> ItemAttr,
     {
-        let attr = attr_merger(self.attr, other.attr);
-        Item {
-            kind: self.kind,
-            how_many: self.how_many + other.how_many,
-            attr,
-        }
+        self.attr = attr_merger(self.attr, other.attr);
+        self.how_many += other.how_many;
     }
     pub(crate) fn many(mut self) -> Self {
         self.attr |= ItemAttr::IS_MANY;
         self
+    }
+    pub(crate) fn is_many(&self) -> bool {
+        self.attr.contains(ItemAttr::IS_MANY)
     }
 }
 
@@ -148,10 +148,22 @@ impl ItemHandler {
             next_id: ItemId(0),
         }
     }
+    /// get reference to item by ItemId
+    pub fn get_mut(&mut self, id: ItemId) -> Option<&mut Item> {
+        self.items.get_mut(&id)
+    }
+    /// get reference to item by ItemId
+    pub fn get(&self, id: ItemId) -> Option<&Item> {
+        self.items.get(&id)
+    }
     /// get reference to item by DungeonPath
-    pub fn get_ref(&self, path: &DungeonPath) -> Option<&Item> {
+    pub fn get_by_path(&self, path: &DungeonPath) -> Option<&Item> {
         let id = self.placed_items.get(path)?;
         self.items.get(id)
+    }
+    /// get entry to an item in dungeon
+    pub fn get_placed_id(&self, path: &DungeonPath) -> Option<ItemId> {
+        self.placed_items.get(path).cloned()
     }
     /// generate and register an item
     fn gen_item<F>(&mut self, itemgen: F) -> ItemId
@@ -166,10 +178,7 @@ impl ItemHandler {
         self.next_id.increment();
         id
     }
-    pub fn remove_from_path(&mut self, path: &DungeonPath) -> Option<ItemId> {
-        self.placed_items.remove(&path)
-    }
-    pub fn place_to_path(&mut self, place: DungeonPath, id: ItemId) {
+    pub fn set_to_path(&mut self, place: DungeonPath, id: ItemId) {
         self.placed_items.insert(place, id);
     }
     /// Sets up gold for 1 room
@@ -180,7 +189,7 @@ impl ItemHandler {
         if let Some(num) = self.config.gold.gen(&mut self.rng, level) {
             let item_id = self.gen_item(|| ItemKind::Gold.numbered(num).many());
             let place = empty_cell().chain_err(|| "ItemHandler::setup_gold")?;
-            self.place_to_path(place, item_id);
+            self.set_to_path(place, item_id);
         }
         Ok(())
     }
@@ -193,10 +202,16 @@ impl ItemHandler {
                 if pack.add(item) {
                     Ok(())
                 } else {
-                    let item_num = items.len();
-                    Err(ErrorId::InvalidSetting.into_with(|| format!("")))
+                    Err(ErrorId::InvalidSetting
+                        .into_with(|| format!("You can't add {} items", items.len())))
                 }
             })
             .chain_err(|| "in ItemHandler::init_player_items")
+    }
+    pub fn remove(&mut self, id: ItemId) -> Option<Item> {
+        self.items.remove(&id)
+    }
+    pub fn remove_from_place(&mut self, path: &DungeonPath) -> Option<ItemId> {
+        self.placed_items.remove(path)
     }
 }

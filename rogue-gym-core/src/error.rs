@@ -18,6 +18,8 @@ pub enum ErrorId {
     InvalidSetting,
     #[msg(short = "json", detailed = "{}", _0)]
     Json(JsonError),
+    #[msg(short = "invalid conversion")]
+    InvalidConversion,
     MaybeBug,
     // STUB
     Unimplemented,

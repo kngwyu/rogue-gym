@@ -285,6 +285,9 @@ impl Dungeon {
             .select_cell(&mut self.rng, is_character)
             .map(|cd| vec![self.level as i32, cd.x.0, cd.y.0].into())
     }
+    pub(crate) fn remove_object(&mut self, address: Address, is_character: bool) -> bool {
+        self.current_floor.remove_obj(address.cd, is_character)
+    }
     /// draw dungeon to screen by callback
     pub(crate) fn draw<F, E>(&self, drawer: &mut F) -> Result<(), ChainedError<E>>
     where

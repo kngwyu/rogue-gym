@@ -120,10 +120,7 @@ impl Floor {
     fn can_move_impl(&self, cd: Coord, direction: Direction, is_enemy: bool) -> Option<bool> {
         let cur_cell = self.field.try_get_p(cd).ok()?;
         let nxt_cell = self.field.try_get_p(cd + direction.to_cd()).ok()?;
-        debug!(
-            "[can_move_impl] cur: {:?}, nxt: {:?}",
-            cur_cell.surface, nxt_cell.surface
-        );
+
         // TODO: trap
         let mut res = match cur_cell.surface {
             Surface::Floor => match nxt_cell.surface {
@@ -155,7 +152,6 @@ impl Floor {
 
     /// judge if the player can move from `cd` in `direction`
     pub(crate) fn can_move_player(&self, cd: Coord, direction: Direction) -> bool {
-        debug!("[can_move_player] cd: {:?}, direction: {}", cd, direction);
         self.can_move_impl(cd, direction, false).unwrap_or(false)
     }
 
@@ -261,12 +257,21 @@ impl Floor {
     }
 
     /// register an object to cell
-    pub(crate) fn fill_cell(&mut self, cd: Coord, is_character: bool) -> bool {
-        fn fill_cell_impl(rooms: &mut Vec<Room>, cd: Coord, is_character: bool) -> Option<bool> {
-            let room = rooms.iter_mut().find(|room| room.contains(cd))?;
+    pub(crate) fn set_obj(&mut self, cd: Coord, is_character: bool) -> bool {
+        let mut impl_ = || {
+            let room = self.rooms.iter_mut().find(|room| room.contains(cd))?;
             Some(room.fill_cell(cd, is_character))
-        }
-        fill_cell_impl(&mut self.rooms, cd, is_character) == Some(true)
+        };
+        impl_() == Some(true)
+    }
+
+    /// unregister an object to cell
+    pub(crate) fn remove_obj(&mut self, cd: Coord, is_character: bool) -> bool {
+        let mut impl_ = || {
+            let room = self.rooms.iter_mut().find(|room| room.contains(cd))?;
+            Some(room.unfill_cell(cd, is_character))
+        };
+        impl_() == Some(true)
     }
 
     /// select an empty cell randomly
@@ -367,7 +372,7 @@ mod test {
             let cd = floor.select_cell(&mut rng, false);
             if let Some(cd) = cd {
                 cnt += 1;
-                assert!(floor.fill_cell(cd, false));
+                assert!(floor.set_obj(cd, false));
             } else {
                 break;
             }
