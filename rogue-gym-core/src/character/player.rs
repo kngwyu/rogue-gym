@@ -9,17 +9,17 @@ use tile::{Drawable, Tile};
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Config {
     #[serde(default, flatten)]
-    level: Leveling,
+    pub level: Leveling,
     #[serde(default = "default_hunger_time")]
-    hunger_time: u32,
+    pub hunger_time: u32,
     #[serde(default = "default_init_hp")]
-    init_hp: HitPoint,
+    pub init_hp: HitPoint,
     #[serde(default = "default_init_str")]
-    init_str: Strength,
+    pub init_str: Strength,
     #[serde(default = "default_max_items")]
-    max_items: usize,
+    pub max_items: usize,
     #[serde(default = "default_init_items")]
-    init_items: Vec<Item>,
+    pub init_items: Vec<Item>,
 }
 
 impl Default for Config {

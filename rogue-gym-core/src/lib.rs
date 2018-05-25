@@ -128,6 +128,8 @@ impl GameConfig {
             .chain_err(ERR_STR)?;
         // TODO: invalid checking
         let mut player = self.player.build();
+        item.init_player_items(&mut player.items, &player.config.init_items)
+            .chain_err(ERR_STR)?;
         actions::new_level(&game_info, &mut dungeon, &mut item, &mut player, true)
             .chain_err(ERR_STR)?;
         Ok(RunTime {
