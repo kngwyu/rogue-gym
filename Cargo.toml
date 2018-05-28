@@ -5,4 +5,4 @@ opt-level = 0
 lto = true
 
 [workspace]
-members = ["rogue-gym-core", "rogue-gym-devui"]
+members = ["core", "devui", "python"]

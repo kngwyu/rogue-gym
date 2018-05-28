@@ -1,0 +1,9 @@
+[package]
+name = "rogue-gym-python"
+version = "0.0.1"
+authors = ["kngwyu <yuji.kngw.80s.revive@gmail.com>"]
+crate-type = ["cdylib"]
+
+[dependencies.pyo3]
+version = "0.2"
+features = ["extension-module"]
