@@ -190,7 +190,7 @@ impl Dungeon {
     ) -> GameResult<Self> {
         let rng = RngHandle::from_seed(seed);
         let mut dungeon = Dungeon {
-            level: 1,
+            level: 0,
             max_level: config.amulet_level,
             current_floor: Floor::default(),
             config,
@@ -298,7 +298,7 @@ impl Dungeon {
         let range = self
             .current_floor
             .field
-            .size()
+            .size_ytrimed()
             .ok_or_else(|| E::from(ErrorId::MaybeBug).into_with(|| ERR_STR))?;
         range.into_iter().try_for_each(|cd| {
             let cell = self

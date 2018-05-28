@@ -2,7 +2,7 @@
 use super::{Item, ItemHandler, ItemId};
 use error::{ErrorId, ErrorKind, GameResult};
 use fenwick::FenwickSet;
-use std::collections::BTreeMap;
+use std::collections::{btree_map, BTreeMap};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ItemPack {
@@ -36,6 +36,9 @@ impl ItemPack {
         self.empty_chars
             .nth(0)
             .map(|u| PackEntry::Insert(InsertEntry(u)))
+    }
+    pub fn ids(&self) -> btree_map::Values<usize, ItemId> {
+        self.items.values()
     }
     fn check_merge(&self, got_item: &Item, handle: &ItemHandler) -> Option<MergeEntry> {
         // check if we can merge item or not

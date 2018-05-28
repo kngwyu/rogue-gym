@@ -1,6 +1,6 @@
 use error::{ErrorID, Result};
 use error_chain_mini::{ErrorKind, ResultExt};
-use rogue_gym_core::{dungeon::Coord, tile::Tile};
+use rogue_gym_core::{character::player, dungeon::Coord, tile::Tile};
 use std::io::{self, Stdout, Write};
 use termion::raw::{IntoRawMode, RawTerminal};
 use termion::{clear, cursor, terminal_size};
@@ -20,7 +20,7 @@ impl Screen {
             .into_chained(|| "in Screen::clear")
     }
 
-    pub(crate) fn clean_notification(&mut self) -> Result<()> {
+    pub(crate) fn clear_notification(&mut self) -> Result<()> {
         if self.has_notification {
             self.has_notification = false;
             write!(
@@ -81,6 +81,18 @@ impl Screen {
             cursor::Goto(1, 2)
         ).into_chained(|| "in Screen::from_stdout")?;
         self.flush().chain_err(|| "in Screen::from_stdout")
+    }
+
+    pub(crate) fn status(&mut self, status: player::Status) -> Result<()> {
+        let line = self.height;
+        write!(
+            self.term,
+            "{}{}{}",
+            cursor::Goto(1, line),
+            clear::CurrentLine,
+            status,
+        ).into_chained(|| "in Screen::status")?;
+        self.flush().chain_err(|| "in Screen::status")
     }
 }
 

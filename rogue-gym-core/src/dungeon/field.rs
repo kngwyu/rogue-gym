@@ -117,6 +117,11 @@ impl<S> Field<S> {
         let x = self.inner.get(0)?.len();
         RectRange::zero_start(x as i32, y as i32)
     }
+    pub fn size_ytrimed(&self) -> Option<RectRange<i32>> {
+        let y = self.inner.len();
+        let x = self.inner.get(0)?.len();
+        RectRange::from_corners((0, 1), (x as i32, y as i32 - 1))
+    }
 }
 
 impl<S: Clone> Field<S> {

@@ -69,6 +69,12 @@ impl Dungeon {
             _ => unimplemented!(),
         }
     }
+    pub(crate) fn level(&self) -> u32 {
+        match self {
+            Dungeon::Rogue(dungeon) => dungeon.level,
+            _ => unimplemented!(),
+        }
+    }
     pub(crate) fn new_level(
         &mut self,
         game_info: &GameInfo,

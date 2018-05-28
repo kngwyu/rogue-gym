@@ -1,8 +1,8 @@
-use super::{Exp, HitPoint, Maxed, Strength};
+use super::{Defense, Exp, HitPoint, Maxed, Strength};
 use dungeon::{Direction, DungeonPath};
 use item::{food::Food, pack::ItemPack, Item, ItemKind};
+use std::fmt;
 use tile::{Drawable, Tile};
-
 /// Player configuration
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Config {
@@ -86,6 +86,21 @@ pub struct Player {
     pub(crate) items: ItemPack,
 }
 
+impl Player {
+    pub fn fill_status(&self, status: &mut Status) {
+        status.hp = self.status.hp;
+        status.strength = self.status.strength;
+        status.exp = self.status.exp;
+        status.player_level = self.status.level;
+        let hunger = self.config.hunger_time / 10;
+        status.hunger_level = match self.status.food_left {
+            x if x <= hunger => Hunger::Weak,
+            x if x <= hunger * 2 => Hunger::Hungry,
+            _ => Hunger::Normal,
+        };
+    }
+}
+
 impl Drawable for Player {
     fn tile(&self) -> Tile {
         b'@'.into()
@@ -104,7 +119,7 @@ pub(crate) struct StatusInner {
     /// level
     level: u32,
     /// count down to death
-    hunger_time: u32,
+    food_left: u32,
 }
 
 impl StatusInner {
@@ -114,7 +129,7 @@ impl StatusInner {
             strength: Maxed::max(Strength(16)),
             exp: Exp(0),
             level: 1,
-            hunger_time: config.hunger_time,
+            food_left: config.hunger_time,
         }
     }
 }
@@ -158,4 +173,52 @@ pub enum Hunger {
     Normal,
     Hungry,
     Weak,
+}
+
+impl Default for Hunger {
+    fn default() -> Hunger {
+        Hunger::Normal
+    }
+}
+
+impl fmt::Display for Hunger {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Hunger::Hungry => write!(formatter, "hungry"),
+            Hunger::Weak => write!(formatter, "weak"),
+            Hunger::Normal => Ok(()),
+        }
+    }
+}
+
+/// status for displaying
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub struct Status {
+    pub dungeon_level: u32,
+    pub gold: u32,
+    pub hp: Maxed<HitPoint>,
+    pub strength: Maxed<Strength>,
+    pub defense: Defense,
+    pub player_level: u32,
+    pub exp: Exp,
+    pub hunger_level: Hunger,
+}
+
+impl fmt::Display for Status {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            formatter,
+            "Level: {:2} Gold: {:5} Hp: {:2}({:2}) Str: {:2}({:2}) Arm: {:2} Exp: {:2}/{:2} {}",
+            self.dungeon_level,
+            self.gold,
+            self.hp.current,
+            self.hp.max,
+            self.strength.current,
+            self.strength.max,
+            self.defense,
+            self.player_level,
+            self.exp.0,
+            self.hunger_level,
+        )
+    }
 }

@@ -39,10 +39,11 @@ fn play_game(config: GameConfig) -> Result<()> {
     let mut runtime = config.build().convert()?;
     thread::sleep(Duration::from_secs(1));
     draw_dungeon(&mut screen, &mut runtime)?;
+    screen.status(runtime.player_status())?;
     let stdin = io::stdin();
     // let's receive keyboard inputs(out main loop)
     for keys in stdin.keys() {
-        screen.clean_notification()?;
+        screen.clear_notification()?;
         let key = keys.into_chained(|| "in play_game")?;
         let res = runtime.react_to_key(key.into());
         let res = match res {
@@ -101,6 +102,11 @@ fn process_reaction(
                 .chain_err(|| "in process_action attempt to draw dungeon")?;
             Ok(None)
         }
+        Reaction::StatusUpdated => {
+            let status = runtime.player_status();
+            screen.status(status)?;
+            Ok(None)
+        }
         Reaction::UiTransition(ui_state) => {
             if let UiState::Mordal(kind) = ui_state {
                 match kind {
@@ -114,7 +120,7 @@ fn process_reaction(
 }
 
 fn draw_dungeon(screen: &mut Screen, runtime: &mut RunTime) -> Result<()> {
-    screen.clear_dungeon()?;
+    // screen.clear_dungeon()?;
     let mut player_pos = None;
     runtime.draw_screen(|Positioned(cd, tile)| {
         if tile.to_byte() == b'@' {

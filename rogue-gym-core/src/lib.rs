@@ -247,6 +247,26 @@ impl RunTime {
     pub fn screen_size(&self) -> (X, Y) {
         (self.config.width, self.config.height)
     }
+    pub fn player_status(&self) -> player::Status {
+        let mut status = player::Status::default();
+        self.player.fill_status(&mut status);
+        status.gold = self
+            .player
+            .items
+            .ids()
+            .filter_map(|&id| {
+                let item = self.item.get(id)?;
+                if item.kind == ItemKind::Gold {
+                    Some(item.how_many.0)
+                } else {
+                    None
+                }
+            })
+            .nth(0)
+            .unwrap_or(0);
+        status.dungeon_level = self.dungeon.level();
+        status
+    }
 }
 
 /// Reaction to user input
@@ -254,6 +274,8 @@ impl RunTime {
 pub enum Reaction {
     /// dungeon
     Redraw,
+    /// status changed
+    StatusUpdated,
     /// Ui State changed
     UiTransition(UiState),
     /// Game Messages,

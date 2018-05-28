@@ -65,6 +65,7 @@ fn move_player(
     let mut res = vec![Reaction::Redraw];
     if let Some(msg) = get_item(dungeon, item, player).chain_err(|| "in actions::move_player")? {
         res.push(Reaction::Notify(msg));
+        res.push(Reaction::StatusUpdated);
     }
     Ok(res)
 }
