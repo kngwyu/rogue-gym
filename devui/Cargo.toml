@@ -1,6 +1,6 @@
 [package]
 name = "rogue-gym-devui"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["kngwyu <yuji.kngw.80s.revive@gmail.com>"]
 
 [dependencies]
@@ -16,4 +16,4 @@ chrono = "0.4.2"
 [dependencies.rogue-gym-core]
 features = ["termion"]
 path = "../core/"
-version = "0.0.1"
+version = "0.1.0"

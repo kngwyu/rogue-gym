@@ -1,6 +1,17 @@
+# Rust
 /target
 **/*.rs.bk
 Cargo.lock
+
+# python/pyo3
+**/*env
+**/*.egg-info
+**/.pytest_cache
+**/build
+**/dist
+**/__pycache__
+
+# backup/debug files
 **/#*
 **/~*
 *.txt

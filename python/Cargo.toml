@@ -2,8 +2,16 @@
 name = "rogue-gym-python"
 version = "0.0.1"
 authors = ["kngwyu <yuji.kngw.80s.revive@gmail.com>"]
+
+[lib]
+name = "rogue_gym"
 crate-type = ["cdylib"]
 
 [dependencies.pyo3]
 version = "0.2"
 features = ["extension-module"]
+
+[dependencies.rogue-gym-core]
+features = ["termion"]
+path = "../core/"
+version = "0.1.0"
