@@ -58,6 +58,26 @@ impl Default for KeyMap {
     }
 }
 
+impl KeyMap {
+    pub fn ai() -> Self {
+        use self::Direction::*;
+        let map = vec![
+            (Key::Char('l'), InputCode::Act(Action::Move(Right))),
+            (Key::Char('k'), InputCode::Act(Action::Move(Up))),
+            (Key::Char('j'), InputCode::Act(Action::Move(Down))),
+            (Key::Char('h'), InputCode::Act(Action::Move(Left))),
+            (Key::Char('u'), InputCode::Act(Action::Move(RightUp))),
+            (Key::Char('y'), InputCode::Act(Action::Move(LeftUp))),
+            (Key::Char('n'), InputCode::Act(Action::Move(RightDown))),
+            (Key::Char('b'), InputCode::Act(Action::Move(LeftDown))),
+            (Key::Char('S'), InputCode::Sys(System::Save)),
+            (Key::Char('Q'), InputCode::Sys(System::Quit)),
+        ];
+        let inner: HashMap<_, _> = map.into_iter().collect();
+        KeyMap { inner }
+    }
+}
+
 impl Serialize for KeyMap {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

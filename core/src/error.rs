@@ -25,6 +25,16 @@ pub enum ErrorId {
     Unimplemented,
 }
 
+impl ErrorId {
+    pub fn can_allow(&self) -> bool {
+        use self::ErrorId::*;
+        match self {
+            InvalidInput(_) | IgnoredInput(_) | IncompleteInput => true,
+            _ => false,
+        }
+    }
+}
+
 impl From<IndexError> for ErrorId {
     fn from(e: IndexError) -> Self {
         ErrorId::Index(e)

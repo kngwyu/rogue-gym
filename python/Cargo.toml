@@ -1,6 +1,6 @@
 [package]
 name = "rogue-gym-python"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["kngwyu <yuji.kngw.80s.revive@gmail.com>"]
 
 [lib]
