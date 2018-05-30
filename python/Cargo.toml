@@ -7,6 +7,9 @@ authors = ["kngwyu <yuji.kngw.80s.revive@gmail.com>"]
 name = "rogue_gym"
 crate-type = ["cdylib"]
 
+[dependencies]
+rect-iter = "0.1.9"
+
 [dependencies.pyo3]
 version = "0.2"
 features = ["extension-module"]
@@ -15,3 +18,6 @@ features = ["extension-module"]
 features = ["termion"]
 path = "../core/"
 version = "0.1.0"
+
+[patch.crates-io]
+pyo3 = {git = "https://github.com/kngwyu/pyo3.git", branch = "vec_to_dict"}

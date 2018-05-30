@@ -1,6 +1,5 @@
 use error_chain_mini::ChainedError;
-pub(crate) use error_chain_mini::ErrorKind;
-pub(crate) use error_chain_mini::ResultExt;
+pub use error_chain_mini::{ErrorKind, ResultExt};
 use input::{InputCode, Key};
 use rect_iter::IndexError;
 use serde_json::Error as JsonError;

@@ -3,10 +3,10 @@ use error_chain_mini::{ChainedError, ErrorKind};
 use log::SetLoggerError;
 use rogue_gym_core::error::ErrorId as CoreError;
 use std::io::Error as IoError;
-pub(crate) type Result<T> = ::std::result::Result<T, ChainedError<ErrorID>>;
+pub type Result<T> = ::std::result::Result<T, ChainedError<ErrorID>>;
 
 #[derive(ErrorKind)]
-pub(crate) enum ErrorID {
+pub enum ErrorID {
     #[msg(short = "core error", detailed = "{}", _0)]
     Core(CoreError),
     #[msg(short = "io error", detailed = "{}", _0)]

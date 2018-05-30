@@ -6,21 +6,21 @@ use termion::raw::{IntoRawMode, RawTerminal};
 use termion::{clear, cursor, terminal_size};
 use tuple_map::TupleMap2;
 
-pub(crate) struct Screen {
-    pub(crate) term: RawTerminal<Stdout>,
-    pub(crate) has_notification: bool,
+pub struct Screen {
+    pub term: RawTerminal<Stdout>,
+    pub has_notification: bool,
     width: u16,
     height: u16,
 }
 
 impl Screen {
-    pub(crate) fn clear_dungeon(&mut self) -> Result<()> {
+    pub fn clear_dungeon(&mut self) -> Result<()> {
         (2..self.height)
             .try_for_each(|row| write!(self.term, "{}{}", cursor::Goto(1, row), clear::CurrentLine))
             .into_chained(|| "in Screen::clear")
     }
 
-    pub(crate) fn clear_notification(&mut self) -> Result<()> {
+    pub fn clear_notification(&mut self) -> Result<()> {
         if self.has_notification {
             self.has_notification = false;
             write!(
@@ -34,21 +34,21 @@ impl Screen {
         }.into_chained(|| "in Screen::clean_notification")
     }
 
-    pub(crate) fn cursor<P: Into<(u16, u16)>>(&mut self, cd: P) -> Result<()> {
+    pub fn cursor<P: Into<(u16, u16)>>(&mut self, cd: P) -> Result<()> {
         let (col, row) = cd.into();
         write!(self.term, "{}", cursor::Goto(col, row)).into_chained(|| "in Screen::draw_tile")
     }
-    pub(crate) fn draw_tile(&mut self, cd: Coord, tile: Tile) -> Result<()> {
+    pub fn draw_tile(&mut self, cd: Coord, tile: Tile) -> Result<()> {
         let (col, row) = cd.into();
         write!(self.term, "{}{}", cursor::Goto(col, row), tile.to_char())
             .into_chained(|| "in Screen::draw_tile")
     }
 
-    pub(crate) fn flush(&mut self) -> Result<()> {
+    pub fn flush(&mut self) -> Result<()> {
         self.term.flush().into_chained(|| "Screen::flush")
     }
 
-    pub(crate) fn from_stdout(w: i32, h: i32) -> Result<Self> {
+    pub fn from_stdout(w: i32, h: i32) -> Result<Self> {
         let stdout = io::stdout();
         let term = stdout
             .into_raw_mode()
@@ -72,7 +72,7 @@ impl Screen {
         })
     }
 
-    pub(crate) fn welcome(&mut self) -> Result<()> {
+    pub fn welcome(&mut self) -> Result<()> {
         write!(
             self.term,
             "{}{} Welcome to rogue-gym!{}Wait a minute while we're digging the dungeon...",
@@ -83,7 +83,7 @@ impl Screen {
         self.flush().chain_err(|| "in Screen::from_stdout")
     }
 
-    pub(crate) fn status(&mut self, status: player::Status) -> Result<()> {
+    pub fn status(&mut self, status: player::Status) -> Result<()> {
         let line = self.height;
         write!(
             self.term,

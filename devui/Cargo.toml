@@ -3,6 +3,15 @@ name = "rogue-gym-devui"
 version = "0.1.0"
 authors = ["kngwyu <yuji.kngw.80s.revive@gmail.com>"]
 
+[lib]
+name = "rogue_gym_devui"
+path = "src/lib.rs"
+
+[[bin]]
+name = "rogue_gym_devui"
+path = "src/main.rs"
+doc = false
+
 [dependencies]
 clap = "2.31"
 error-chain-mini = "0.2.0"

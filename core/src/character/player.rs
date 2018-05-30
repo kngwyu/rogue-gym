@@ -175,6 +175,16 @@ pub enum Hunger {
     Weak,
 }
 
+impl Hunger {
+    fn to_u32(&self) -> u32 {
+        match self {
+            Hunger::Normal => 0,
+            Hunger::Hungry => 1,
+            Hunger::Weak => 2,
+        }
+    }
+}
+
 impl Default for Hunger {
     fn default() -> Hunger {
         Hunger::Normal
@@ -202,6 +212,23 @@ pub struct Status {
     pub player_level: u32,
     pub exp: Exp,
     pub hunger_level: Hunger,
+}
+
+impl Status {
+    pub fn to_vec(&self) -> Vec<(&'static str, u32)> {
+        vec![
+            ("dungeon_level", self.dungeon_level),
+            ("gold", self.gold),
+            ("hp_current", self.hp.current.0 as u32),
+            ("hp_max", self.hp.max.0 as u32),
+            ("str_current", self.strength.current.0 as u32),
+            ("str_max", self.strength.max.0 as u32),
+            ("defense", self.defense.0 as u32),
+            ("player_level", self.player_level),
+            ("exp", self.exp.0),
+            ("hunger", self.hunger_level.to_u32()),
+        ]
+    }
 }
 
 impl fmt::Display for Status {
