@@ -11,13 +11,11 @@ crate-type = ["cdylib"]
 rect-iter = "0.1.9"
 
 [dependencies.pyo3]
-version = "0.2"
+version = "0.2.5"
+git = "https://github.com/PyO3/pyo3.git"
 features = ["extension-module"]
 
 [dependencies.rogue-gym-core]
 features = ["termion"]
 path = "../core/"
 version = "0.1.0"
-
-[patch.crates-io]
-pyo3 = {git = "https://github.com/kngwyu/pyo3.git", branch = "vec_to_dict"}

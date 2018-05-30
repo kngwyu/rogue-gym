@@ -23,6 +23,9 @@ class RogueEnv(gym.Env):
         self.game.reset()
 
     def step(self, action):
-        map, status = self.game.react(action)
-        return map
+        return self.game.react(action)
+
+    def seed(self, seed):
+        self.game.set_seed(seed)
+        
 
