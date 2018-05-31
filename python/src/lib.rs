@@ -46,7 +46,9 @@ impl PlayerState {
     }
     fn draw_map(&mut self, runtime: &RunTime) -> GameResult<()> {
         runtime.draw_screen(|Positioned(cd, tile)| -> GameResult<()> {
-            *self.map.try_get_mut_p(cd)
+            *self
+                .map
+                .try_get_mut_p(cd)
                 .into_chained(|| "in python::GameState::react")? = tile.to_byte();
             Ok(())
         })
@@ -90,6 +92,9 @@ impl GameState {
         self.runtime = runtime;
         Ok(())
     }
+    fn prev(&self) -> PyResult<ActionResult> {
+        Ok(self.state.res(self.token.py()))
+    }
     fn react(&mut self, input: u8) -> PyResult<ActionResult> {
         let res = self.runtime.react_to_key(Key::Char(input as char));
         let res = match res {
@@ -114,7 +119,6 @@ impl GameState {
         Ok(self.state.res(self.token.py()))
     }
 }
-
 
 #[pymodinit(_rogue_gym)]
 fn init_mod(_py: Python, m: &PyModule) -> PyResult<()> {

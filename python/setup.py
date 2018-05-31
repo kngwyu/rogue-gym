@@ -1,4 +1,7 @@
-# setup.py for rogue_gym
+""" setup.py for rogue_gym """
+
+import subprocess
+import sys
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
@@ -14,20 +17,20 @@ except ImportError:
         from setuptools_rust import RustExtension
 
 
-class PyTest(TestCommand):
-    user_options = []
+class CmdTest(TestCommand):
+    user_options = [('pytest-args=', 'a', "Arguments to pass to pytest")]
+    def initialize_options(self):
+        TestCommand.initialize_options(self)
+        self.pytest_args = ''        
     def run(self):
         self.run_command("test_rust")
-
-        import subprocess
-        import sys
-        errno = subprocess.call([sys.executable, '-m', 'pytest', 'tests'])
-        raise SystemExit(errno)
+        errno = subprocess.call([sys.executable, './tests/test_rogue_env.py'])    
+        sys.exit(errno)
 
 
 setup_requires = ['setuptools-rust>=0.6.0']
 install_requires = ['numpy', 'gym']
-tests_require = install_requires + ['pytest', 'pytest-benchmark']
+tests_requires = install_requires
 
 setup(
     name='rouge-gym',
@@ -38,19 +41,19 @@ setup(
     author_email='yuji.kngw.80s.revive@gmail.com',
     classifiers=[
         'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: Apache Software License',
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'Programming Language :: Python',
         'Programming Language :: Rust',
         'Operating System :: POSIX',
-        'Operating System :: MacOS :: MacOS X',
     ],
     packages=['rogue_gym'],
-    rust_extensions=[RustExtension('rogue_gym._rogue_gym', 'Cargo.toml')],
+    rust_extensions=[RustExtension('rogue_gym_python._rogue_gym', 'Cargo.toml')],
     install_requires=install_requires,
-    tests_require=tests_require,
+    tests_require=tests_requires,
     setup_requires=setup_requires,
     include_package_data=True,
     zip_safe=False,
-    cmdclass=dict(test=PyTest)
+    cmdclass=dict(test=CmdTest)
 )
