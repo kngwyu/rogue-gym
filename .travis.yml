@@ -1,7 +1,23 @@
-language: rust
-python: "3.6"
-rust:
-  - nightly
-script:
-  - cargo build --verbose --all
-  - cargo test --verbose --all
+sudo: required
+dist: trusty
+language: python
+python:
+  - "3.6"
+
+cache:
+  pip: true
+  directories:
+  - "$HOME/.cargo"
+
+env:
+  global:
+    - TRAVIS_RUST_VERSION=nightly
+    - RUSTFLAGS="-C link-dead-code"
+    - RUST_BACKTRACE=1
+    - SCCACHE_DIR="$HOME/.cargo/sccache"
+    - RUSTC_WRAPPER=sccache
+
+# language: rust
+# rust:
+#   - nightly
+# script:

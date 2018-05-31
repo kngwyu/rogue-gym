@@ -10,6 +10,7 @@ Cargo.lock
 **/build
 **/dist
 **/__pycache__
+**/.eggs
 
 # backup/debug files
 **/#*
