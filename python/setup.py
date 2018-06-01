@@ -22,11 +22,12 @@ class CmdTest(TestCommand):
     def run(self):
         self.run_command("test_rust")
         test_files = os.listdir('./tests')
-        res = 0
+        ok = 0
         for f in test_files:
             _, ext = os.path.splitext(f)
             if ext == '.py':
-                res = res & subprocess.call([sys.executable, f], cwd = './tests')
+                res = subprocess.call([sys.executable, f], cwd = './tests')
+                ok = ok | res
         sys.exit(res)
 
 

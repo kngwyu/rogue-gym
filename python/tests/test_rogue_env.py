@@ -1,6 +1,6 @@
 """test for RogueEnv """
 import rogue_gym
-from rogue_gym import RogueEnv
+from rogue_gym import Hage
 import unittest
 SEED1_DUNGEON = [b'                                                                                ',
                  b'                                                    ---------                   ',
@@ -32,7 +32,7 @@ class TestSeed1(unittest.TestCase):
     """
     
     def test_screen(self):
-        env = RogueEnv()
+        env = rogue_gym.RogueEnv()
         env.seed(1)
         env.reset()
         self.assertEqual(env.get_screen(), SEED1_DUNGEON)
