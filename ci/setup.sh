@@ -18,26 +18,13 @@ _latest() {
 curl -SsL "https://sh.rustup.rs/" | sh -s -- -y --default-toolchain=$TRAVIS_RUST_VERSION
 export PATH=$PATH:$HOME/.cargo/bin
 
-
-### Setup sccache ##############################################################
-echo -n "Fetching latest available 'sccache' version... "
-INSTALLED=$(_installed sccache)
-LATEST=$(_latest sccache)
-echo "${LATEST} (installed: ${INSTALLED})"
-
-if [ "$INSTALLED" = "$LATEST" ]; then
-  echo "Using cached 'sccache'"
-else
-  echo "Installing latest 'sccache' from mozilla/sccache"
-  URL="https://github.com/mozilla/sccache/releases/download/${LATEST}/sccache-${LATEST}-x86_64-unknown-linux-musl.tar.gz"
-  curl -SsL $URL | tar xzv -C /tmp
-  mv /tmp/sccache-${LATEST}-x86_64-unknown-linux-musl/sccache $HOME/.cargo/bin/sccache
-fi
-
-mkdir -p $SCCACHE_DIR
-
-
 ### Setup python linker flags ##################################################
+
+python -c """
+import sysconfig
+cfg = sorted(sysconfig.get_config_vars().items())
+print('\n'.join(['{}={}'.format(*x) for x in cfg]))
+"""
 
 export PYTHON_LIB=$(python -c "import sysconfig as s; print(s.get_config_var('LIBDIR'))")
 
