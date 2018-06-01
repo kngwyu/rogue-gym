@@ -16,6 +16,7 @@ env:
     - RUST_BACKTRACE=1
     - SCCACHE_DIR="$HOME/.cargo/sccache"
     - RUSTC_WRAPPER=sccache
+    - FEATURES=python3
 
 
 addons:
@@ -33,7 +34,7 @@ before_install:
   - source ./ci/setup.sh
 
 install:
-- pip install setuptools-rust
+  - pip install setuptools-rust
 
 script:
-- ./ci/test.sh
+  - ./ci/test.sh

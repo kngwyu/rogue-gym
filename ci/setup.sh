@@ -39,12 +39,6 @@ mkdir -p $SCCACHE_DIR
 
 ### Setup python linker flags ##################################################
 
-python -c """
-import sysconfig
-cfg = sorted(sysconfig.get_config_vars().items())
-print('\n'.join(['{}={}'.format(*x) for x in cfg]))
-"""
-
 export PYTHON_LIB=$(python -c "import sysconfig as s; print(s.get_config_var('LIBDIR'))")
 
 # find $PYTHON_LIB
