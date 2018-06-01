@@ -11,6 +11,7 @@ Cargo.lock
 **/dist
 **/__pycache__
 **/.eggs
+python/rogue_gym_python
 
 # backup/debug files
 **/#*

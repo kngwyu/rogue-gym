@@ -1,5 +1,6 @@
 """ setup.py for rogue_gym """
 
+import os
 import subprocess
 import sys
 from setuptools import setup
@@ -20,8 +21,13 @@ except ImportError:
 class CmdTest(TestCommand):
     def run(self):
         self.run_command("test_rust")
-        errno = subprocess.call([sys.executable, 'test_rogue_env.py'], cwd = './tests')
-        sys.exit(errno)
+        test_files = os.listdir('./tests')
+        res = 0
+        for f in test_files:
+            _, ext = os.path.splitext(f)
+            if ext == '.py':
+                res = res & subprocess.call([sys.executable, f], cwd = './tests')
+        sys.exit(res)
 
 
 setup_requires = ['setuptools-rust>=0.6.0']
