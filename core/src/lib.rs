@@ -70,6 +70,15 @@ pub struct GameConfig {
     /// player configuration
     #[serde(default)]
     pub player: player::Config,
+    /// hide dungeon or not
+    /// this setting is only for debug and don't use it when you play game
+    #[serde(default = "default_hide_dungeon")]
+    pub hide_dungeon: bool,
+}
+
+#[inline]
+fn default_hide_dungeon() -> bool {
+    true
 }
 
 impl Default for GameConfig {
@@ -82,6 +91,7 @@ impl Default for GameConfig {
             item: item::Config::default(),
             keymap: KeyMap::default(),
             player: player::Config::default(),
+            hide_dungeon: true,
         }
     }
 }
@@ -114,6 +124,7 @@ impl GameConfig {
             width: w.into(),
             height: h.into(),
             seed,
+            hide_dungeon: self.hide_dungeon,
         })
     }
     pub fn build(self) -> GameResult<RunTime> {
@@ -298,6 +309,7 @@ pub struct GlobalConfig {
     pub width: X,
     pub height: Y,
     pub seed: u64,
+    pub hide_dungeon: bool,
 }
 
 // only for testing
@@ -307,6 +319,7 @@ impl Default for GlobalConfig {
             width: X(80),
             height: Y(24),
             seed: 1,
+            hide_dungeon: true,
         }
     }
 }

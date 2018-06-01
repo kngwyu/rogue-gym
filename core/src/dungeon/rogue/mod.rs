@@ -9,7 +9,7 @@ use super::{Coord, Direction, DungeonPath, Positioned, X, Y};
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
 use error_chain_mini::ChainedError;
 use item::ItemHandler;
-use rect_iter::{Get2D, RectRange};
+use rect_iter::{Get2D, GetMut2D, RectRange};
 use rng::RngHandle;
 use tile::{Drawable, Tile};
 use {GameInfo, GlobalConfig};
@@ -202,6 +202,7 @@ impl Dungeon {
             .chain_err(|| "rogue::Dungeon::new")?;
         Ok(dungeon)
     }
+
     /// returns the range to draw
     pub(crate) fn draw_ranges<'a>(&'a self) -> impl 'a + Iterator<Item = DungeonPath> {
         let level = self.level;
@@ -213,12 +214,14 @@ impl Dungeon {
             .filter(move |&cd| self.current_floor.field.get_p(cd).is_obj_visible())
             .map(move |cd| vec![level as i32, cd.0, cd.1].into())
     }
+
     /// setup next floor
     pub fn new_level(
         &mut self,
         game_info: &GameInfo,
         item_handle: &mut ItemHandler,
     ) -> GameResult<()> {
+        const ERR_STR: &str = "in rogue::Dungeon::new_level";
         let level = {
             self.level += 1;
             self.level
@@ -228,16 +231,30 @@ impl Dungeon {
         }
         let (width, height) = (self.config_global.width, self.config_global.height);
         let mut floor = Floor::gen_floor(level, &self.config, width, height, &mut self.rng)
-            .chain_err(|| "Dungeon::new_floor")?;
+            .chain_err(|| ERR_STR)?;
         // setup gold
         let set_gold = !game_info.is_cleared || level >= self.max_level;
         debug!("[Dungeon::new_level] set_gold: {}", set_gold);
         floor
             .setup_items(level, item_handle, set_gold, &mut self.rng)
-            .chain_err(|| "Dungeon::new_floor")?;
+            .chain_err(|| ERR_STR)?;
+        // place traps (STUB)        // place stair
+        floor.setup_stair(&mut self.rng).chain_err(|| ERR_STR)?;
+        if !self.config_global.hide_dungeon {
+            let xmax = self.config_global.width.0;
+            let ymax = self.config_global.height.0 - 1;
+            RectRange::from_ranges(0..xmax, 1..ymax)
+                .unwrap()
+                .into_iter()
+                .for_each(|cd| {
+                    let cell = floor.field.get_mut_p(cd);
+                    cell.visible(true);
+                });
+        }
         self.current_floor = floor;
         Ok(())
     }
+
     /// takes addrees and judge if thers's a stair at that address
     pub(crate) fn is_downstair(&self, address: Address) -> bool {
         if address.level != self.level {
@@ -249,6 +266,7 @@ impl Dungeon {
             false
         }
     }
+
     /// judge if the player can move from the address in the direction
     pub(crate) fn can_move_player(&self, address: Address, direction: Direction) -> bool {
         if address.level != self.level {

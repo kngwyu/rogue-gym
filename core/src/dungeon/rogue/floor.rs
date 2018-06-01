@@ -117,6 +117,22 @@ impl Floor {
         Ok(())
     }
 
+    /// set stair
+    pub fn setup_stair(&mut self, rng: &mut RngHandle) -> GameResult<()> {
+        let cd = self
+            .select_cell(rng, false)
+            .ok_or_else(|| ErrorId::MaybeBug.into_with(|| "[setup stair] no empty cell!"))?;
+        {
+            let cell = self
+                .field
+                .try_get_mut_p(cd)
+                .into_chained(|| "[setup stair] select_cell returned invalid coord")?;
+            cell.surface = Surface::Stair;
+        }
+        self.set_obj(cd, false);
+        Ok(())
+    }
+
     fn can_move_impl(&self, cd: Coord, direction: Direction, is_enemy: bool) -> Option<bool> {
         let cur_cell = self.field.try_get_p(cd).ok()?;
         let nxt_cell = self.field.try_get_p(cd + direction.to_cd()).ok()?;

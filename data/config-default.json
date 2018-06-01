@@ -27,11 +27,6 @@
         }
     },
     "keymap": {
-        "u": {
-            "Act": {
-                "Move": "RightUp"
-            }
-        },
         "y": {
             "Both": {
                 "act": {
@@ -40,24 +35,20 @@
                 "sys": "Yes"
             }
         },
-        "l": {
+        "Down": {
             "Act": {
-                "Move": "Right"
+                "Move": "Down"
             }
         },
-        "Q": {
-            "Sys": "Quit"
-        },
-        "n": {
-            "Both": {
-                "act": {
-                    "Move": "RightDown"
-                },
-                "sys": "No"
+        "h": {
+            "Act": {
+                "Move": "Left"
             }
         },
-        "Esc": {
-            "Sys": "Cancel"
+        "b": {
+            "Act": {
+                "Move": "LeftDown"
+            }
         },
         "j": {
             "Act": {
@@ -69,29 +60,12 @@
                 "Move": "Up"
             }
         },
-        "b": {
-            "Act": {
-                "Move": "LeftDown"
-            }
-        },
-        "Down": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
-        "Left": {
-            "Act": {
-                "Move": "Left"
-            }
-        },
-        "k": {
-            "Act": {
-                "Move": "Up"
-            }
-        },
-        "h": {
-            "Act": {
-                "Move": "Left"
+        "n": {
+            "Both": {
+                "act": {
+                    "Move": "RightDown"
+                },
+                "sys": "No"
             }
         },
         "Right": {
@@ -99,8 +73,34 @@
                 "Move": "Right"
             }
         },
+        "l": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "Left": {
+            "Act": {
+                "Move": "Left"
+            }
+        },
+        "u": {
+            "Act": {
+                "Move": "RightUp"
+            }
+        },
+        "k": {
+            "Act": {
+                "Move": "Up"
+            }
+        },
         "S": {
             "Sys": "Save"
+        },
+        "Q": {
+            "Sys": "Quit"
+        },
+        "Esc": {
+            "Sys": "Cancel"
         }
     },
     "player": {
@@ -149,5 +149,6 @@
                 }
             }
         ]
-    }
+    },
+    "hide_dungeon": true
 }
