@@ -45,6 +45,7 @@ impl Default for KeyMap {
                 },
             ),
             (Key::Char('b'), InputCode::Act(Action::Move(LeftDown))),
+            (Key::Char('>'), InputCode::Act(Action::DownStair)),
             (Key::Up, InputCode::Act(Action::Move(Up))),
             (Key::Down, InputCode::Act(Action::Move(Down))),
             (Key::Left, InputCode::Act(Action::Move(Left))),

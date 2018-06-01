@@ -27,12 +27,25 @@
         }
     },
     "keymap": {
-        "y": {
-            "Both": {
-                "act": {
-                    "Move": "LeftUp"
-                },
-                "sys": "Yes"
+        "l": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "S": {
+            "Sys": "Save"
+        },
+        "Q": {
+            "Sys": "Quit"
+        },
+        "u": {
+            "Act": {
+                "Move": "RightUp"
+            }
+        },
+        "Up": {
+            "Act": {
+                "Move": "Up"
             }
         },
         "Down": {
@@ -40,24 +53,24 @@
                 "Move": "Down"
             }
         },
-        "h": {
-            "Act": {
-                "Move": "Left"
-            }
-        },
-        "b": {
-            "Act": {
-                "Move": "LeftDown"
-            }
-        },
         "j": {
             "Act": {
                 "Move": "Down"
             }
         },
-        "Up": {
+        "Right": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "k": {
             "Act": {
                 "Move": "Up"
+            }
+        },
+        "h": {
+            "Act": {
+                "Move": "Left"
             }
         },
         "n": {
@@ -68,39 +81,29 @@
                 "sys": "No"
             }
         },
-        "Right": {
-            "Act": {
-                "Move": "Right"
+        "Esc": {
+            "Sys": "Cancel"
+        },
+        "y": {
+            "Both": {
+                "act": {
+                    "Move": "LeftUp"
+                },
+                "sys": "Yes"
             }
         },
-        "l": {
+        "b": {
             "Act": {
-                "Move": "Right"
+                "Move": "LeftDown"
             }
+        },
+        ">": {
+            "Act": "DownStair"
         },
         "Left": {
             "Act": {
                 "Move": "Left"
             }
-        },
-        "u": {
-            "Act": {
-                "Move": "RightUp"
-            }
-        },
-        "k": {
-            "Act": {
-                "Move": "Up"
-            }
-        },
-        "S": {
-            "Sys": "Save"
-        },
-        "Q": {
-            "Sys": "Quit"
-        },
-        "Esc": {
-            "Sys": "Cancel"
         }
     },
     "player": {
