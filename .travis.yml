@@ -17,7 +17,23 @@ env:
     - SCCACHE_DIR="$HOME/.cargo/sccache"
     - RUSTC_WRAPPER=sccache
 
-# language: rust
-# rust:
-#   - nightly
-# script:
+
+addons:
+  apt:
+    packages:
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - cmake
+      - gcc
+      - binutils-dev
+      - libiberty-dev
+
+before_install:
+  - source ./ci/setup.sh
+
+install:
+- pip install setuptools-rust
+
+script:
+- ./ci/test.sh
