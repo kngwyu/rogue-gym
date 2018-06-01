@@ -4,7 +4,7 @@ import gym
 import numpy as np
 
 try:
-    from ._rogue_gym import GameState
+    from rogue_gym_python._rogue_gym import GameState
 except ImportErroor as e:
     raise error.DependencyNotInstalled("{}. (Did you install cargo and rust?)")
 
