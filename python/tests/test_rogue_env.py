@@ -1,4 +1,5 @@
 """test for RogueEnv """
+import rogue_gym
 from rogue_gym import RogueEnv
 import unittest
 SEED1_DUNGEON = [b'                                                                                ',

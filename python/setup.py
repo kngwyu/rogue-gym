@@ -18,13 +18,9 @@ except ImportError:
 
 
 class CmdTest(TestCommand):
-    user_options = [('pytest-args=', 'a', "Arguments to pass to pytest")]
-    def initialize_options(self):
-        TestCommand.initialize_options(self)
-        self.pytest_args = ''        
     def run(self):
         self.run_command("test_rust")
-        errno = subprocess.call([sys.executable, './tests/test_rogue_env.py'])    
+        errno = subprocess.call([sys.executable, 'test_rogue_env.py'], cwd = './tests')
         sys.exit(errno)
 
 
