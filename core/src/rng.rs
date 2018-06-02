@@ -5,10 +5,9 @@ use rand::{
     distributions::uniform::SampleUniform, thread_rng, Error as RndError, RngCore, SeedableRng,
     XorShiftRng,
 };
-#[cfg(test)]
-use std::convert;
 use std::fmt::Debug;
 use std::ops::Range;
+use std::mem;
 /// wrapper of XorShiftRng
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RngHandle(XorShiftRng);
@@ -19,24 +18,17 @@ impl Default for RngHandle {
     }
 }
 
-pub fn gen_seed() -> u64 {
+pub fn gen_seed() -> u128 {
     let mut rng = thread_rng();
     rng.gen()
 }
 
 impl RngHandle {
-    fn gen_seed(seed: u64) -> [u8; 16] {
-        let mut seed_bytes = [0u8; 16];
-        for i in 0..8 {
-            let shift = i * 8;
-            let val = (seed >> shift) as u8;
-            seed_bytes[i] = val;
-            seed_bytes[15 - i] = val;
-        }
-        seed_bytes
+    fn gen_seed(seed: u128) -> [u8; 16] {
+        unsafe { mem::transmute::<_, [u8; 16]>(seed) }
     }
     /// create new Rng by specified seed
-    pub fn from_seed(seed: u64) -> Self {
+    pub fn from_seed(seed: u128) -> Self {
         let seed = Self::gen_seed(seed);
         RngHandle(XorShiftRng::from_seed(seed))
     }
@@ -123,27 +115,6 @@ impl<'a, T: PrimInt> Iterator for RandomSelecter<'a, T> {
         let res = T::from(res).expect("[RngSelect::Iterator::next] NumCast error") + self.offset;
         Some(res)
     }
-}
-
-#[cfg(test)]
-mod rng_test {
-    use super::*;
-    /// seed encoding test
-    #[test]
-    fn gen_seed() {
-        let seed = 2367689;
-        let seed_bytes = RngHandle::gen_seed(seed);
-        let decoded = seed_bytes
-            .into_iter()
-            .take(8)
-            .enumerate()
-            .fold(0, |acc, (i, byte)| {
-                let plus: u64 = convert::From::from(*byte);
-                acc + (plus << (i * 8))
-            });
-        assert_eq!(seed, decoded);
-    }
-
 }
 
 #[cfg(test)]

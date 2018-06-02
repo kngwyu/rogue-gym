@@ -50,14 +50,14 @@ use ui::{MordalKind, MordalMsg, UiState};
 /// it's inteded to construct from json
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct GameConfig {
-    /// screen width
+    /// screen widt
     pub width: i32,
     /// screen height
     pub height: i32,
     /// seed of random number generator
     /// if None, we use random value chosen by `thread_rng().gen()`
     #[serde(default)]
-    pub seed: Option<u64>,
+    pub seed: Option<u128>,
     /// dungeon configuration
     #[serde(flatten)]
     pub dungeon: DungeonStyle,
@@ -308,7 +308,7 @@ pub enum GameMsg {
 pub struct GlobalConfig {
     pub width: X,
     pub height: Y,
-    pub seed: u64,
+    pub seed: u128,
     pub hide_dungeon: bool,
 }
 

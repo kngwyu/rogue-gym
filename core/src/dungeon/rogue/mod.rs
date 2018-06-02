@@ -186,7 +186,7 @@ impl Dungeon {
         config_global: &GlobalConfig,
         game_info: &GameInfo,
         item_handle: &mut ItemHandler,
-        seed: u64,
+        seed: u128,
     ) -> GameResult<Self> {
         let rng = RngHandle::from_seed(seed);
         let mut dungeon = Dungeon {

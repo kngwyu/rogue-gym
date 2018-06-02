@@ -139,7 +139,7 @@ pub struct ItemHandler {
 
 impl ItemHandler {
     /// generate new ItemHandler
-    pub fn new(config: Config, seed: u64) -> Self {
+    pub fn new(config: Config, seed: u128) -> Self {
         ItemHandler {
             items: BTreeMap::new(),
             placed_items: BTreeMap::new(),

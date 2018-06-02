@@ -12,9 +12,10 @@ use rect_iter::GetMut2D;
 use rogue_gym_core::character::player::Status;
 use rogue_gym_core::dungeon::{Positioned, X, Y};
 use rogue_gym_core::error::{GameResult, ResultExt};
-use rogue_gym_core::{
-    input::{Key, KeyMap}, GameConfig, Reaction, RunTime,
-};
+use rogue_gym_core::{input::{Key, KeyMap},
+                     GameConfig,
+                     Reaction,
+                     RunTime};
 
 #[pyclass]
 struct GameState {
@@ -46,8 +47,7 @@ impl PlayerState {
     }
     fn draw_map(&mut self, runtime: &RunTime) -> GameResult<()> {
         runtime.draw_screen(|Positioned(cd, tile)| -> GameResult<()> {
-            *self
-                .map
+            *self.map
                 .try_get_mut_p(cd)
                 .into_chained(|| "in python::GameState::react")? = tile.to_byte();
             Ok(())
@@ -65,10 +65,11 @@ impl PlayerState {
 #[pymethods]
 impl GameState {
     #[new]
-    fn __new__(obj: &PyRawObject, config: Option<String>) -> PyResult<()> {
-        let config = config.map_or_else(GameConfig::default, |cfg| {
+    fn __new__(obj: &PyRawObject, config: Option<String>, seed: Option<u64>) -> PyResult<()> {
+        let mut config = config.map_or_else(GameConfig::default, |cfg| {
             GameConfig::from_json(&cfg).unwrap()
         });
+        config.seed = seed.map(|u| u as u128);
         let mut runtime = config.clone().build().unwrap();
         let (w, h) = runtime.screen_size();
         let mut state = PlayerState::new(w, h);
@@ -82,7 +83,7 @@ impl GameState {
         })
     }
     fn set_seed(&mut self, seed: u64) -> PyResult<()> {
-        self.config.seed = Some(seed);
+        self.config.seed = Some(seed as u128);
         Ok(())
     }
     fn reset(&mut self) -> PyResult<()> {

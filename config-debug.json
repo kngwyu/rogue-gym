@@ -1,0 +1,157 @@
+{
+    "width": 80,
+    "height": 24,
+    "seed": 1,
+    "dungeon-style": "rogue",
+    "dungeon-setting": {
+        "room_num_x": 3,
+        "room_num_y": 3,
+        "min_room_size": {
+            "x": 4,
+            "y": 4
+        },
+        "enable_trap": true,
+        "max_empty_rooms": 4,
+        "amulet_level": 25,
+        "maze_rate_inv": 15,
+        "dark_level": 10,
+        "hidden_passage_rate_inv": 40,
+        "locked_door_rate_inv": 5,
+        "max_extra_edges": 5
+    },
+    "item": {
+        "gold": {
+            "rate_inv": 2,
+            "base": 50,
+            "per_level": 10
+        }
+    },
+    "keymap": {
+        "l": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "S": {
+            "Sys": "Save"
+        },
+        "Q": {
+            "Sys": "Quit"
+        },
+        "u": {
+            "Act": {
+                "Move": "RightUp"
+            }
+        },
+        "Up": {
+            "Act": {
+                "Move": "Up"
+            }
+        },
+        "Down": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "j": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "Right": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "k": {
+            "Act": {
+                "Move": "Up"
+            }
+        },
+        "h": {
+            "Act": {
+                "Move": "Left"
+            }
+        },
+        "n": {
+            "Both": {
+                "act": {
+                    "Move": "RightDown"
+                },
+                "sys": "No"
+            }
+        },
+        "Esc": {
+            "Sys": "Cancel"
+        },
+        "y": {
+            "Both": {
+                "act": {
+                    "Move": "LeftUp"
+                },
+                "sys": "Yes"
+            }
+        },
+        "b": {
+            "Act": {
+                "Move": "LeftDown"
+            }
+        },
+        ">": {
+            "Act": "DownStair"
+        },
+        "Left": {
+            "Act": {
+                "Move": "Left"
+            }
+        }
+    },
+    "player": {
+        "exps": [
+            10,
+            20,
+            40,
+            80,
+            160,
+            320,
+            640,
+            1300,
+            2600,
+            5200,
+            13000,
+            26000,
+            50000,
+            100000,
+            200000,
+            400000,
+            800000,
+            2000000,
+            4000000,
+            8000000,
+            0
+        ],
+        "hunger_time": 1300,
+        "init_hp": 12,
+        "init_str": 16,
+        "max_items": 27,
+        "init_items": [
+            {
+                "kind": "Gold",
+                "how_many": 0,
+                "attr": {
+                    "bits": 4
+                }
+            },
+            {
+                "kind": {
+                    "Food": "Ration"
+                },
+                "how_many": 1,
+                "attr": {
+                    "bits": 4
+                }
+            }
+        ]
+    },
+    "hide_dungeon": true
+}

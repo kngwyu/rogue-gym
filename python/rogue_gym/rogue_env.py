@@ -11,35 +11,42 @@ except ImportErroor as e:
 
 class RogueEnv(gym.Env):
     metadata = {'render.modes': ['human', 'ansi']}
-    def __init__(self, config_path = None):
+    def __init__(self, seed = None, config_path = None):
         """
         @param config_path(string): path to config file
         """
         super().__init__()
         config = None
         if config_path:
-            file = open(config_path, 'r')
-            config = file.read()
-        self.game = GameState(config_path)
+            f = open(config_path, 'r')
+            config = f.read()
+        self.game = GameState(config, seed)
         self.__cache()
 
     def __cache(self):
         self.cached_dungeon, self.cached_state = self.game.prev()
-        
+
+    def __state(self):
+        return self.cached_dungeon, self.cached_state
+
     def reset(self):
         """reset game state"""
         self.game.reset()
         self.__cache()
     
-    def step(self, action):
+    def step(self, actions):
         """
         Do action.
-        @param action(one length string): key board input to rogue(e.g. "h" or "j")
+        @param action(string): key board input to rogue(e.g. "hjk" or "hh>")
         """
-        action = ord(action)
-        self.cached_dungeon, self.cached_state = self.game.react(action)
-        return self.game.react(action)
+        for act in actions:
+            action = ord(action)
+            self.game.react(action)
+        self.__cache()
+        return self.__state()
 
+    
+    
     def seed(self, seed):
         """
         Set seed.

@@ -33,7 +33,7 @@ impl DungeonStyle {
         config_global: &GlobalConfig,
         item_handle: &mut ItemHandler,
         game_info: &GameInfo,
-        seed: u64,
+        seed: u128,
     ) -> GameResult<Dungeon> {
         match self {
             DungeonStyle::Rogue(config) => {
