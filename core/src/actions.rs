@@ -19,7 +19,7 @@ pub(crate) fn process_action(
             if dungeon.is_downstair(player.pos.clone()) {
                 new_level(info, dungeon, item, player, false)
                     .chain_err(|| "action::process_action")?;
-                Ok(vec![Reaction::Redraw])
+                Ok(vec![Reaction::Redraw, Reaction::StatusUpdated])
             } else {
                 Ok(vec![Reaction::Notify(GameMsg::NoDownStair)])
             }

@@ -27,7 +27,10 @@ where
     selected.insert(cur_room);
     // Connect all rooms
     while selected.len() < num_rooms {
-        let nxt = select_candidate(num_rooms, &graph[cur_room], &selected, rng);
+        // select the room which isn't in graph
+        let nxt = select_candidate(num_rooms, &graph[cur_room], rng, |room_id| {
+            !selected.contains(room_id)
+        });
         if let Some((nxt_room, direction)) = nxt {
             selected.insert(nxt_room);
             graph.coonect(cur_room, nxt_room);
@@ -47,7 +50,10 @@ where
     let try_num = rng.range(0..max_extra_edges);
     for _ in 0..try_num {
         let room1 = rng.range(0..num_rooms);
-        let selected = select_candidate(num_rooms, &graph[room1], &selected, rng);
+        // select the room which isn't connected with room1
+        let selected = select_candidate(num_rooms, &graph[room1], rng, |room_id| {
+            !&graph[room1].connections.contains(room_id)
+        });
         if let Some((room2, direction)) = selected {
             graph.coonect(room1, room2);
             connect_2rooms(&rooms[room1], &rooms[room2], direction, rng, &mut register)
@@ -60,17 +66,12 @@ where
 fn select_candidate(
     num_rooms: usize,
     node: &Node,
-    selected: &FenwickSet,
     rng: &mut RngHandle,
+    mut predicate: impl FnMut(usize) -> bool,
 ) -> Option<(usize, Direction)> {
     (0..num_rooms)
-        .filter_map(|i| {
-            if selected.contains(i) {
-                None
-            } else {
-                node.candidates.get(&i).map(|dir| (i, *dir))
-            }
-        })
+        .filter(|&i| predicate(i))
+        .filter_map(|i| node.candidates.get(&i).map(|dir| (i, *dir)))
         .enumerate()
         .filter(|(i, _)| rng.does_happen(*i as u32 + 1))
         .last()
