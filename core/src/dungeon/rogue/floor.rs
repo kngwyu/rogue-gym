@@ -1,3 +1,4 @@
+//! rogue floor
 use super::{passages, rooms, Config, Room, Surface};
 use dungeon::{Cell, CellAttr, Coord, Direction, Field, Positioned, X, Y};
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
@@ -15,7 +16,7 @@ pub struct Floor {
     pub doors: HashSet<Coord>,
     /// field (level map)
     pub field: Field<Surface>,
-    /// numbers of rooms which is not empty
+    /// ids of rooms which are not empty
     pub non_empty_rooms: FenwickSet,
 }
 
@@ -139,7 +140,7 @@ impl Floor {
 
         // TODO: trap
         let mut res = match cur_cell.surface {
-            Surface::Floor => match nxt_cell.surface {
+            Surface::Floor | Surface::Stair => match nxt_cell.surface {
                 Surface::Floor | Surface::Stair | Surface::Trap => true,
                 Surface::Door | Surface::Passage => !direction.is_diag(),
                 _ => false,
