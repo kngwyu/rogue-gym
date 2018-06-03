@@ -40,12 +40,9 @@ class RogueEnv(gym.Env):
         @param action(string): key board input to rogue(e.g. "hjk" or "hh>")
         """
         for act in actions:
-            action = ord(action)
-            self.game.react(action)
+            self.game.react(ord(act))
         self.__cache()
         return self.__state()
-
-    
     
     def seed(self, seed):
         """
