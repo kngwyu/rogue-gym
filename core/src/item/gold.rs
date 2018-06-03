@@ -10,6 +10,8 @@ pub struct Config {
     pub base: u32,
     #[serde(default = "default_gold_per_level")]
     pub per_level: u32,
+    #[serde(default = "default_gold_minimum")]
+    pub minimum: u32,
 }
 
 impl Config {
@@ -17,7 +19,7 @@ impl Config {
         if !rng.does_happen(self.rate_inv) {
             return None;
         }
-        let num = rng.range(0..self.base + self.per_level * level);
+        let num = rng.range(0..self.base + self.per_level * level) + self.minimum;
         Some(ItemNum(num))
     }
 }
@@ -28,6 +30,7 @@ impl Default for Config {
             rate_inv: default_gold_rate(),
             base: default_gold_base(),
             per_level: default_gold_per_level(),
+            minimum: default_gold_minimum(),
         }
     }
 }
@@ -43,4 +46,8 @@ fn default_gold_base() -> u32 {
 #[inline]
 fn default_gold_per_level() -> u32 {
     10
+}
+#[inline]
+fn default_gold_minimum() -> u32 {
+    2
 }

@@ -23,49 +23,17 @@
         "gold": {
             "rate_inv": 2,
             "base": 50,
-            "per_level": 10
+            "per_level": 10,
+            "minimum": 2
         }
     },
     "keymap": {
-        "l": {
-            "Act": {
-                "Move": "Right"
-            }
-        },
-        "S": {
-            "Sys": "Save"
-        },
-        "Q": {
-            "Sys": "Quit"
-        },
-        "u": {
-            "Act": {
-                "Move": "RightUp"
-            }
-        },
-        "Up": {
-            "Act": {
-                "Move": "Up"
-            }
-        },
-        "Down": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
-        "j": {
-            "Act": {
-                "Move": "Down"
-            }
+        ">": {
+            "Act": "DownStair"
         },
         "Right": {
             "Act": {
                 "Move": "Right"
-            }
-        },
-        "k": {
-            "Act": {
-                "Move": "Up"
             }
         },
         "h": {
@@ -81,8 +49,15 @@
                 "sys": "No"
             }
         },
-        "Esc": {
-            "Sys": "Cancel"
+        "l": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "Down": {
+            "Act": {
+                "Move": "Down"
+            }
         },
         "y": {
             "Both": {
@@ -97,12 +72,38 @@
                 "Move": "LeftDown"
             }
         },
-        ">": {
-            "Act": "DownStair"
+        "S": {
+            "Sys": "Save"
+        },
+        "Up": {
+            "Act": {
+                "Move": "Up"
+            }
+        },
+        "j": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "Q": {
+            "Sys": "Quit"
+        },
+        "k": {
+            "Act": {
+                "Move": "Up"
+            }
         },
         "Left": {
             "Act": {
                 "Move": "Left"
+            }
+        },
+        "Esc": {
+            "Sys": "Cancel"
+        },
+        "u": {
+            "Act": {
+                "Move": "RightUp"
             }
         }
     },
