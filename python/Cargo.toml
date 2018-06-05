@@ -19,3 +19,7 @@ features = ["extension-module"]
 features = ["termion"]
 path = "../core/"
 version = "0.1.0"
+
+[dependencies.rogue-gym-devui]
+path = "../devui/"
+version = "0.1.0"

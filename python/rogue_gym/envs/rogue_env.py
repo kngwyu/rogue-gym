@@ -10,7 +10,8 @@ except ImportErroor as e:
 
 
 class RogueEnv(gym.Env):
-    metadata = {'render.modes': ['human', 'ansi']}
+    metadata = {'render.modes': ['human', 'ascii']}
+
     def __init__(self, seed = None, config_path = None):
         """
         @param config_path(string): path to config file
@@ -64,3 +65,7 @@ class RogueEnv(gym.Env):
         """
         for b in self.cached_dungeon:
             print(b)
+
+    def render(self, mode = 'human'):
+        if mode == 'ascii':
+            return self.cached_dungeon
