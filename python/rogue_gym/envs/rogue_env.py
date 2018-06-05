@@ -64,4 +64,3 @@ class RogueEnv(gym.Env):
         """
         for b in self.cached_dungeon:
             print(b)
-
