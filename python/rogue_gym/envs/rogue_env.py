@@ -69,3 +69,5 @@ class RogueEnv(gym.Env):
     def render(self, mode = 'human'):
         if mode == 'ascii':
             return self.cached_dungeon
+        elif mode == 'human':
+            self.game.render_console()

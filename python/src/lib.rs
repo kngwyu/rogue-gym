@@ -18,6 +18,8 @@ use rogue_gym_core::{
     input::{Key, KeyMap}, GameConfig, Reaction, RunTime,
 };
 
+type Console = devui::screen::Screen<std::io::Stdout>;
+
 #[pyclass]
 struct GameState {
     runtime: RunTime,
@@ -25,6 +27,7 @@ struct GameState {
     config: GameConfig,
     token: PyToken,
     prev_actions: Vec<Reaction>,
+    console: Console,
 }
 
 /// result of the action(map as list of byte array, status as dict)
@@ -84,6 +87,7 @@ impl GameState {
             config,
             token,
             prev_actions: vec![],
+            console: Console::from_stdout(w.0, h.0).unwrap(),
         })
     }
     fn set_seed(&mut self, seed: u64) -> PyResult<()> {
@@ -123,6 +127,13 @@ impl GameState {
         });
         self.prev_actions = res;
         Ok(self.state.res(self.token.py()))
+    }
+    fn render_console(&mut self) -> PyResult<()> {
+        let actions = self.prev_actions.clone();
+        actions.into_iter().for_each(|r| {
+            devui::process_reaction(&mut self.console, &mut self.runtime, r).unwrap();
+        });
+        Ok(())
     }
 }
 
