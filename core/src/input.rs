@@ -7,6 +7,7 @@ use serde::ser::{Serialize, SerializeMap, Serializer};
 use std::collections::HashMap;
 use std::fmt;
 use std::marker::PhantomData;
+use std::path::PathBuf;
 use std::str;
 
 /// Mapping from Keyboard input to InputCode
@@ -71,8 +72,7 @@ impl KeyMap {
             (Key::Char('y'), InputCode::Act(Action::Move(LeftUp))),
             (Key::Char('n'), InputCode::Act(Action::Move(RightDown))),
             (Key::Char('b'), InputCode::Act(Action::Move(LeftDown))),
-            (Key::Char('S'), InputCode::Sys(System::Save)),
-            (Key::Char('Q'), InputCode::Sys(System::Quit)),
+            (Key::Char('>'), InputCode::Act(Action::DownStair)),
         ];
         let inner: HashMap<_, _> = map.into_iter().collect();
         KeyMap { inner }
@@ -239,7 +239,10 @@ impl Key {
 #[cfg(test)]
 mod keymap_test {
     use super::*;
-    use serde_json::{from_str, to_string};
+    use serde_json as json;
+    use std::fs::File;
+    use std::io::prelude::*;
+    use std::path::Path;
     #[test]
     fn from_str_() {
         let f1 = Key::from_str("F1").unwrap();
@@ -255,9 +258,25 @@ mod keymap_test {
     #[test]
     fn serde() {
         let keymap = KeyMap::default();
-        let ser = to_string(&keymap).unwrap();
-        let de: KeyMap = from_str(&ser).unwrap();
+        let ser = json::to_string(&keymap).unwrap();
+        let de: KeyMap = json::from_str(&ser).unwrap();
         assert_eq!(de, keymap);
+    }
+    fn print_keymap(keymap: KeyMap, filename: &str) {
+        let json = json::to_string(&keymap).unwrap();
+        let path = Path::new("../data/keymaps").join(filename);
+        let mut file = File::create(path).unwrap();
+        file.write_all(json.as_bytes()).unwrap();
+    }
+    #[test]
+    #[ignore]
+    fn print_ai_keymap() {
+        print_keymap(KeyMap::ai(), "ai.json");
+    }
+    #[test]
+    #[ignore]
+    fn print_default_keymap() {
+        print_keymap(KeyMap::default(), "default.json");
     }
 }
 

@@ -6,7 +6,9 @@ use termion::raw::{IntoRawMode, RawTerminal};
 use termion::{clear, cursor, terminal_size};
 use tuple_map::TupleMap2;
 
+/// wrapper of stdout as rogue screen
 pub struct Screen<T> {
+    /// stdout
     pub term: T,
     pub has_notification: bool,
     width: u16,
@@ -14,6 +16,7 @@ pub struct Screen<T> {
 }
 
 impl Screen<RawTerminal<Stdout>> {
+    /// raw terminal screen(for cli)
     pub fn from_raw(w: i32, h: i32) -> Result<Self> {
         let stdout = io::stdout();
         let term = stdout
@@ -40,6 +43,7 @@ impl Screen<RawTerminal<Stdout>> {
 }
 
 impl Screen<Stdout> {
+    /// raw terminal screen(for python API)
     pub fn from_stdout(w: i32, h: i32) -> Result<Self> {
         let stdout = io::stdout();
         let (width, height) =

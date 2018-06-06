@@ -86,7 +86,7 @@ impl GameState {
             state,
             config,
             token,
-            prev_actions: vec![],
+            prev_actions: vec![Reaction::Redraw],
             console: Console::from_stdout(w.0, h.0).unwrap(),
         })
     }

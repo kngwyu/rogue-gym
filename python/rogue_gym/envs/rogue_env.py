@@ -38,7 +38,7 @@ class RogueEnv(gym.Env):
     def step(self, actions):
         """
         Do action.
-        @param action(string): key board input to rogue(e.g. "hjk" or "hh>")
+        @param actions(string): key board inputs to rogue(e.g. "hjk" or "hh>")
         """
         for act in actions:
             self.game.react(ord(act))
@@ -66,8 +66,21 @@ class RogueEnv(gym.Env):
         for b in self.cached_dungeon:
             print(b)
 
-    def render(self, mode = 'human'):
+    def render(self, mode = 'human', close = False):
         if mode == 'ascii':
             return self.cached_dungeon
         elif mode == 'human':
             self.game.render_console()
+
+# Same as data/keymaps/ai.json
+ACTION_MEANINGS = {
+    "h": "MOVE_LEFT",
+    "j": "MOVE_UP",
+    "k": "MOVE_DOWN",
+    "l": "MOVE_RIGHT",
+    "n": "MOVE_RIGHTDOWN",
+    "b": "MOVE_LEFTDOWN",
+    "u": "MOVE_RIGHTUP",
+    "y": "MOVE_LEFTDOWN",
+    ">": "DOWNSTAIR",
+}

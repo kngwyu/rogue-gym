@@ -1,0 +1,45 @@
+{
+    "u": {
+        "Act": {
+            "Move": "RightUp"
+        }
+    },
+    "n": {
+        "Act": {
+            "Move": "RightDown"
+        }
+    },
+    ">": {
+        "Act": "DownStair"
+    },
+    "h": {
+        "Act": {
+            "Move": "Left"
+        }
+    },
+    "y": {
+        "Act": {
+            "Move": "LeftUp"
+        }
+    },
+    "l": {
+        "Act": {
+            "Move": "Right"
+        }
+    },
+    "k": {
+        "Act": {
+            "Move": "Up"
+        }
+    },
+    "b": {
+        "Act": {
+            "Move": "LeftDown"
+        }
+    },
+    "j": {
+        "Act": {
+            "Move": "Down"
+        }
+    }
+}
