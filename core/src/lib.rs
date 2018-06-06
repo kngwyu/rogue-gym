@@ -214,7 +214,6 @@ impl RunTime {
                     InputCode::Sys(sys) => self.check_interrupting(sys),
                     InputCode::Act(act) | InputCode::Both { act, .. } => actions::process_action(
                         act,
-                        &self.config,
                         &mut self.game_info,
                         &mut self.dungeon,
                         &mut self.item,
@@ -300,6 +299,7 @@ pub enum GameMsg {
     CantGetItem(ItemKind),
     GotItem { kind: ItemKind, num: u32 },
     NoDownStair,
+    SecretDoor,
     Quit,
 }
 

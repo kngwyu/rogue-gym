@@ -1,15 +1,5 @@
 {
-    "u": {
-        "Act": {
-            "Move": "RightUp"
-        }
-    },
-    "n": {
-        "Act": {
-            "Move": "RightDown"
-        }
-    },
-    ">": {
+    "s": {
         "Act": "DownStair"
     },
     "h": {
@@ -17,14 +7,19 @@
             "Move": "Left"
         }
     },
-    "y": {
+    "n": {
         "Act": {
-            "Move": "LeftUp"
+            "Move": "RightDown"
         }
     },
-    "l": {
+    "j": {
         "Act": {
-            "Move": "Right"
+            "Move": "Down"
+        }
+    },
+    "u": {
+        "Act": {
+            "Move": "RightUp"
         }
     },
     "k": {
@@ -32,14 +27,22 @@
             "Move": "Up"
         }
     },
+    ">": {
+        "Act": "DownStair"
+    },
+    "l": {
+        "Act": {
+            "Move": "Right"
+        }
+    },
+    "y": {
+        "Act": {
+            "Move": "LeftUp"
+        }
+    },
     "b": {
         "Act": {
             "Move": "LeftDown"
-        }
-    },
-    "j": {
-        "Act": {
-            "Move": "Down"
         }
     }
 }

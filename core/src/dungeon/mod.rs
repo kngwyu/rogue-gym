@@ -8,7 +8,7 @@ use error::{ErrorId, ErrorKind, GameResult, ResultExt};
 use error_chain_mini::ChainedError;
 use item::ItemHandler;
 use tile::Tile;
-use {GameInfo, GlobalConfig};
+use {GameInfo, GameMsg, GlobalConfig};
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(tag = "dungeon-style", content = "dungeon-setting")]
@@ -103,6 +103,18 @@ impl Dungeon {
             Dungeon::Rogue(dungeon) => {
                 let address = path.to_rogue()?;
                 dungeon.move_player(address, direction)
+            }
+            _ => unimplemented!(),
+        }
+    }
+    pub(crate) fn search<'a>(
+        &'a mut self,
+        path: &DungeonPath,
+    ) -> GameResult<impl 'a + Iterator<Item = GameMsg>> {
+        match self {
+            Dungeon::Rogue(dungeon) => {
+                let address = path.to_rogue()?;
+                dungeon.search(address)
             }
             _ => unimplemented!(),
         }

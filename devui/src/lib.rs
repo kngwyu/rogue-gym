@@ -81,6 +81,7 @@ pub fn process_reaction<W: Write>(
                 GameMsg::GotItem { kind, num } => {
                     notify!(screen, "Now you have {} {:?}", num, kind)
                 }
+                GameMsg::SecretDoor => notify!(screen, "you found a secret door"),
                 GameMsg::Quit => {
                     notify!(screen, "Thank you for playing!")?;
                     return Ok(Some(Transition::Exit));

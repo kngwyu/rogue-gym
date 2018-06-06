@@ -12,7 +12,7 @@ use item::ItemHandler;
 use rect_iter::{Get2D, GetMut2D, RectRange};
 use rng::RngHandle;
 use tile::{Drawable, Tile};
-use {GameInfo, GlobalConfig};
+use {GameInfo, GameMsg, GlobalConfig};
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Config {
@@ -49,6 +49,10 @@ pub struct Config {
     /// try number of additional passages
     #[serde(default = "default_max_extra_edges")]
     pub max_extra_edges: u32,
+    #[serde(default = "default_door_unlock_rate_inv")]
+    pub door_unlock_rate_inv: u32,
+    #[serde(default = "default_passage_unlock_rate_inv")]
+    pub passage_unlock_rate_inv: u32,
 }
 
 #[inline]
@@ -95,6 +99,14 @@ fn default_locked_door_rate() -> u32 {
 fn default_max_extra_edges() -> u32 {
     5
 }
+#[inline]
+fn default_door_unlock_rate_inv() -> u32 {
+    5
+}
+#[inline]
+fn default_passage_unlock_rate_inv() -> u32 {
+    3
+}
 impl Default for Config {
     fn default() -> Config {
         Config {
@@ -109,6 +121,8 @@ impl Default for Config {
             hidden_passage_rate_inv: default_hidden_passage_rate(),
             locked_door_rate_inv: default_locked_door_rate(),
             max_extra_edges: default_max_extra_edges(),
+            door_unlock_rate_inv: default_door_unlock_rate_inv(),
+            passage_unlock_rate_inv: default_passage_unlock_rate_inv(),
         }
     }
 }
@@ -296,6 +310,17 @@ impl Dungeon {
             .player_in(cd, false)
             .chain_err(|| ERR_STR)?;
         Ok(address.into())
+    }
+    pub(crate) fn search<'a>(
+        &'a mut self,
+        address: Address,
+    ) -> GameResult<impl 'a + Iterator<Item = GameMsg>> {
+        if address.level != self.level {
+            return Err(ErrorId::MaybeBug.into_with(|| "[rogue::Dungeon::search]"));
+        }
+        Ok(self
+            .current_floor
+            .search(address.cd, &mut self.rng, &self.config))
     }
     /// select an empty cell randomly
     pub(crate) fn select_cell(&mut self, is_character: bool) -> Option<DungeonPath> {

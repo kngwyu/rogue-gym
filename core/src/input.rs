@@ -7,7 +7,6 @@ use serde::ser::{Serialize, SerializeMap, Serializer};
 use std::collections::HashMap;
 use std::fmt;
 use std::marker::PhantomData;
-use std::path::PathBuf;
 use std::str;
 
 /// Mapping from Keyboard input to InputCode
@@ -46,6 +45,7 @@ impl Default for KeyMap {
                 },
             ),
             (Key::Char('b'), InputCode::Act(Action::Move(LeftDown))),
+            (Key::Char('s'), InputCode::Act(Action::Search)),
             (Key::Char('>'), InputCode::Act(Action::DownStair)),
             (Key::Up, InputCode::Act(Action::Move(Up))),
             (Key::Down, InputCode::Act(Action::Move(Down))),
@@ -72,6 +72,7 @@ impl KeyMap {
             (Key::Char('y'), InputCode::Act(Action::Move(LeftUp))),
             (Key::Char('n'), InputCode::Act(Action::Move(RightDown))),
             (Key::Char('b'), InputCode::Act(Action::Move(LeftDown))),
+            (Key::Char('s'), InputCode::Act(Action::Search)),
             (Key::Char('>'), InputCode::Act(Action::DownStair)),
         ];
         let inner: HashMap<_, _> = map.into_iter().collect();

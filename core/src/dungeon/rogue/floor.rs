@@ -6,6 +6,7 @@ use item::ItemHandler;
 use rect_iter::{Get2D, GetMut2D};
 use rng::RngHandle;
 use std::collections::HashSet;
+use GameMsg;
 /// representation of 'floor'
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Floor {
@@ -80,12 +81,11 @@ impl Floor {
                 field
                     .try_get_mut_p(cd)
                     .map(|cell| {
-                        let attr = gen_attr(surface, false, rng, level, config);
-                        // if the passage is hiddden, don't draw it
-                        if !cell.is_hidden() || !cell.is_locked() {
+                        cell.attr = gen_attr(surface, false, rng, level, config);
+                        // if the passage is not hiddden, let's draw
+                        if !cell.is_hidden() && !cell.is_locked() {
                             cell.surface = surface;
                         }
-                        cell.attr = attr;
                     })
                     .into_chained(|| "Floor::new dig_passges returned invalid index")
             })?;
@@ -250,7 +250,9 @@ impl Floor {
         Direction::iter_variants().take(9).for_each(|d| {
             let cd = cd + d.to_cd();
             if let Ok(cell) = self.field.try_get_mut_p(cd) {
-                cell.approached();
+                if !d.is_diag() || cell.surface != Surface::Passage {
+                    cell.approached();
+                }
             }
         });
         Ok(())
@@ -305,6 +307,31 @@ impl Floor {
         }
         None
     }
+
+    /// search command
+    pub(crate) fn search<'a>(
+        &'a mut self,
+        cd: Coord,
+        rng: &'a mut RngHandle,
+        config: &'a Config,
+    ) -> impl 'a + Iterator<Item = GameMsg> {
+        let probinc = 0; // STUB: it's changed by player status
+        Direction::iter_variants().take(8).filter_map(move |d| {
+            let cd = cd + d.to_cd();
+            let cell = self.field.try_get_mut_p(cd).ok()?;
+            if cell.is_hidden() && rng.does_happen(probinc + config.passage_unlock_rate_inv) {
+                cell.unlock();
+                cell.surface = Surface::Passage;
+            }
+            if cell.is_locked() && rng.does_happen(probinc + config.door_unlock_rate_inv) {
+                cell.unlock();
+                cell.surface = Surface::Door;
+                return Some(GameMsg::SecretDoor);
+                // STUB
+            }
+            None
+        })
+    }
 }
 
 // generate initial attribute of cell
@@ -318,14 +345,14 @@ fn gen_attr(
     let mut attr = CellAttr::default();
     match surface {
         Surface::Passage => {
-            if rng.range(0..config.dark_level) + 1 < level
+            if rng.range(0..config.dark_level) < level
                 && rng.does_happen(config.hidden_passage_rate_inv)
             {
                 attr |= CellAttr::IS_HIDDEN;
             }
         }
         Surface::Door => {
-            if rng.range(0..config.dark_level) + 1 < level
+            if rng.range(0..config.dark_level) < level
                 && rng.does_happen(config.locked_door_rate_inv)
             {
                 attr |= CellAttr::IS_LOCKED;
