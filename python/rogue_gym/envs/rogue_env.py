@@ -12,7 +12,7 @@ except ImportErroor as e:
 class RogueEnv(gym.Env):
     metadata = {'render.modes': ['human', 'ascii']}
 
-    def __init__(self, seed = None, config_path = None):
+    def __init__(self, seed = None, config_path = None, console = True):
         """
         @param config_path(string): path to config file
         """
@@ -21,7 +21,7 @@ class RogueEnv(gym.Env):
         if config_path:
             f = open(config_path, 'r')
             config = f.read()
-        self.game = GameState(config, seed)
+        self.game = GameState(config, seed, console)
         self.__cache()
 
     def __cache(self):
