@@ -4,11 +4,10 @@ use character::{Action, Player};
 use dungeon::{Direction, Dungeon};
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
 use item::{pack::PackEntry, ItemHandler};
-use {GameInfo, GameMsg, GlobalConfig, Reaction};
+use {GameInfo, GameMsg, Reaction};
 
 pub(crate) fn process_action(
     action: Action,
-    config: &GlobalConfig,
     info: &mut GameInfo,
     dungeon: &mut Dungeon,
     item: &mut ItemHandler,
@@ -28,6 +27,7 @@ pub(crate) fn process_action(
             Err(ErrorId::Unimplemented.into_with(|| "UpStair Command is unimplemented"))
         }
         Action::Move(d) => move_player(d, dungeon, item, player),
+        Action::Search => search(dungeon, player),
     }
 }
 
@@ -62,12 +62,19 @@ fn move_player(
         .move_player(&player.pos, direction)
         .chain_err(|| "actions::move_player")?;
     player.pos = new_pos;
+    player.running(true);
     let mut res = vec![Reaction::Redraw];
     if let Some(msg) = get_item(dungeon, item, player).chain_err(|| "in actions::move_player")? {
         res.push(Reaction::Notify(msg));
         res.push(Reaction::StatusUpdated);
     }
     Ok(res)
+}
+
+fn search(dungeon: &mut Dungeon, player: &mut Player) -> GameResult<Vec<Reaction>> {
+    dungeon
+        .search(&player.pos)
+        .map(|v| v.map(|msg| Reaction::Notify(msg)).collect())
 }
 
 fn get_item(

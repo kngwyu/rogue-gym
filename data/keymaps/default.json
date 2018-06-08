@@ -1,0 +1,83 @@
+{
+    "Up": {
+        "Act": {
+            "Move": "Up"
+        }
+    },
+    "Left": {
+        "Act": {
+            "Move": "Left"
+        }
+    },
+    "h": {
+        "Act": {
+            "Move": "Left"
+        }
+    },
+    "y": {
+        "Both": {
+            "act": {
+                "Move": "LeftUp"
+            },
+            "sys": "Yes"
+        }
+    },
+    "k": {
+        "Act": {
+            "Move": "Up"
+        }
+    },
+    "n": {
+        "Both": {
+            "act": {
+                "Move": "RightDown"
+            },
+            "sys": "No"
+        }
+    },
+    "s": {
+        "Act": "DownStair"
+    },
+    "Esc": {
+        "Sys": "Cancel"
+    },
+    "u": {
+        "Act": {
+            "Move": "RightUp"
+        }
+    },
+    "j": {
+        "Act": {
+            "Move": "Down"
+        }
+    },
+    "b": {
+        "Act": {
+            "Move": "LeftDown"
+        }
+    },
+    "l": {
+        "Act": {
+            "Move": "Right"
+        }
+    },
+    ">": {
+        "Act": "DownStair"
+    },
+    "Q": {
+        "Sys": "Quit"
+    },
+    "S": {
+        "Sys": "Save"
+    },
+    "Down": {
+        "Act": {
+            "Move": "Down"
+        }
+    },
+    "Right": {
+        "Act": {
+            "Move": "Right"
+        }
+    }
+}

@@ -74,6 +74,11 @@ impl<S> Cell<S> {
     pub fn is_locked(&self) -> bool {
         self.attr.contains(CellAttr::IS_LOCKED)
     }
+    #[inline]
+    pub fn unlock(&mut self) {
+        self.attr &= !(CellAttr::IS_LOCKED | CellAttr::IS_HIDDEN);
+        self.visible(true)
+    }
 }
 
 impl<S: Drawable> Drawable for Cell<S> {

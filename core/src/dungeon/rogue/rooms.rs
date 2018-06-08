@@ -232,7 +232,7 @@ pub(crate) fn make_room(
             assigned_range,
         ));
     }
-    let is_dark = rng.range(0..config.dark_level) + 1 < level;
+    let is_dark = rng.range(0..config.dark_level) < level;
     let kind = if is_dark && rng.does_happen(config.maze_rate_inv) {
         // maze
         let range =

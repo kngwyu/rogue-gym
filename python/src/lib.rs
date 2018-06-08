@@ -3,6 +3,8 @@
 extern crate pyo3;
 extern crate rect_iter;
 extern crate rogue_gym_core;
+extern crate rogue_gym_devui as devui;
+
 use pyo3::prelude::*;
 use pyo3::py::class as pyclass;
 use pyo3::py::methods as pymethods;
@@ -12,10 +14,11 @@ use rect_iter::GetMut2D;
 use rogue_gym_core::character::player::Status;
 use rogue_gym_core::dungeon::{Positioned, X, Y};
 use rogue_gym_core::error::{GameResult, ResultExt};
-use rogue_gym_core::{input::{Key, KeyMap},
-                     GameConfig,
-                     Reaction,
-                     RunTime};
+use rogue_gym_core::{
+    input::{Key, KeyMap}, GameConfig, Reaction, RunTime,
+};
+
+type Console = devui::screen::Screen<std::io::Stdout>;
 
 #[pyclass]
 struct GameState {
@@ -23,6 +26,8 @@ struct GameState {
     state: PlayerState,
     config: GameConfig,
     token: PyToken,
+    prev_actions: Vec<Reaction>,
+    console: Console,
 }
 
 /// result of the action(map as list of byte array, status as dict)
@@ -47,7 +52,8 @@ impl PlayerState {
     }
     fn draw_map(&mut self, runtime: &RunTime) -> GameResult<()> {
         runtime.draw_screen(|Positioned(cd, tile)| -> GameResult<()> {
-            *self.map
+            *self
+                .map
                 .try_get_mut_p(cd)
                 .into_chained(|| "in python::GameState::react")? = tile.to_byte();
             Ok(())
@@ -80,6 +86,8 @@ impl GameState {
             state,
             config,
             token,
+            prev_actions: vec![Reaction::Redraw],
+            console: Console::from_stdout(w.0, h.0).unwrap(),
         })
     }
     fn set_seed(&mut self, seed: u64) -> PyResult<()> {
@@ -107,7 +115,7 @@ impl GameState {
                 panic!("error in game: {}", e);
             }
         };
-        res.into_iter().for_each(|reaction| match reaction {
+        res.iter().for_each(|reaction| match reaction {
             Reaction::Redraw => {
                 self.state.draw_map(&self.runtime).unwrap();
             }
@@ -117,7 +125,15 @@ impl GameState {
             Reaction::UiTransition(_) => {}
             Reaction::Notify(_) => {}
         });
+        self.prev_actions = res;
         Ok(self.state.res(self.token.py()))
+    }
+    fn render_console(&mut self) -> PyResult<()> {
+        let actions = self.prev_actions.clone();
+        actions.into_iter().for_each(|r| {
+            devui::process_reaction(&mut self.console, &mut self.runtime, r).unwrap();
+        });
+        Ok(())
     }
 }
 

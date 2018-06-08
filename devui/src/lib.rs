@@ -25,7 +25,7 @@ use termion::input::TermRead;
 
 pub fn play_game(config: GameConfig) -> Result<()> {
     let (w, h) = (config.width, config.height);
-    let mut screen = Screen::from_stdout(w, h)?;
+    let mut screen = Screen::from_raw(w, h)?;
     screen.welcome()?;
     let mut runtime = config.build().convert()?;
     thread::sleep(Duration::from_secs(1));
@@ -65,8 +65,8 @@ pub enum Transition {
     Exit,
 }
 
-pub fn process_reaction(
-    screen: &mut Screen,
+pub fn process_reaction<W: Write>(
+    screen: &mut Screen<W>,
     runtime: &mut RunTime,
     reaction: Reaction,
 ) -> Result<Option<Transition>> {
@@ -81,6 +81,7 @@ pub fn process_reaction(
                 GameMsg::GotItem { kind, num } => {
                     notify!(screen, "Now you have {} {:?}", num, kind)
                 }
+                GameMsg::SecretDoor => notify!(screen, "you found a secret door"),
                 GameMsg::Quit => {
                     notify!(screen, "Thank you for playing!")?;
                     return Ok(Some(Transition::Exit));
@@ -110,7 +111,7 @@ pub fn process_reaction(
     }
 }
 
-pub fn draw_dungeon(screen: &mut Screen, runtime: &mut RunTime) -> Result<()> {
+pub fn draw_dungeon<W: Write>(screen: &mut Screen<W>, runtime: &mut RunTime) -> Result<()> {
     // screen.clear_dungeon()?;
     let mut player_pos = None;
     runtime.draw_screen(|Positioned(cd, tile)| {

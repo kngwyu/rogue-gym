@@ -99,6 +99,9 @@ impl Player {
             _ => Hunger::Normal,
         };
     }
+    pub(crate) fn running(&mut self, b: bool) {
+        self.status.running = b;
+    }
 }
 
 impl Drawable for Player {
@@ -120,6 +123,7 @@ pub(crate) struct StatusInner {
     level: u32,
     /// count down to death
     food_left: u32,
+    running: bool,
 }
 
 impl StatusInner {
@@ -130,6 +134,7 @@ impl StatusInner {
             exp: Exp(0),
             level: 1,
             food_left: config.hunger_time,
+            running: false,
         }
     }
 }
@@ -137,10 +142,10 @@ impl StatusInner {
 /// possible player actions
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq, Hash)]
 pub enum Action {
-    /// move
     Move(Direction),
     UpStair,
     DownStair,
+    Search,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]

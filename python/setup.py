@@ -4,6 +4,7 @@ import os
 import subprocess
 import sys
 from setuptools import setup
+from setuptools import find_packages
 from setuptools.command.test import test as TestCommand
 
 try:
@@ -51,7 +52,7 @@ setup(
         'Programming Language :: Rust',
         'Operating System :: POSIX',
     ],
-    packages=['rogue_gym'],
+    packages=find_packages(),
     rust_extensions=[RustExtension('rogue_gym_python._rogue_gym', 'Cargo.toml')],
     install_requires=install_requires,
     tests_require=tests_requires,

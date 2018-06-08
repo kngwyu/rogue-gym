@@ -6,14 +6,67 @@ use termion::raw::{IntoRawMode, RawTerminal};
 use termion::{clear, cursor, terminal_size};
 use tuple_map::TupleMap2;
 
-pub struct Screen {
-    pub term: RawTerminal<Stdout>,
+/// wrapper of stdout as rogue screen
+pub struct Screen<T> {
+    /// stdout
+    pub term: T,
     pub has_notification: bool,
     width: u16,
     height: u16,
 }
 
-impl Screen {
+impl Screen<RawTerminal<Stdout>> {
+    /// raw terminal screen(for cli)
+    pub fn from_raw(w: i32, h: i32) -> Result<Self> {
+        let stdout = io::stdout();
+        let term = stdout
+            .into_raw_mode()
+            .into_chained(|| "[Screen::from_stdout] attempt to get raw mode terminal")?;
+        let (width, height) =
+            terminal_size().into_chained(|| "[Screen::from_stdout] attempt to get terminal size")?;
+        let (w, h) = (w, h).map(|i| i as u16);
+        if width < w {
+            return Err(ErrorID::InvalidScreenSize(width, height)
+                .into_with(|| format!("Screen width must be larger than {} characters", w)));
+        }
+        if height < h {
+            return Err(ErrorID::InvalidScreenSize(width, height)
+                .into_with(|| format!("Screen height must be larger than {} characters", h)));
+        }
+        Ok(Screen {
+            term,
+            has_notification: false,
+            width,
+            height,
+        })
+    }
+}
+
+impl Screen<Stdout> {
+    /// raw terminal screen(for python API)
+    pub fn from_stdout(w: i32, h: i32) -> Result<Self> {
+        let stdout = io::stdout();
+        let (width, height) =
+            terminal_size().into_chained(|| "[Screen::from_stdout] attempt to get terminal size")?;
+        let (w, h) = (w, h).map(|i| i as u16);
+        if width < w {
+            return Err(ErrorID::InvalidScreenSize(width, height)
+                .into_with(|| format!("Screen width must be larger than {} characters", w)));
+        }
+        if height < h {
+            return Err(ErrorID::InvalidScreenSize(width, height)
+                .into_with(|| format!("Screen height must be larger than {} characters", h)));
+        }
+        Ok(Screen {
+            term: stdout,
+            has_notification: false,
+            width,
+            height,
+        })
+    }
+}
+
+impl<T: Write> Screen<T> {
     pub fn clear_dungeon(&mut self) -> Result<()> {
         (2..self.height)
             .try_for_each(|row| write!(self.term, "{}{}", cursor::Goto(1, row), clear::CurrentLine))
@@ -46,30 +99,6 @@ impl Screen {
 
     pub fn flush(&mut self) -> Result<()> {
         self.term.flush().into_chained(|| "Screen::flush")
-    }
-
-    pub fn from_stdout(w: i32, h: i32) -> Result<Self> {
-        let stdout = io::stdout();
-        let term = stdout
-            .into_raw_mode()
-            .into_chained(|| "[Screen::from_stdout] attempt to get raw mode terminal")?;
-        let (width, height) =
-            terminal_size().into_chained(|| "[Screen::from_stdout] attempt to get terminal size")?;
-        let (w, h) = (w, h).map(|i| i as u16);
-        if width < w {
-            return Err(ErrorID::InvalidScreenSize(width, height)
-                .into_with(|| format!("Screen width must be larger than {} characters", w)));
-        }
-        if height < h {
-            return Err(ErrorID::InvalidScreenSize(width, height)
-                .into_with(|| format!("Screen height must be larger than {} characters", h)));
-        }
-        Ok(Screen {
-            term,
-            has_notification: false,
-            width,
-            height,
-        })
     }
 
     pub fn welcome(&mut self) -> Result<()> {

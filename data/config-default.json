@@ -17,7 +17,9 @@
         "dark_level": 10,
         "hidden_passage_rate_inv": 40,
         "locked_door_rate_inv": 5,
-        "max_extra_edges": 5
+        "max_extra_edges": 5,
+        "door_unlock_rate_inv": 5,
+        "passage_unlock_rate_inv": 3
     },
     "item": {
         "gold": {
@@ -28,35 +30,9 @@
         }
     },
     "keymap": {
-        ">": {
-            "Act": "DownStair"
-        },
-        "Right": {
+        "u": {
             "Act": {
-                "Move": "Right"
-            }
-        },
-        "h": {
-            "Act": {
-                "Move": "Left"
-            }
-        },
-        "n": {
-            "Both": {
-                "act": {
-                    "Move": "RightDown"
-                },
-                "sys": "No"
-            }
-        },
-        "l": {
-            "Act": {
-                "Move": "Right"
-            }
-        },
-        "Down": {
-            "Act": {
-                "Move": "Down"
+                "Move": "RightUp"
             }
         },
         "y": {
@@ -67,31 +43,8 @@
                 "sys": "Yes"
             }
         },
-        "b": {
-            "Act": {
-                "Move": "LeftDown"
-            }
-        },
-        "S": {
-            "Sys": "Save"
-        },
-        "Up": {
-            "Act": {
-                "Move": "Up"
-            }
-        },
-        "j": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
         "Q": {
             "Sys": "Quit"
-        },
-        "k": {
-            "Act": {
-                "Move": "Up"
-            }
         },
         "Left": {
             "Act": {
@@ -101,9 +54,61 @@
         "Esc": {
             "Sys": "Cancel"
         },
-        "u": {
+        "k": {
             "Act": {
-                "Move": "RightUp"
+                "Move": "Up"
+            }
+        },
+        "S": {
+            "Sys": "Save"
+        },
+        "b": {
+            "Act": {
+                "Move": "LeftDown"
+            }
+        },
+        "s": {
+            "Act": "Search"
+        },
+        ">": {
+            "Act": "DownStair"
+        },
+        "j": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "n": {
+            "Both": {
+                "act": {
+                    "Move": "RightDown"
+                },
+                "sys": "No"
+            }
+        },
+        "Down": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "h": {
+            "Act": {
+                "Move": "Left"
+            }
+        },
+        "l": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "Up": {
+            "Act": {
+                "Move": "Up"
+            }
+        },
+        "Right": {
+            "Act": {
+                "Move": "Right"
             }
         }
     },
