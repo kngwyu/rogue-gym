@@ -4,6 +4,7 @@ use character::{Action, Player};
 use dungeon::{Direction, Dungeon};
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
 use item::{pack::PackEntry, ItemHandler};
+use std::iter;
 use {GameInfo, GameMsg, Reaction};
 
 pub(crate) fn process_action(
@@ -72,9 +73,11 @@ fn move_player(
 }
 
 fn search(dungeon: &mut Dungeon, player: &mut Player) -> GameResult<Vec<Reaction>> {
-    dungeon
-        .search(&player.pos)
-        .map(|v| v.map(|msg| Reaction::Notify(msg)).collect())
+    dungeon.search(&player.pos).map(|v| {
+        v.map(|msg| Reaction::Notify(msg))
+            .chain(iter::once(Reaction::Redraw))
+            .collect()
+    })
 }
 
 fn get_item(
