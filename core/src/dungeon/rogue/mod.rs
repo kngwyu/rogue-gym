@@ -37,14 +37,14 @@ pub struct Config {
     /// a room changes to maze with a probability of 1 / maze_rate_inv
     #[serde(default = "default_maze_rate")]
     pub maze_rate_inv: u32,
-    /// if the rooms is dark or not is judged by rand[0..dark_levl) < level - 1
+    /// if the rooms is dark or not is judged by rand[0..dark_level) < level - 1
     #[serde(default = "default_dark_level")]
     pub dark_level: u32,
     /// a passage is hidden with a probability of 1 / hidden_rate_inv
     #[serde(default = "default_hidden_passage_rate")]
     pub hidden_passage_rate_inv: u32,
     /// a door is locked with a probability of 1 / hidden_rate_inv
-    #[serde(default = "default_locked_door_rate")]
+    #[serde(default = "default_locked_door_rate_inv")]
     pub locked_door_rate_inv: u32,
     /// try number of additional passages
     #[serde(default = "default_max_extra_edges")]
@@ -92,7 +92,7 @@ fn default_hidden_passage_rate() -> u32 {
     40
 }
 #[inline]
-fn default_locked_door_rate() -> u32 {
+fn default_locked_door_rate_inv() -> u32 {
     5
 }
 #[inline]
@@ -119,7 +119,7 @@ impl Default for Config {
             maze_rate_inv: default_maze_rate(),
             dark_level: default_dark_level(),
             hidden_passage_rate_inv: default_hidden_passage_rate(),
-            locked_door_rate_inv: default_locked_door_rate(),
+            locked_door_rate_inv: default_locked_door_rate_inv(),
             max_extra_edges: default_max_extra_edges(),
             door_unlock_rate_inv: default_door_unlock_rate_inv(),
             passage_unlock_rate_inv: default_passage_unlock_rate_inv(),

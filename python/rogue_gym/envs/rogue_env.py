@@ -40,10 +40,13 @@ class RogueEnv(gym.Env):
         Do action.
         @param actions(string): key board inputs to rogue(e.g. "hjk" or "hh>")
         """
+        gold_before = self.cached_state["gold"]
         for act in actions:
             self.game.react(ord(act))
         self.__cache()
-        return self.__state()
+        gold_after = self.cached_state["gold"]
+        reward = gold_after - glod_before
+        return self.cached_dungeon, self.cached_state, reward
     
     def seed(self, seed):
         """
@@ -71,6 +74,9 @@ class RogueEnv(gym.Env):
             return self.cached_dungeon
         elif mode == 'human':
             self.game.render_console()
+
+    def get_key_to_action(self):
+        return ACION_MEANINGS
 
 # Same as data/keymaps/ai.json
 ACTION_MEANINGS = {
