@@ -14,7 +14,7 @@ class TestSeed1(unittest.TestCase):
 
     def test_action(self):
         env = RogueEnv(seed = 1)
-        screen, status = env.step(CMD_STR)
+        screen, _status, _reward = env.step(CMD_STR)
         self.assertEqual(screen, SEED1_DUNGEON2)
 
 if __name__ == "__main__":

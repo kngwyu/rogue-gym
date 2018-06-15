@@ -45,7 +45,7 @@ class RogueEnv(gym.Env):
             self.game.react(ord(act))
         self.__cache()
         gold_after = self.cached_state["gold"]
-        reward = gold_after - glod_before
+        reward = gold_after - gold_before
         return self.cached_dungeon, self.cached_state, reward
     
     def seed(self, seed):
