@@ -3,12 +3,17 @@ pub use error_chain_mini::{ErrorKind, ResultExt};
 use input::{InputCode, Key};
 use rect_iter::IndexError;
 use serde_json::Error as JsonError;
+
 /// Our own ErrorKind type
 #[derive(ErrorKind)]
 pub enum ErrorId {
     #[msg(short = "Invalid index access", detailed = "{:?}", _0)]
     Index(IndexError),
-    #[msg(short = "invliad input which is not mapped by keymap", detailed = "key: {:?}", _0)]
+    #[msg(
+        short = "invliad input which is not mapped by keymap",
+        detailed = "key: {:?}",
+        _0
+    )]
     InvalidInput(Key),
     #[msg(short = "ignored input", detailed = "code: {:?}", _0)]
     IgnoredInput(InputCode),

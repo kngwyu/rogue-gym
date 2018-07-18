@@ -85,12 +85,14 @@ fn setup_logger(args: &ArgMatches) -> Result<()> {
                 ))
             })
             .level(level)
-            .chain(OpenOptions::new()
-                .write(true)
-                .create(true)
-                .truncate(true)
-                .open(file)
-                .into_chained(|| "error in getting log file")?)
+            .chain(
+                OpenOptions::new()
+                    .write(true)
+                    .create(true)
+                    .truncate(true)
+                    .open(file)
+                    .into_chained(|| "error in getting log file")?,
+            )
             .apply()
             .into_chained(|| "error in setup_log")?;
     }

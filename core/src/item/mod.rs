@@ -60,8 +60,28 @@ impl Drawable for ItemKind {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, Hash, PartialEq, PartialOrd, Eq, Add, Sub, Mul, Div,
-         AddAssign, SubAssign, MulAssign, DivAssign, From, Into, Serialize, Deserialize)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Default,
+    Hash,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    AddAssign,
+    SubAssign,
+    MulAssign,
+    DivAssign,
+    From,
+    Into,
+    Serialize,
+    Deserialize,
+)]
 pub struct ItemNum(pub u32);
 
 // TODO: add more attribute

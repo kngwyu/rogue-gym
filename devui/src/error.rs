@@ -13,7 +13,12 @@ pub enum ErrorID {
     Io(IoError),
     #[msg(short = "Invalid Command Args")]
     InvalidArg,
-    #[msg(short = "Invalid screen size", detailed = "width: {} height: {}", _0, _1)]
+    #[msg(
+        short = "Invalid screen size",
+        detailed = "width: {} height: {}",
+        _0,
+        _1
+    )]
     InvalidScreenSize(u16, u16),
     #[msg(short = "Error in logging", detailed = "{}", _0)]
     Log(SetLoggerError),

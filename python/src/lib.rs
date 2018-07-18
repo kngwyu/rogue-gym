@@ -14,10 +14,10 @@ use rect_iter::GetMut2D;
 use rogue_gym_core::character::player::Status;
 use rogue_gym_core::dungeon::{Positioned, X, Y};
 use rogue_gym_core::error::{GameResult, ResultExt};
-use rogue_gym_core::{input::{Key, KeyMap},
-                     GameConfig,
-                     Reaction,
-                     RunTime};
+use rogue_gym_core::{
+    input::{Key, KeyMap},
+    GameConfig, Reaction, RunTime,
+};
 
 type Console = devui::screen::Screen<std::io::Stdout>;
 
@@ -53,7 +53,8 @@ impl PlayerState {
     }
     fn draw_map(&mut self, runtime: &RunTime) -> GameResult<()> {
         runtime.draw_screen(|Positioned(cd, tile)| -> GameResult<()> {
-            *self.map
+            *self
+                .map
                 .try_get_mut_p(cd)
                 .into_chained(|| "in python::GameState::react")? = tile.to_byte();
             Ok(())

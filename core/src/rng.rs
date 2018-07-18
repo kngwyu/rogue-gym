@@ -6,8 +6,8 @@ use rand::{
     XorShiftRng,
 };
 use std::fmt::Debug;
-use std::ops::Range;
 use std::mem;
+use std::ops::Range;
 /// wrapper of XorShiftRng
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RngHandle(XorShiftRng);

@@ -2,16 +2,75 @@ use rect_iter::{FromTuple2, IntoTuple2};
 use std::fmt;
 use tuple_map::TupleMap2;
 
-#[derive(Clone, Copy, Debug, Default, Hash, PartialEq, PartialOrd, Ord, Eq, Add, Sub, Mul, Div,
-         Neg, AddAssign, SubAssign, MulAssign, DivAssign, From, Into, Serialize, Deserialize)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Default,
+    Hash,
+    PartialEq,
+    PartialOrd,
+    Ord,
+    Eq,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Neg,
+    AddAssign,
+    SubAssign,
+    MulAssign,
+    DivAssign,
+    From,
+    Into,
+    Serialize,
+    Deserialize,
+)]
 pub struct X(pub i32);
 
-#[derive(Clone, Copy, Debug, Default, Hash, PartialEq, PartialOrd, Ord, Eq, Add, Sub, Mul, Div,
-         Neg, AddAssign, SubAssign, MulAssign, DivAssign, From, Into, Serialize, Deserialize)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Default,
+    Hash,
+    PartialEq,
+    PartialOrd,
+    Ord,
+    Eq,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Neg,
+    AddAssign,
+    SubAssign,
+    MulAssign,
+    DivAssign,
+    From,
+    Into,
+    Serialize,
+    Deserialize,
+)]
 pub struct Y(pub i32);
 
-#[derive(Clone, Copy, Debug, Default, Hash, PartialEq, PartialOrd, Ord, Eq, Add, Sub, AddAssign,
-         SubAssign, Serialize, Deserialize)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Default,
+    Hash,
+    PartialEq,
+    PartialOrd,
+    Ord,
+    Eq,
+    Add,
+    Sub,
+    AddAssign,
+    SubAssign,
+    Serialize,
+    Deserialize,
+)]
 pub struct Coord {
     pub x: X,
     pub y: Y,
@@ -105,8 +164,9 @@ impl Into<(u16, u16)> for Coord {
 
 pub struct Positioned<T>(pub Coord, pub T);
 
-#[derive(Clone, Copy, Debug, Hash, PartialEq, PartialOrd, Ord, Eq, Serialize, Deserialize,
-         EnumIterator)]
+#[derive(
+    Clone, Copy, Debug, Hash, PartialEq, PartialOrd, Ord, Eq, Serialize, Deserialize, EnumIterator,
+)]
 pub enum Direction {
     Up,
     Down,

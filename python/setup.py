@@ -34,7 +34,7 @@ class CmdTest(TestCommand):
 
 setup_requires = ['setuptools-rust>=0.6.0']
 install_requires = ['numpy', 'gym']
-tests_requires = install_requires
+test_requires = install_requires
 
 setup(
     name='rouge-gym',
@@ -55,7 +55,7 @@ setup(
     packages=find_packages(),
     rust_extensions=[RustExtension('rogue_gym_python._rogue_gym', 'Cargo.toml')],
     install_requires=install_requires,
-    tests_require=tests_requires,
+    test_requires=test_requires,
     setup_requires=setup_requires,
     include_package_data=True,
     zip_safe=False,
