@@ -31,3 +31,34 @@ pub trait Drawable {
 /// currently it's not used at all
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Color(pub u8);
+
+/// Symbole representation of tile for neural network
+pub struct Symbol(u8);
+
+impl Symbol {
+    pub fn from_tile(t: Tile) -> Option<Symbol> {
+        let sym = |u| Some(Symbol(u));
+        match t.0 {
+            b' ' => sym(0),
+            b'@' => sym(1),
+            b'#' => sym(2),
+            b'.' => sym(3),
+            b'-' | b'|' => sym(4),
+            b'%' => sym(5),
+            b'+' => sym(6),
+            b'^' => sym(7),
+            b'!' => sym(8),
+            b'?' => sym(9),
+            b']' => sym(10),
+            b')' => sym(11),
+            b'/' => sym(12),
+            b'*' => sym(13),
+            b':' => sym(14),
+            b'=' => sym(15),
+            b',' => sym(16),
+            x if b'A' <= x && x <= b'Z' => sym(x - b'A' + 17),
+            _ => None,
+        }
+    }
+}
+

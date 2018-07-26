@@ -100,6 +100,7 @@ const MIN_WIDTH: i32 = 80;
 const MAX_WIDTH: i32 = MIN_WIDTH * 2;
 const MIN_HEIGHT: i32 = 24;
 const MAX_HEIGHT: i32 = MIN_HEIGHT * 2;
+
 impl GameConfig {
     /// construct Game configuration from json string
     pub fn from_json(json: &str) -> GameResult<Self> {
@@ -127,6 +128,7 @@ impl GameConfig {
             hide_dungeon: self.hide_dungeon,
         })
     }
+    /// get runtime from config
     pub fn build(self) -> GameResult<RunTime> {
         const ERR_STR: &str = "GameConfig::build";
         let game_info = GameInfo::new();
@@ -183,6 +185,7 @@ impl RunTime {
                 .into_with(|| "rogue_gym_core::RunTime::check_interuppting")),
         }
     }
+    /// take draw function F and draw screen with it
     pub fn draw_screen<F, E>(&self, mut drawer: F) -> Result<(), ChainedError<E>>
     where
         F: FnMut(Positioned<Tile>) -> Result<(), ChainedError<E>>,

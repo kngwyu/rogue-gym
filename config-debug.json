@@ -14,7 +14,7 @@
         "max_empty_rooms": 4,
         "amulet_level": 25,
         "maze_rate_inv": 15,
-        "dark_level": 1,
+        "dark_level": 10,
         "hidden_passage_rate_inv": 40,
         "locked_door_rate_inv": 1,
         "max_extra_edges": 5,
@@ -159,5 +159,5 @@
             }
         ]
     },
-    "hide_dungeon": true
+    "hide_dungeon": false
 }
