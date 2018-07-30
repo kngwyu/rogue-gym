@@ -1,5 +1,6 @@
 use super::{Room, RoomKind, Surface};
 use dungeon::{Coord, Direction, Positioned, X, Y};
+use enum_iterator::IntoEnumIterator;
 use error::{GameResult, ResultExt};
 use fenwick::FenwickSet;
 use fixedbitset::FixedBitSet;
@@ -247,7 +248,7 @@ struct Node {
 
 impl Node {
     fn new(xrooms: X, yrooms: Y, room_pos: (i32, i32), id: usize) -> Self {
-        let candidates: HashMap<_, _> = Direction::iter_variants()
+        let candidates: HashMap<_, _> = Direction::into_enum_iter()
             .take(4)
             .filter_map(|d| {
                 let next = room_pos.add(d.to_cd().into_tuple2());
@@ -354,7 +355,7 @@ mod test {
             let mut queue = VecDeque::new();
             queue.push_back(start);
             while let Some(cd) = queue.pop_front() {
-                for dir in Direction::iter_variants().take(4) {
+                for dir in Direction::into_enum_iter().take(4) {
                     let nxt = cd + dir.to_cd();
                     if let Ok(s) = buffer.try_get_p(nxt) {
                         if s.can_walk() && !*visited.get_p(nxt) {

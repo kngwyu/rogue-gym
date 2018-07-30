@@ -1,4 +1,4 @@
-#![feature(proc_macro, specialization)]
+#![feature(use_extern_macros, specialization)]
 
 extern crate pyo3;
 extern crate rect_iter;
@@ -6,18 +6,16 @@ extern crate rogue_gym_core;
 extern crate rogue_gym_devui as devui;
 
 use pyo3::prelude::*;
-use pyo3::py::class as pyclass;
-use pyo3::py::methods as pymethods;
-use pyo3::py::modinit as pymodinit;
-use pyo3::{IntoPyDictPointer, PyBytes, PyList};
+use pyo3::{IntoPyDictPointer, PyBytes, PyList, PyDict};
 use rect_iter::GetMut2D;
 use rogue_gym_core::character::player::Status;
 use rogue_gym_core::dungeon::{Positioned, X, Y};
 use rogue_gym_core::error::{GameResult, ResultExt};
 use rogue_gym_core::{
     input::{Key, KeyMap},
-    GameConfig, Reaction, RunTime,
+    GameConfig, Reaction, RunTime, tile::Tile,
 };
+
 
 type Console = devui::screen::Screen<std::io::Stdout>;
 

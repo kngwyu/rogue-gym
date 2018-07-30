@@ -35,19 +35,18 @@ impl Default for Config {
     }
 }
 
-#[inline]
-fn default_gold_rate() -> u32 {
+const fn default_gold_rate() -> u32 {
     2
 }
-#[inline]
-fn default_gold_base() -> u32 {
+
+const fn default_gold_base() -> u32 {
     50
 }
-#[inline]
-fn default_gold_per_level() -> u32 {
+
+const fn default_gold_per_level() -> u32 {
     10
 }
-#[inline]
-fn default_gold_minimum() -> u32 {
+
+const fn default_gold_minimum() -> u32 {
     2
 }

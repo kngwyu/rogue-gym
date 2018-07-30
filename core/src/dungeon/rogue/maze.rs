@@ -1,4 +1,5 @@
 use dungeon::{Coord, Direction};
+use enum_iterator::IntoEnumIterator;
 use error::{GameResult, ResultExt};
 use fenwick::FenwickSet;
 use rect_iter::RectRange;
@@ -62,7 +63,7 @@ where
     F: FnMut(Coord) -> GameResult<()>,
 {
     loop {
-        let dig_dir = Direction::iter_variants()
+        let dig_dir = Direction::into_enum_iter()
             .take(4)
             .filter(|dir| {
                 let nxt = current_cd + dir.to_cd().scale(2, 2);

@@ -1,6 +1,7 @@
 //! rogue floor
 use super::{passages, rooms, Config, Room, Surface};
 use dungeon::{Cell, CellAttr, Coord, Direction, Field, Positioned, X, Y};
+use enum_iterator::IntoEnumIterator;
 use error::{ErrorId, ErrorKind, GameResult, ResultExt};
 use fenwick::FenwickSet;
 use item::ItemHandler;
@@ -248,7 +249,7 @@ impl Floor {
             .try_get_mut_p(cd)
             .into_chained(|| "Floor::player_in Cannot move")?
             .visit();
-        Direction::iter_variants().take(9).for_each(|d| {
+        Direction::into_enum_iter().take(9).for_each(|d| {
             let cd = cd + d.to_cd();
             if let Ok(cell) = self.field.try_get_mut_p(cd) {
                 if !d.is_diag() || cell.surface != Surface::Passage {
@@ -264,7 +265,7 @@ impl Floor {
         if self.doors.contains(&cd) {
             self.leaves_room(cd).chain_err(|| "Floor::player_out")?;
         }
-        Direction::iter_variants().take(9).for_each(|d| {
+        Direction::into_enum_iter().take(9).for_each(|d| {
             let cd = cd + d.to_cd();
             if let Ok(cell) = self.field.try_get_mut_p(cd) {
                 if cell.surface == Surface::Floor {
@@ -317,7 +318,7 @@ impl Floor {
         config: &'a Config,
     ) -> impl 'a + Iterator<Item = GameMsg> {
         let probinc = 0; // STUB: it's changed by player status
-        Direction::iter_variants().take(8).filter_map(move |d| {
+        Direction::into_enum_iter().take(8).filter_map(move |d| {
             let cd = cd + d.to_cd();
             let cell = self.field.try_get_mut_p(cd).ok()?;
             if cell.is_hidden() && rng.does_happen(probinc + config.passage_unlock_rate_inv) {

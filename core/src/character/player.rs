@@ -33,23 +33,19 @@ impl Default for Config {
     }
 }
 
-#[inline]
-fn default_hunger_time() -> u32 {
+const fn default_hunger_time() -> u32 {
     1300
 }
 
-#[inline]
-fn default_init_hp() -> HitPoint {
+const fn default_init_hp() -> HitPoint {
     HitPoint(12)
 }
 
-#[inline]
-fn default_init_str() -> Strength {
+const fn default_init_str() -> Strength {
     Strength(16)
 }
 
-#[inline]
-fn default_max_items() -> usize {
+const fn default_max_items() -> usize {
     27
 }
 

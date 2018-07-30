@@ -1,11 +1,12 @@
 #![cfg_attr(feature = "bench", feature(test))]
+#![feature(const_fn)]
 
 #[macro_use]
 extern crate bitflags;
 #[macro_use]
 extern crate derive_more;
 #[macro_use]
-extern crate enum_iterator_derive;
+extern crate enum_iterator;
 extern crate error_chain_mini;
 #[macro_use]
 extern crate error_chain_mini_derive;
@@ -76,8 +77,7 @@ pub struct GameConfig {
     pub hide_dungeon: bool,
 }
 
-#[inline]
-fn default_hide_dungeon() -> bool {
+const fn default_hide_dungeon() -> bool {
     true
 }
 

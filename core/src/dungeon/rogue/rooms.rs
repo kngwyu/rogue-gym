@@ -304,11 +304,12 @@ pub(crate) mod test {
     #[test]
     fn pos_check() {
         let (xrooms, yrooms) = (3, 3);
+        use ::enum_iterator::IntoEnumIterator;
         for i in 0..100 {
             let rooms = gen(i % 20);
             for (x, y) in RectRange::zero_start(xrooms, yrooms).unwrap() {
                 let room1 = &rooms[x + xrooms * y];
-                Direction::iter_variants().take(4).for_each(|d| {
+                Direction::into_enum_iter().take(4).for_each(|d| {
                     let (nx, ny) = d.to_cd().into_tuple2().add((x as i32, y as i32));
                     if nx < 0 || ny < 0 || nx >= xrooms as i32 || ny >= yrooms as i32 {
                         return;

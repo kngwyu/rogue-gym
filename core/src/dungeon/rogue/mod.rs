@@ -55,58 +55,59 @@ pub struct Config {
     pub passage_unlock_rate_inv: u32,
 }
 
-#[inline]
-fn default_room_num_x() -> X {
+const fn default_room_num_x() -> X {
     X(3)
 }
-#[inline]
-fn default_room_num_y() -> Y {
+
+const fn default_room_num_y() -> Y {
     Y(3)
 }
+
 #[inline]
 fn default_min_room_size() -> Coord {
     Coord::new(4, 4)
 }
-#[inline]
-fn default_trap() -> bool {
+
+const fn default_trap() -> bool {
     true
 }
-#[inline]
-fn default_max_empty_rooms() -> u32 {
+
+const fn default_max_empty_rooms() -> u32 {
     4
 }
-#[inline]
-fn default_amulet_level() -> u32 {
+
+const fn default_amulet_level() -> u32 {
     25
 }
-#[inline]
-fn default_maze_rate() -> u32 {
+
+const fn default_maze_rate() -> u32 {
     15
 }
-#[inline]
-fn default_dark_level() -> u32 {
+
+const fn default_dark_level() -> u32 {
     10
 }
-#[inline]
-fn default_hidden_passage_rate() -> u32 {
+
+const fn default_hidden_passage_rate() -> u32 {
     40
 }
-#[inline]
-fn default_locked_door_rate_inv() -> u32 {
+
+const fn default_locked_door_rate_inv() -> u32 {
     5
 }
-#[inline]
-fn default_max_extra_edges() -> u32 {
+
+const fn default_max_extra_edges() -> u32 {
     5
 }
-#[inline]
-fn default_door_unlock_rate_inv() -> u32 {
+
+const fn default_door_unlock_rate_inv() -> u32 {
     5
 }
-#[inline]
-fn default_passage_unlock_rate_inv() -> u32 {
+
+const fn default_passage_unlock_rate_inv() -> u32 {
     3
 }
+
 impl Default for Config {
     fn default() -> Config {
         Config {

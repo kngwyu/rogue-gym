@@ -165,7 +165,17 @@ impl Into<(u16, u16)> for Coord {
 pub struct Positioned<T>(pub Coord, pub T);
 
 #[derive(
-    Clone, Copy, Debug, Hash, PartialEq, PartialOrd, Ord, Eq, Serialize, Deserialize, EnumIterator,
+    Clone,
+    Copy,
+    Debug,
+    Hash,
+    PartialEq,
+    PartialOrd,
+    Ord,
+    Eq,
+    Serialize,
+    Deserialize,
+    IntoEnumIterator,
 )]
 pub enum Direction {
     Up,
