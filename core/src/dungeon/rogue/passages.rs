@@ -1,7 +1,7 @@
 use super::{Room, RoomKind, Surface};
 use dungeon::{Coord, Direction, Positioned, X, Y};
 use enum_iterator::IntoEnumIterator;
-use error::{GameResult, ResultExt};
+use error::*;
 use fenwick::FenwickSet;
 use fixedbitset::FixedBitSet;
 use rect_iter::{IntoTuple2, RectRange};
@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use tuple_map::TupleMap2;
 
 /// make passages between rooms
-pub(crate) fn dig_passges<F>(
+crate fn dig_passges<F>(
     rooms: &[Room],
     xrooms: X,
     yrooms: Y,
@@ -41,7 +41,7 @@ where
                 direction,
                 rng,
                 &mut register,
-            ).chain_err(|| "passages::dig_passges")?;
+            )?;
         } else {
             cur_room = selected.select(rng).unwrap();
         }
@@ -57,8 +57,7 @@ where
         });
         if let Some((room2, direction)) = selected {
             graph.coonect(room1, room2);
-            connect_2rooms(&rooms[room1], &rooms[room2], direction, rng, &mut register)
-                .chain_err(|| "passages::dig_passages")?;
+            connect_2rooms(&rooms[room1], &rooms[room2], direction, rng, &mut register)?;
         }
     }
     Ok(())
@@ -256,8 +255,7 @@ impl Node {
                     return None;
                 }
                 Some(((next.0 + next.1 * xrooms.0) as usize, d))
-            })
-            .collect();
+            }).collect();
         let num_rooms = (xrooms.0 * yrooms.0) as usize;
         Node {
             connections: FixedBitSet::with_capacity(num_rooms),
@@ -316,8 +314,7 @@ mod test {
                     .and_then(|buf| {
                         *buf = surface;
                         Ok(())
-                    })
-                    .into_chained(|| "passages::test::to_buffer")
+                    }).into_chained(|| "passages::test::to_buffer")
             },
         ).unwrap();
         buffer

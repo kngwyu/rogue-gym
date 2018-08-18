@@ -2,12 +2,12 @@
 
 use character::{Action, Player};
 use dungeon::{Direction, Dungeon};
-use error::{ErrorId, ErrorKind, GameResult, ResultExt};
+use error::*;
 use item::{pack::PackEntry, ItemHandler};
 use std::iter;
 use {GameInfo, GameMsg, Reaction};
 
-pub(crate) fn process_action(
+crate fn process_action(
     action: Action,
     info: &mut GameInfo,
     dungeon: &mut Dungeon,
@@ -32,7 +32,7 @@ pub(crate) fn process_action(
     }
 }
 
-pub(crate) fn new_level(
+crate fn new_level(
     info: &GameInfo,
     dungeon: &mut Dungeon,
     item: &mut ItemHandler,

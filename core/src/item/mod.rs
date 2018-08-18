@@ -7,7 +7,7 @@ pub mod pack;
 use self::food::Food;
 use self::pack::ItemPack;
 use dungeon::DungeonPath;
-use error::{ErrorId, ErrorKind, GameResult, ResultExt};
+use error::*;
 use rng::RngHandle;
 use std::collections::BTreeMap;
 use tile::{Drawable, Tile};
@@ -115,25 +115,25 @@ pub struct Item {
 }
 
 impl Item {
-    pub(crate) fn new<N: Into<ItemNum>>(kind: ItemKind, num: N) -> Self {
+    crate fn new<N: Into<ItemNum>>(kind: ItemKind, num: N) -> Self {
         Item {
             kind,
             how_many: num.into(),
             attr: ItemAttr::default(),
         }
     }
-    pub(crate) fn merge<F>(&mut self, other: Self, attr_merger: F)
+    crate fn merge<F>(&mut self, other: Self, attr_merger: F)
     where
         F: FnOnce(ItemAttr, ItemAttr) -> ItemAttr,
     {
         self.attr = attr_merger(self.attr, other.attr);
         self.how_many += other.how_many;
     }
-    pub(crate) fn many(mut self) -> Self {
+    crate fn many(mut self) -> Self {
         self.attr |= ItemAttr::IS_MANY;
         self
     }
-    pub(crate) fn is_many(&self) -> bool {
+    crate fn is_many(&self) -> bool {
         self.attr.contains(ItemAttr::IS_MANY)
     }
 }
@@ -225,8 +225,7 @@ impl ItemHandler {
                     Err(ErrorId::InvalidSetting
                         .into_with(|| format!("You can't add {} items", items.len())))
                 }
-            })
-            .chain_err(|| "in ItemHandler::init_player_items")
+            }).chain_err(|| "in ItemHandler::init_player_items")
     }
     pub fn remove(&mut self, id: ItemId) -> Option<Item> {
         self.items.remove(&id)

@@ -1,5 +1,4 @@
-use error::{ErrorID, Result};
-use error_chain_mini::{ErrorKind, ResultExt};
+use error::*;
 use rogue_gym_core::{character::player, dungeon::Coord, tile::Tile};
 use std::io::{self, Stdout, Write};
 use termion::raw::{IntoRawMode, RawTerminal};
@@ -17,13 +16,13 @@ pub struct Screen<T> {
 
 impl Screen<RawTerminal<Stdout>> {
     /// raw terminal screen(for cli)
-    pub fn from_raw(w: i32, h: i32) -> Result<Self> {
+    pub fn from_raw(w: i32, h: i32) -> GameResult<Self> {
         let stdout = io::stdout();
         let term = stdout
             .into_raw_mode()
             .into_chained(|| "[Screen::from_stdout] attempt to get raw mode terminal")?;
-        let (width, height) =
-            terminal_size().into_chained(|| "[Screen::from_stdout] attempt to get terminal size")?;
+        let (width, height) = terminal_size()
+            .into_chained(|| "[Screen::from_stdout] attempt to get terminal size")?;
         let (w, h) = (w, h).map(|i| i as u16);
         if width < w {
             return Err(ErrorID::InvalidScreenSize(width, height)
@@ -44,10 +43,10 @@ impl Screen<RawTerminal<Stdout>> {
 
 impl Screen<Stdout> {
     /// raw terminal screen(for python API)
-    pub fn from_stdout(w: i32, h: i32) -> Result<Self> {
+    pub fn from_stdout(w: i32, h: i32) -> GameResult<Self> {
         let stdout = io::stdout();
-        let (width, height) =
-            terminal_size().into_chained(|| "[Screen::from_stdout] attempt to get terminal size")?;
+        let (width, height) = terminal_size()
+            .into_chained(|| "[Screen::from_stdout] attempt to get terminal size")?;
         let (w, h) = (w, h).map(|i| i as u16);
         if width < w {
             return Err(ErrorID::InvalidScreenSize(width, height)
@@ -67,13 +66,13 @@ impl Screen<Stdout> {
 }
 
 impl<T: Write> Screen<T> {
-    pub fn clear_dungeon(&mut self) -> Result<()> {
+    pub fn clear_dungeon(&mut self) -> GameResult<()> {
         (2..self.height)
             .try_for_each(|row| write!(self.term, "{}{}", cursor::Goto(1, row), clear::CurrentLine))
             .into_chained(|| "in Screen::clear")
     }
 
-    pub fn clear_notification(&mut self) -> Result<()> {
+    pub fn clear_notification(&mut self) -> GameResult<()> {
         if self.has_notification {
             self.has_notification = false;
             write!(
@@ -87,21 +86,21 @@ impl<T: Write> Screen<T> {
         }.into_chained(|| "in Screen::clean_notification")
     }
 
-    pub fn cursor<P: Into<(u16, u16)>>(&mut self, cd: P) -> Result<()> {
+    pub fn cursor<P: Into<(u16, u16)>>(&mut self, cd: P) -> GameResult<()> {
         let (col, row) = cd.into();
         write!(self.term, "{}", cursor::Goto(col, row)).into_chained(|| "in Screen::draw_tile")
     }
-    pub fn draw_tile(&mut self, cd: Coord, tile: Tile) -> Result<()> {
+    pub fn draw_tile(&mut self, cd: Coord, tile: Tile) -> GameResult<()> {
         let (col, row) = cd.into();
         write!(self.term, "{}{}", cursor::Goto(col, row), tile.to_char())
             .into_chained(|| "in Screen::draw_tile")
     }
 
-    pub fn flush(&mut self) -> Result<()> {
+    pub fn flush(&mut self) -> GameResult<()> {
         self.term.flush().into_chained(|| "Screen::flush")
     }
 
-    pub fn welcome(&mut self) -> Result<()> {
+    pub fn welcome(&mut self) -> GameResult<()> {
         write!(
             self.term,
             "{}{} Welcome to rogue-gym!{}Wait a minute while we're digging the dungeon...",
@@ -112,7 +111,7 @@ impl<T: Write> Screen<T> {
         self.flush().chain_err(|| "in Screen::from_stdout")
     }
 
-    pub fn status(&mut self, status: player::Status) -> Result<()> {
+    pub fn status(&mut self, status: player::Status) -> GameResult<()> {
         let line = self.height;
         write!(
             self.term,

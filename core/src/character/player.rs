@@ -73,13 +73,13 @@ impl Config {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Player {
     /// player position
-    pub(crate) pos: DungeonPath,
+    crate pos: DungeonPath,
     /// player status(for drawing)
-    pub(crate) status: StatusInner,
+    crate status: StatusInner,
     /// configuration
-    pub(crate) config: Config,
+    crate config: Config,
     /// items
-    pub(crate) items: ItemPack,
+    crate items: ItemPack,
 }
 
 impl Player {
@@ -95,7 +95,7 @@ impl Player {
             _ => Hunger::Normal,
         };
     }
-    pub(crate) fn running(&mut self, b: bool) {
+    crate fn running(&mut self, b: bool) {
         self.status.running = b;
     }
 }
@@ -108,7 +108,7 @@ impl Drawable for Player {
 
 /// statuses only for internal
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub(crate) struct StatusInner {
+crate struct StatusInner {
     /// hit point
     hp: Maxed<HitPoint>,
     /// strength
@@ -156,8 +156,8 @@ impl Default for Leveling {
             10, 20, 40, 80, 160, 320, 640, 1300, 2600, 5200, 13000, 26000, 50000, 100_000, 200_000,
             400_000, 800_000, 2_000_000, 4_000_000, 8_000_000, 0,
         ].into_iter()
-            .map(|u| u.into())
-            .collect();
+        .map(|u| u.into())
+        .collect();
         Leveling { exps }
     }
 }

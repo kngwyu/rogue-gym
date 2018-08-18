@@ -19,7 +19,7 @@ See [this page](./python/README.md)
 [rogue5.4](https://github.com/kngwyu/rogue5.4.4)
 
 # Required minimum version of rust
-1.27
+1.30.0-nightly
 
 # License
 

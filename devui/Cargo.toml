@@ -14,8 +14,7 @@ doc = false
 
 [dependencies]
 clap = "2.31"
-error-chain-mini = "0.2.0"
-error-chain-mini-derive = "0.2.0"
+failure = "0.1.2"
 fern = "0.5.5"
 log = "0.4.1"
 termion = "1.5"

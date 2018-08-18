@@ -4,8 +4,7 @@ mod field;
 mod rogue;
 pub use self::coord::{Coord, Direction, Positioned, X, Y};
 pub use self::field::{Cell, CellAttr, Field};
-use error::{ErrorId, ErrorKind, GameResult, ResultExt};
-use error_chain_mini::ChainedError;
+use error::*;
 use item::ItemHandler;
 use tile::Tile;
 use {GameInfo, GameMsg, GlobalConfig};
@@ -60,7 +59,7 @@ pub enum Dungeon {
 }
 
 impl Dungeon {
-    pub(crate) fn is_downstair(&self, path: DungeonPath) -> bool {
+    crate fn is_downstair(&self, path: DungeonPath) -> bool {
         match self {
             Dungeon::Rogue(dungeon) => {
                 let address = rogue::Address::from(path);
@@ -69,23 +68,19 @@ impl Dungeon {
             _ => unimplemented!(),
         }
     }
-    pub(crate) fn level(&self) -> u32 {
+    crate fn level(&self) -> u32 {
         match self {
             Dungeon::Rogue(dungeon) => dungeon.level,
             _ => unimplemented!(),
         }
     }
-    pub(crate) fn new_level(
-        &mut self,
-        game_info: &GameInfo,
-        item: &mut ItemHandler,
-    ) -> GameResult<()> {
+    crate fn new_level(&mut self, game_info: &GameInfo, item: &mut ItemHandler) -> GameResult<()> {
         match self {
             Dungeon::Rogue(dungeon) => dungeon.new_level(game_info, item),
             _ => unimplemented!(),
         }
     }
-    pub(crate) fn can_move_player(&self, path: DungeonPath, direction: Direction) -> bool {
+    crate fn can_move_player(&self, path: DungeonPath, direction: Direction) -> bool {
         match self {
             Dungeon::Rogue(dungeon) => {
                 let address = rogue::Address::from(path);
@@ -94,7 +89,7 @@ impl Dungeon {
             _ => unimplemented!(),
         }
     }
-    pub(crate) fn move_player(
+    crate fn move_player(
         &mut self,
         path: &DungeonPath,
         direction: Direction,
@@ -107,7 +102,7 @@ impl Dungeon {
             _ => unimplemented!(),
         }
     }
-    pub(crate) fn search<'a>(
+    crate fn search<'a>(
         &'a mut self,
         path: &DungeonPath,
     ) -> GameResult<impl 'a + Iterator<Item = GameMsg>> {
@@ -119,13 +114,13 @@ impl Dungeon {
             _ => unimplemented!(),
         }
     }
-    pub(crate) fn select_cell(&mut self, is_character: bool) -> Option<DungeonPath> {
+    crate fn select_cell(&mut self, is_character: bool) -> Option<DungeonPath> {
         match self {
             Dungeon::Rogue(dungeon) => dungeon.select_cell(is_character),
             _ => unimplemented!(),
         }
     }
-    pub(crate) fn enter_room(&mut self, path: &DungeonPath) -> GameResult<()> {
+    crate fn enter_room(&mut self, path: &DungeonPath) -> GameResult<()> {
         match self {
             Dungeon::Rogue(dungeon) => {
                 let address = path.to_rogue()?;
@@ -134,33 +129,28 @@ impl Dungeon {
             _ => unimplemented!(),
         }
     }
-    pub(crate) fn draw<F, E>(&self, drawer: &mut F) -> Result<(), ChainedError<E>>
+    crate fn draw<F>(&self, drawer: &mut F) -> GameResult<()>
     where
-        F: FnMut(Positioned<Tile>) -> Result<(), ChainedError<E>>,
-        E: From<ErrorId> + ErrorKind,
+        F: FnMut(Positioned<Tile>) -> GameResult<()>,
     {
         match self {
             Dungeon::Rogue(dungeon) => dungeon.draw(drawer),
             _ => unimplemented!(),
         }
     }
-    pub(crate) fn draw_ranges<'a>(&'a self) -> impl 'a + Iterator<Item = DungeonPath> {
+    crate fn draw_ranges<'a>(&'a self) -> impl 'a + Iterator<Item = DungeonPath> {
         match self {
             Dungeon::Rogue(dungeon) => dungeon.draw_ranges(),
             _ => unimplemented!(),
         }
     }
-    pub(crate) fn path_to_cd(&self, path: &DungeonPath) -> Coord {
+    crate fn path_to_cd(&self, path: &DungeonPath) -> Coord {
         match self {
             Dungeon::Rogue(_) => Coord::new(path.0[1], path.0[2]),
             _ => unimplemented!(),
         }
     }
-    pub(crate) fn remove_object(
-        &mut self,
-        path: &DungeonPath,
-        is_character: bool,
-    ) -> GameResult<bool> {
+    crate fn remove_object(&mut self, path: &DungeonPath, is_character: bool) -> GameResult<bool> {
         match self {
             Dungeon::Rogue(dungeon) => {
                 let address = path.to_rogue()?;

@@ -159,5 +159,5 @@
             }
         ]
     },
-    "hide_dungeon": false
+    "hide_dungeon": true
 }

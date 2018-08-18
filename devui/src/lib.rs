@@ -1,8 +1,7 @@
 extern crate chrono;
 extern crate clap;
-extern crate error_chain_mini;
 #[macro_use]
-extern crate error_chain_mini_derive;
+extern crate failure;
 extern crate fern;
 extern crate log;
 extern crate rogue_gym_core;
@@ -12,8 +11,7 @@ extern crate tuple_map;
 pub mod error;
 #[macro_use]
 pub mod screen;
-use error::Result;
-use error_chain_mini::{ErrorKind, ResultExt};
+use error::*;
 use rogue_gym_core::dungeon::Positioned;
 use rogue_gym_core::ui::{MordalKind, UiState};
 use rogue_gym_core::{GameConfig, GameMsg, Reaction, RunTime};
@@ -23,11 +21,11 @@ use std::thread;
 use std::time::Duration;
 use termion::input::TermRead;
 
-pub fn play_game(config: GameConfig) -> Result<()> {
+pub fn play_game(config: GameConfig) -> GameResult<()> {
     let (w, h) = (config.width, config.height);
     let mut screen = Screen::from_raw(w, h)?;
     screen.welcome()?;
-    let mut runtime = config.build().convert()?;
+    let mut runtime = config.build()?;
     thread::sleep(Duration::from_secs(1));
     draw_dungeon(&mut screen, &mut runtime)?;
     screen.status(runtime.player_status())?;
@@ -41,14 +39,14 @@ pub fn play_game(config: GameConfig) -> Result<()> {
             Ok(r) => r,
             Err(e) => {
                 // STUB
-                notify!(screen, "{}", e.kind().full())?;
+                notify!(screen, "{}", e)?;
                 continue;
             }
         };
 
         for reaction in res {
-            let result =
-                process_reaction(&mut screen, &mut runtime, reaction).chain_err(|| "in play_game")?;
+            let result = process_reaction(&mut screen, &mut runtime, reaction)
+                .chain_err(|| "in play_game")?;
             if let Some(transition) = result {
                 match transition {
                     Transition::Exit => return Ok(()),
@@ -69,7 +67,7 @@ pub fn process_reaction<W: Write>(
     screen: &mut Screen<W>,
     runtime: &mut RunTime,
     reaction: Reaction,
-) -> Result<Option<Transition>> {
+) -> GameResult<Option<Transition>> {
     match reaction {
         Reaction::Notify(msg) => {
             match msg {
@@ -111,7 +109,7 @@ pub fn process_reaction<W: Write>(
     }
 }
 
-pub fn draw_dungeon<W: Write>(screen: &mut Screen<W>, runtime: &mut RunTime) -> Result<()> {
+pub fn draw_dungeon<W: Write>(screen: &mut Screen<W>, runtime: &mut RunTime) -> GameResult<()> {
     // screen.clear_dungeon()?;
     let mut player_pos = None;
     runtime.draw_screen(|Positioned(cd, tile)| {

@@ -1,6 +1,6 @@
 use super::{maze, Config, Surface};
 use dungeon::{Coord, Positioned, X, Y};
-use error::{ErrorId, ErrorKind, GameResult, ResultExt};
+use error::*;
 use fenwick::FenwickSet;
 use fixedbitset::FixedBitSet;
 use rect_iter::{IntoTuple2, RectRange};
@@ -11,14 +11,10 @@ use tuple_map::TupleMap2;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum RoomKind {
     /// normal room
-    // 16byte
     Normal { range: RectRange<i32> },
     /// maze room
-    // boxed -> 8 byte
-    // not -> 64 byte
     Maze(Box<maze::Maze>),
     /// passage only(gone room)
-    // 8 byte
     Empty { up_left: Coord },
 }
 
@@ -72,8 +68,7 @@ impl Room {
                         Surface::Floor
                     };
                     register(Positioned(cd.into(), surface))
-                })
-                .chain_err(|| "Room::draw"),
+                }).chain_err(|| "Room::draw"),
             RoomKind::Maze(ref maze) => maze
                 .passage_iter()
                 .try_for_each(|cd| register(Positioned(cd, Surface::Passage)))
@@ -169,7 +164,7 @@ fn gen_empty_cells(kind: &RoomKind) -> FenwickSet {
 }
 
 /// generate rooms
-pub(crate) fn gen_rooms(
+crate fn gen_rooms(
     level: u32,
     config: &Config,
     width: X,
@@ -204,12 +199,11 @@ pub(crate) fn gen_rooms(
             }
             let is_empty = empty_rooms.contains(i);
             make_room(is_empty, room_size, upper_left, i, &config, level, rng)
-        })
-        .collect()
+        }).collect()
 }
 
 /// generata a room
-pub(crate) fn make_room(
+crate fn make_room(
     is_empty: bool,
     room_size: Coord,
     upper_left: Coord,
@@ -267,19 +261,19 @@ pub(crate) fn make_room(
 }
 
 #[cfg(test)]
-pub(crate) mod test {
+crate mod test {
     use super::*;
     use dungeon::Direction;
     use rect_iter::GetMut2D;
     use tile::Drawable;
-    pub(crate) fn gen(level: u32) -> Vec<Room> {
+    crate fn gen(level: u32) -> Vec<Room> {
         let mut config = Config::default();
         config.maze_rate_inv = 5;
         let (w, h) = (X(80), Y(24));
         let mut rng = RngHandle::new();
         gen_rooms(level, &config, w, h, &mut rng).unwrap()
     }
-    pub(crate) fn draw_to_buffer(rooms: &[Room]) -> Vec<Vec<Surface>> {
+    crate fn draw_to_buffer(rooms: &[Room]) -> Vec<Vec<Surface>> {
         let mut buffer = vec![vec![Surface::None; 80]; 24];
         for room in rooms {
             room.draw(|Positioned(cd, s)| {
@@ -304,7 +298,7 @@ pub(crate) mod test {
     #[test]
     fn pos_check() {
         let (xrooms, yrooms) = (3, 3);
-        use ::enum_iterator::IntoEnumIterator;
+        use enum_iterator::IntoEnumIterator;
         for i in 0..100 {
             let rooms = gen(i % 20);
             for (x, y) in RectRange::zero_start(xrooms, yrooms).unwrap() {

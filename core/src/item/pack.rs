@@ -1,6 +1,6 @@
 //! utility for managing character's items
 use super::{Item, ItemHandler, ItemId};
-use error::{ErrorId, ErrorKind, GameResult};
+use error::*;
 use fenwick::FenwickSet;
 use std::collections::{btree_map, BTreeMap};
 
@@ -50,8 +50,7 @@ impl ItemPack {
                 } else {
                     false
                 }
-            })
-            .map(|(_, &id)| MergeEntry(id))
+            }).map(|(_, &id)| MergeEntry(id))
     }
     fn insert(&mut self, ch: usize, id: ItemId) {
         self.items.insert(ch, id);

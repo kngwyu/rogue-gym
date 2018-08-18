@@ -2,13 +2,14 @@
 use super::{passages, rooms, Config, Room, Surface};
 use dungeon::{Cell, CellAttr, Coord, Direction, Field, Positioned, X, Y};
 use enum_iterator::IntoEnumIterator;
-use error::{ErrorId, ErrorKind, GameResult, ResultExt};
+use error::*;
 use fenwick::FenwickSet;
 use item::ItemHandler;
 use rect_iter::{Get2D, GetMut2D};
 use rng::RngHandle;
 use std::collections::HashSet;
 use GameMsg;
+
 /// representation of 'floor'
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Floor {
@@ -46,7 +47,7 @@ impl Floor {
         rng: &mut RngHandle,
     ) -> GameResult<Self> {
         let rooms = rooms::gen_rooms(level, config, width, height, rng)
-            .chain_err(|| "dugeon::floor::Floor::new")?;
+            .chain_err(|| "Error in gen_floor")?;
         let mut field = Field::new(width, height, Cell::with_default_attr(Surface::None));
         // in this phase, we can draw surfaces 'as is'
         rooms.iter().try_for_each(|room| {
@@ -56,8 +57,7 @@ impl Floor {
                     .map(|mut_cell| {
                         mut_cell.surface = surface;
                         mut_cell.attr = gen_attr(surface, room.is_dark, rng, level, config);
-                    })
-                    .into_chained(|| "Floor::new")
+                    }).into_chained(|| "Error in gen_floor")
             })
         })?;
         // sometimes door is hidden randomly so first we store positions to avoid borrow restriction
@@ -88,8 +88,7 @@ impl Floor {
                         if !cell.is_hidden() && !cell.is_locked() {
                             cell.surface = surface;
                         }
-                    })
-                    .into_chained(|| "Floor::new dig_passges returned invalid index")
+                    }).into_chained(|| "Floor::new dig_passges returned invalid index")
             })?;
         Ok(Floor::new(rooms, doors, field))
     }
@@ -169,7 +168,7 @@ impl Floor {
     }
 
     /// judge if the player can move from `cd` in `direction`
-    pub(crate) fn can_move_player(&self, cd: Coord, direction: Direction) -> bool {
+    crate fn can_move_player(&self, cd: Coord, direction: Direction) -> bool {
         self.can_move_impl(cd, direction, false).unwrap_or(false)
     }
 
@@ -210,7 +209,7 @@ impl Floor {
     }
 
     /// player enters room
-    pub(crate) fn enters_room(&mut self, cd: Coord) -> GameResult<()> {
+    crate fn enters_room(&mut self, cd: Coord) -> GameResult<()> {
         self.with_current_room(
             cd,
             |room| {
@@ -228,7 +227,7 @@ impl Floor {
     }
 
     /// player enters room
-    pub(crate) fn leaves_room(&mut self, cd: Coord) -> GameResult<()> {
+    crate fn leaves_room(&mut self, cd: Coord) -> GameResult<()> {
         self.with_current_room(
             cd,
             |room| room.is_visited && room.is_dark,
@@ -241,7 +240,7 @@ impl Floor {
     }
 
     /// player walks in the cell
-    pub(crate) fn player_in(&mut self, cd: Coord, init: bool) -> GameResult<()> {
+    crate fn player_in(&mut self, cd: Coord, init: bool) -> GameResult<()> {
         if init || self.doors.contains(&cd) {
             self.enters_room(cd).chain_err(|| "Floor::player_in")?;
         }
@@ -261,7 +260,7 @@ impl Floor {
     }
 
     /// player leaves the cell
-    pub(crate) fn player_out(&mut self, cd: Coord) -> GameResult<()> {
+    crate fn player_out(&mut self, cd: Coord) -> GameResult<()> {
         if self.doors.contains(&cd) {
             self.leaves_room(cd).chain_err(|| "Floor::player_out")?;
         }
@@ -277,7 +276,7 @@ impl Floor {
     }
 
     /// register an object to cell
-    pub(crate) fn set_obj(&mut self, cd: Coord, is_character: bool) -> bool {
+    crate fn set_obj(&mut self, cd: Coord, is_character: bool) -> bool {
         let mut impl_ = || {
             let room = self.rooms.iter_mut().find(|room| room.contains(cd))?;
             Some(room.fill_cell(cd, is_character))
@@ -286,7 +285,7 @@ impl Floor {
     }
 
     /// unregister an object to cell
-    pub(crate) fn remove_obj(&mut self, cd: Coord, is_character: bool) -> bool {
+    crate fn remove_obj(&mut self, cd: Coord, is_character: bool) -> bool {
         let mut impl_ = || {
             let room = self.rooms.iter_mut().find(|room| room.contains(cd))?;
             Some(room.unfill_cell(cd, is_character))
@@ -295,7 +294,7 @@ impl Floor {
     }
 
     /// select an empty cell randomly
-    pub(crate) fn select_cell(&self, rng: &mut RngHandle, is_character: bool) -> Option<Coord> {
+    crate fn select_cell(&self, rng: &mut RngHandle, is_character: bool) -> Option<Coord> {
         let mut candidates = self.non_empty_rooms.clone();
         while candidates.len() > 0 {
             let room_idx = candidates
@@ -311,7 +310,7 @@ impl Floor {
     }
 
     /// search command
-    pub(crate) fn search<'a>(
+    crate fn search<'a>(
         &'a mut self,
         cd: Coord,
         rng: &'a mut RngHandle,
@@ -399,8 +398,7 @@ mod test {
                         let cd: Coord = cd.into();
                         let cell = floor.field.get_p(cd);
                         cell.surface != Surface::Door && floor.doors.contains(&cd)
-                    })
-                    .count();
+                    }).count();
             }
             assert!(before <= hidden + 10);
             before = hidden;

@@ -1,5 +1,4 @@
-#![cfg_attr(feature = "bench", feature(test))]
-#![feature(const_fn)]
+#![feature(const_fn, crate_visibility_modifier, test)]
 
 #[macro_use]
 extern crate bitflags;
@@ -7,9 +6,8 @@ extern crate bitflags;
 extern crate derive_more;
 #[macro_use]
 extern crate enum_iterator;
-extern crate error_chain_mini;
 #[macro_use]
-extern crate error_chain_mini_derive;
+extern crate failure;
 extern crate fixedbitset;
 extern crate num_traits;
 #[macro_use]
@@ -40,8 +38,7 @@ pub mod ui;
 
 use character::{player, Player};
 use dungeon::{Direction, Dungeon, DungeonStyle, Positioned, X, Y};
-use error::{ErrorId, ErrorKind, GameResult, ResultExt};
-use error_chain_mini::ChainedError;
+use error::*;
 use input::{InputCode, Key, KeyMap};
 use item::{ItemHandler, ItemKind};
 use tile::{Drawable, Tile};
@@ -186,27 +183,22 @@ impl RunTime {
         }
     }
     /// take draw function F and draw screen with it
-    pub fn draw_screen<F, E>(&self, mut drawer: F) -> Result<(), ChainedError<E>>
+    pub fn draw_screen<F>(&self, mut drawer: F) -> GameResult<()>
     where
-        F: FnMut(Positioned<Tile>) -> Result<(), ChainedError<E>>,
-        E: From<ErrorId> + ErrorKind,
+        F: FnMut(Positioned<Tile>) -> GameResult<()>,
     {
-        const ERR_STR: &str = "[rogue_gym_core::RunTime::draw_screen]";
         // floor => item & character
-        self.dungeon.draw(&mut drawer).chain_err(|| ERR_STR)?;
-        self.dungeon
-            .draw_ranges()
-            .try_for_each(|path| {
-                let cd = self.dungeon.path_to_cd(&path);
-                if self.player.pos == path {
-                    return drawer(Positioned(cd, self.player.tile()));
-                };
-                if let Some(item) = self.item.get_by_path(&path) {
-                    return drawer(Positioned(cd, item.tile()));
-                }
-                Ok(())
-            })
-            .chain_err(|| ERR_STR)
+        self.dungeon.draw(&mut drawer)?;
+        self.dungeon.draw_ranges().try_for_each(|path| {
+            let cd = self.dungeon.path_to_cd(&path);
+            if self.player.pos == path {
+                return drawer(Positioned(cd, self.player.tile()));
+            };
+            if let Some(item) = self.item.get_by_path(&path) {
+                return drawer(Positioned(cd, item.tile()));
+            }
+            Ok(())
+        })
     }
     pub fn react_to_input(&mut self, input: InputCode) -> GameResult<Vec<Reaction>> {
         trace!("[react_to_input] input: {:?} ui: {:?}", input, self.ui);
@@ -241,7 +233,7 @@ impl RunTime {
                         MordalMsg::None => (None, Ok(vec![])),
                     }
                 }
-                InputCode::Act(_) => (None, Err(ErrorId::IgnoredInput(input).into_err())),
+                InputCode::Act(_) => (None, Err(ErrorId::IgnoredInput(input).into())),
             },
         };
         if let Some(next_ui) = next_ui {
@@ -252,9 +244,10 @@ impl RunTime {
     pub fn react_to_key(&mut self, key: Key) -> GameResult<Vec<Reaction>> {
         match self.keymap.get(key) {
             Some(i) => self.react_to_input(i),
-            None => Err(
-                ErrorId::InvalidInput(key).into_with(|| "rogue_gym_core::RunTime::react_to_key")
-            ),
+            None => {
+                Err(ErrorId::InvalidInput(key)
+                    .into_with(|| "rogue_gym_core::RunTime::react_to_key"))
+            }
         }
     }
     pub fn screen_size(&self) -> (X, Y) {
@@ -274,8 +267,7 @@ impl RunTime {
                 } else {
                     None
                 }
-            })
-            .nth(0)
+            }).nth(0)
             .unwrap_or(0);
         status.dungeon_level = self.dungeon.level();
         status

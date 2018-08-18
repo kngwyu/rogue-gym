@@ -6,8 +6,7 @@ pub mod rooms;
 use self::floor::Floor;
 pub use self::rooms::{Room, RoomKind};
 use super::{Coord, Direction, DungeonPath, Positioned, X, Y};
-use error::{ErrorId, ErrorKind, GameResult, ResultExt};
-use error_chain_mini::ChainedError;
+use error::*;
 use item::ItemHandler;
 use rect_iter::{Get2D, GetMut2D, RectRange};
 use rng::RngHandle;
@@ -219,7 +218,7 @@ impl Dungeon {
     }
 
     /// returns the range to draw
-    pub(crate) fn draw_ranges<'a>(&'a self) -> impl 'a + Iterator<Item = DungeonPath> {
+    crate fn draw_ranges<'a>(&'a self) -> impl 'a + Iterator<Item = DungeonPath> {
         let level = self.level;
         let xmax = self.config_global.width.0;
         let ymax = self.config_global.height.0 - 1;
@@ -271,7 +270,7 @@ impl Dungeon {
     }
 
     /// takes addrees and judge if thers's a stair at that address
-    pub(crate) fn is_downstair(&self, address: Address) -> bool {
+    crate fn is_downstair(&self, address: Address) -> bool {
         if address.level != self.level {
             return false;
         }
@@ -283,14 +282,14 @@ impl Dungeon {
     }
 
     /// judge if the player can move from the address in the direction
-    pub(crate) fn can_move_player(&self, address: Address, direction: Direction) -> bool {
+    crate fn can_move_player(&self, address: Address, direction: Direction) -> bool {
         if address.level != self.level {
             return false;
         }
         self.current_floor.can_move_player(address.cd, direction)
     }
     /// move the player from the address in the direction
-    pub(crate) fn move_player(
+    crate fn move_player(
         &mut self,
         address: Address,
         direction: Direction,
@@ -312,7 +311,7 @@ impl Dungeon {
             .chain_err(|| ERR_STR)?;
         Ok(address.into())
     }
-    pub(crate) fn search<'a>(
+    crate fn search<'a>(
         &'a mut self,
         address: Address,
     ) -> GameResult<impl 'a + Iterator<Item = GameMsg>> {
@@ -324,33 +323,27 @@ impl Dungeon {
             .search(address.cd, &mut self.rng, &self.config))
     }
     /// select an empty cell randomly
-    pub(crate) fn select_cell(&mut self, is_character: bool) -> Option<DungeonPath> {
+    crate fn select_cell(&mut self, is_character: bool) -> Option<DungeonPath> {
         self.current_floor
             .select_cell(&mut self.rng, is_character)
             .map(|cd| vec![self.level as i32, cd.x.0, cd.y.0].into())
     }
-    pub(crate) fn remove_object(&mut self, address: Address, is_character: bool) -> bool {
+    crate fn remove_object(&mut self, address: Address, is_character: bool) -> bool {
         self.current_floor.remove_obj(address.cd, is_character)
     }
     /// draw dungeon to screen by callback
-    pub(crate) fn draw<F, E>(&self, drawer: &mut F) -> Result<(), ChainedError<E>>
+    crate fn draw<F>(&self, drawer: &mut F) -> GameResult<()>
     where
-        F: FnMut(Positioned<Tile>) -> Result<(), ChainedError<E>>,
-        E: From<ErrorId> + ErrorKind,
+        F: FnMut(Positioned<Tile>) -> GameResult<()>,
     {
         const ERR_STR: &str = "in rogue::Dungeon::move_player";
         let range = self
             .current_floor
             .field
             .size_ytrimed()
-            .ok_or_else(|| E::from(ErrorId::MaybeBug).into_with(|| ERR_STR))?;
+            .ok_or_else(|| ErrorId::MaybeBug.into_with(|| ERR_STR))?;
         range.into_iter().try_for_each(|cd| {
-            let cell = self
-                .current_floor
-                .field
-                .try_get_p(cd)
-                .into_chained(|| ERR_STR)
-                .convert()?;
+            let cell = self.current_floor.field.try_get_p(cd)?;
             let cd = Coord::from(cd);
             let tile = cell.tile();
             drawer(Positioned(cd, tile))
@@ -361,11 +354,11 @@ impl Dungeon {
 /// Address in the dungeon.
 /// It's quite simple in rogue.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub(crate) struct Address {
+crate struct Address {
     /// level
-    pub(crate) level: u32,
+    crate level: u32,
     /// coordinate
-    pub(crate) cd: Coord,
+    crate cd: Coord,
 }
 
 impl From<DungeonPath> for Address {

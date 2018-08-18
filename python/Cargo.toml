@@ -11,13 +11,8 @@ crate-type = ["cdylib"]
 rect-iter = "0.1.9"
 
 [dependencies.pyo3]
-git = "https://github.com/kngwyu/pyo3"
-branch = "native-type-with-generics"
+version = "0.4"
 features = ["extension-module"]
-
-[dependencies.numpy]
-git = "https://github.com/kngwyu/rust-numpy"
-branch = "static-type-check"
 
 [dependencies.rogue-gym-core]
 features = ["termion"]

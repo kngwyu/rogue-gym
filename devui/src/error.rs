@@ -1,34 +1,21 @@
 //! our error types
-use error_chain_mini::{ChainedError, ErrorKind};
 use log::SetLoggerError;
-use rogue_gym_core::error::ErrorId as CoreError;
+pub use rogue_gym_core::error::{FailExt, GameResult, ResultExt1, ResultExt2};
 use std::io::Error as IoError;
-pub type Result<T> = ::std::result::Result<T, ChainedError<ErrorID>>;
 
-#[derive(ErrorKind)]
+#[derive(Debug, Fail)]
 pub enum ErrorID {
-    #[msg(short = "core error", detailed = "{}", _0)]
-    Core(CoreError),
-    #[msg(short = "io error", detailed = "{}", _0)]
+    #[fail(display = "io error: {:?}", _0)]
     Io(IoError),
-    #[msg(short = "Invalid Command Args")]
+    #[fail(display = "Invalid Command Args")]
     InvalidArg,
-    #[msg(
-        short = "Invalid screen size",
-        detailed = "width: {} height: {}",
-        _0,
-        _1
-    )]
+    #[fail(display = "Invalid screen size width: {} height:{} ", _0, _1)]
     InvalidScreenSize(u16, u16),
-    #[msg(short = "Error in logging", detailed = "{}", _0)]
+    #[fail(display = "Error in logging: {:?}", _0)]
     Log(SetLoggerError),
 }
 
-impl From<CoreError> for ErrorID {
-    fn from(e: CoreError) -> ErrorID {
-        ErrorID::Core(e)
-    }
-}
+impl FailExt for ErrorID {}
 
 impl From<IoError> for ErrorID {
     fn from(e: IoError) -> ErrorID {

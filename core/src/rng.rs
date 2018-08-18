@@ -1,6 +1,6 @@
 use fenwick::FenwickSet;
 use num_traits::PrimInt;
-pub(crate) use rand::Rng;
+crate use rand::Rng;
 use rand::{
     distributions::uniform::SampleUniform, thread_rng, Error as RndError, RngCore, SeedableRng,
     XorShiftRng,

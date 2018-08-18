@@ -1,6 +1,6 @@
 use dungeon::{Coord, Direction};
 use enum_iterator::IntoEnumIterator;
-use error::{GameResult, ResultExt};
+use error::*;
 use fenwick::FenwickSet;
 use rect_iter::RectRange;
 use rng::RngHandle;
@@ -9,19 +9,19 @@ use std::collections::HashSet;
 /// structure of maze
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Maze {
-    pub(crate) range: RectRange<i32>,
-    pub(crate) passages: FenwickSet,
+    crate range: RectRange<i32>,
+    crate passages: FenwickSet,
 }
 
 impl Maze {
     /// return an iterator ehich enumerates passages
-    pub(crate) fn passage_iter<'a>(&'a self) -> impl 'a + Iterator<Item = Coord> {
+    crate fn passage_iter<'a>(&'a self) -> impl 'a + Iterator<Item = Coord> {
         self.passages
             .iter()
             .filter_map(move |u| self.range.nth(u).map(|t| Coord::from(t)))
     }
     /// jusges if a cd is in a maze
-    pub(crate) fn has_cd(&self, cd: Coord) -> bool {
+    crate fn has_cd(&self, cd: Coord) -> bool {
         let has_cd_impl = |cd| {
             let id = self.range.index(cd)?;
             Some(self.passages.contains(id))
@@ -68,8 +68,7 @@ where
             .filter(|dir| {
                 let nxt = current_cd + dir.to_cd().scale(2, 2);
                 range.contains(nxt) && !used.contains(&nxt)
-            })
-            .enumerate()
+            }).enumerate()
             .filter(|(i, _)| rng.does_happen(*i as u32 + 1))
             .last()
             .map(|t| t.1);
@@ -91,7 +90,7 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use error::{ErrorId, ErrorKind};
+    use error::ErrorId;
     use rect_iter::GetMut2D;
     #[test]
     #[ignore]
