@@ -49,7 +49,7 @@ fn get_config(args: &ArgMatches) -> GameResult<GameConfig> {
 
 fn parse_args<'a>() -> ArgMatches<'a> {
     clap::App::new("rogue-gym developper ui")
-        .version("0.0.1")
+        .version("0.1.0")
         .author("Yuji Kanagawa <yuji.kngw.80s.revive@gmail.com>")
         .about("play rogue-gym as human")
         .arg(
