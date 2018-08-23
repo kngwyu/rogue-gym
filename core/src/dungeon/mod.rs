@@ -6,6 +6,7 @@ pub use self::coord::{Coord, Direction, Positioned, X, Y};
 pub use self::field::{Cell, CellAttr, Field};
 use error::*;
 use item::ItemHandler;
+use smallvec::SmallVec;
 use tile::Tile;
 use {GameInfo, GameMsg, GlobalConfig};
 
@@ -59,10 +60,10 @@ pub enum Dungeon {
 }
 
 impl Dungeon {
-    crate fn is_downstair(&self, path: DungeonPath) -> bool {
+    crate fn is_downstair(&self, path: &DungeonPath) -> bool {
         match self {
             Dungeon::Rogue(dungeon) => {
-                let address = rogue::Address::from(path);
+                let address = rogue::Address::from_path(&path);
                 dungeon.is_downstair(address)
             }
             _ => unimplemented!(),
@@ -80,10 +81,10 @@ impl Dungeon {
             _ => unimplemented!(),
         }
     }
-    crate fn can_move_player(&self, path: DungeonPath, direction: Direction) -> bool {
+    crate fn can_move_player(&self, path: &DungeonPath, direction: Direction) -> bool {
         match self {
             Dungeon::Rogue(dungeon) => {
-                let address = rogue::Address::from(path);
+                let address = rogue::Address::from_path(path);
                 dungeon.can_move_player(address, direction)
             }
             _ => unimplemented!(),
@@ -96,7 +97,7 @@ impl Dungeon {
     ) -> GameResult<DungeonPath> {
         match self {
             Dungeon::Rogue(dungeon) => {
-                let address = path.to_rogue()?;
+                let address = rogue::Address::from_path(path);
                 dungeon.move_player(address, direction)
             }
             _ => unimplemented!(),
@@ -108,7 +109,7 @@ impl Dungeon {
     ) -> GameResult<impl 'a + Iterator<Item = GameMsg>> {
         match self {
             Dungeon::Rogue(dungeon) => {
-                let address = path.to_rogue()?;
+                let address = rogue::Address::from_path(path);
                 dungeon.search(address)
             }
             _ => unimplemented!(),
@@ -123,7 +124,7 @@ impl Dungeon {
     crate fn enter_room(&mut self, path: &DungeonPath) -> GameResult<()> {
         match self {
             Dungeon::Rogue(dungeon) => {
-                let address = path.to_rogue()?;
+                let address = rogue::Address::from_path(path);
                 dungeon.current_floor.player_in(address.cd, true)
             }
             _ => unimplemented!(),
@@ -150,43 +151,46 @@ impl Dungeon {
             _ => unimplemented!(),
         }
     }
-    crate fn remove_object(&mut self, path: &DungeonPath, is_character: bool) -> GameResult<bool> {
+    crate fn remove_object(&mut self, path: &DungeonPath, is_character: bool) -> bool {
         match self {
             Dungeon::Rogue(dungeon) => {
-                let address = path.to_rogue()?;
-                Ok(dungeon.remove_object(address, is_character))
+                let address = rogue::Address::from_path(path);
+                dungeon.remove_object(address, is_character)
             }
             _ => unimplemented!(),
         }
     }
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize, Hash, Eq, PartialEq, Ord, PartialOrd)]
-pub struct DungeonPath(Vec<i32>);
+pub type PathVec = SmallVec<[i32; 4]>;
+
+#[derive(
+    Clone, Debug, Default, Serialize, Deserialize, Hash, Eq, PartialEq, Ord, PartialOrd, Index,
+)]
+pub struct DungeonPath(PathVec);
 
 impl DungeonPath {
-    fn to_rogue(&self) -> GameResult<rogue::Address> {
-        let res = || {
-            Some(rogue::Address {
-                level: *self.0.get(0)? as u32,
-                cd: Coord::new(*self.0.get(1)?, *self.0.get(2)?),
-            })
-        };
-        res().ok_or_else(|| {
-            ErrorId::InvalidConversion
-                .into_with(|| format!("We can't DungeonPath {:?} to rogue::Address", self))
-        })
+    pub fn from_vec(v: Vec<i32>) -> Self {
+        DungeonPath(PathVec::from_vec(v))
     }
 }
 
 impl From<rogue::Address> for DungeonPath {
     fn from(r: rogue::Address) -> DungeonPath {
-        DungeonPath(vec![r.level as i32, r.cd.x.0, r.cd.y.0])
+        let buf = [r.level as i32, r.cd.x.0, r.cd.y.0, 0];
+        DungeonPath(PathVec::from_buf(buf))
     }
 }
 
-impl From<Vec<i32>> for DungeonPath {
-    fn from(v: Vec<i32>) -> DungeonPath {
-        DungeonPath(v)
+impl From<[i32; 4]> for DungeonPath {
+    fn from(buf: [i32; 4]) -> DungeonPath {
+        DungeonPath(PathVec::from_buf(buf))
+    }
+}
+
+impl From<[i32; 3]> for DungeonPath {
+    fn from(buf: [i32; 3]) -> DungeonPath {
+        let buf = [buf[0], buf[1], buf[2], 0];
+        DungeonPath(PathVec::from_buf_and_len(buf, 3))
     }
 }

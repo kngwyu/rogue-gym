@@ -111,7 +111,7 @@ impl Floor {
                             ErrorId::MaybeBug.into_with(|| "rogue::Dungeon::setup_items")
                         })?;
                         room.fill_cell(cd, false);
-                        Ok(vec![level as i32, cd.x.0, cd.y.0].into())
+                        Ok([level as i32, cd.x.0, cd.y.0].into())
                     })
                 })?;
         }
@@ -316,7 +316,7 @@ impl Floor {
         rng: &'a mut RngHandle,
         config: &'a Config,
     ) -> impl 'a + Iterator<Item = GameMsg> {
-        let probinc = 0; // STUB: it's changed by player status
+        let probinc = 0; // TODO: it should be changed by player status
         Direction::into_enum_iter().take(8).filter_map(move |d| {
             let cd = cd + d.to_cd();
             let cell = self.field.try_get_mut_p(cd).ok()?;
@@ -328,7 +328,6 @@ impl Floor {
                 cell.unlock();
                 cell.surface = Surface::Door;
                 return Some(GameMsg::SecretDoor);
-                // STUB
             }
             None
         })

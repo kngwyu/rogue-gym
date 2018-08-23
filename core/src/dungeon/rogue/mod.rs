@@ -226,7 +226,7 @@ impl Dungeon {
             .unwrap()
             .into_iter()
             .filter(move |&cd| self.current_floor.field.get_p(cd).is_obj_visible())
-            .map(move |cd| vec![level as i32, cd.0, cd.1].into())
+            .map(move |cd| [level as i32, cd.0, cd.1].into())
     }
 
     /// setup next floor
@@ -326,8 +326,9 @@ impl Dungeon {
     crate fn select_cell(&mut self, is_character: bool) -> Option<DungeonPath> {
         self.current_floor
             .select_cell(&mut self.rng, is_character)
-            .map(|cd| vec![self.level as i32, cd.x.0, cd.y.0].into())
+            .map(|cd| [self.level as i32, cd.x.0, cd.y.0].into())
     }
+
     crate fn remove_object(&mut self, address: Address, is_character: bool) -> bool {
         self.current_floor.remove_obj(address.cd, is_character)
     }
@@ -361,12 +362,11 @@ crate struct Address {
     crate cd: Coord,
 }
 
-impl From<DungeonPath> for Address {
-    fn from(d: DungeonPath) -> Address {
-        assert!(d.0.len() == 3, "Address::from invalid value {:?}", d);
+impl Address {
+    crate fn from_path(p: &DungeonPath) -> Address {
         Address {
-            level: d.0[0] as u32,
-            cd: Coord::new(d.0[1], d.0[2]),
+            level: p[0] as u32,
+            cd: Coord::new(p[1], p[2]),
         }
     }
 }

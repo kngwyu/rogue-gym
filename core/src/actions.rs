@@ -16,7 +16,7 @@ crate fn process_action(
 ) -> GameResult<Vec<Reaction>> {
     match action {
         Action::DownStair => {
-            if dungeon.is_downstair(player.pos.clone()) {
+            if dungeon.is_downstair(&player.pos) {
                 new_level(info, dungeon, item, player, false)
                     .chain_err(|| "action::process_action")?;
                 Ok(vec![Reaction::Redraw, Reaction::StatusUpdated])
@@ -56,7 +56,7 @@ fn move_player(
     item: &mut ItemHandler,
     player: &mut Player,
 ) -> GameResult<Vec<Reaction>> {
-    if !dungeon.can_move_player(player.pos.clone(), direction) {
+    if !dungeon.can_move_player(&player.pos, direction) {
         return Ok(vec![Reaction::Notify(GameMsg::CantMove(direction))]);
     }
     let new_pos = dungeon
@@ -115,10 +115,7 @@ fn get_item(
         }
     };
 
-    if !dungeon
-        .remove_object(&player.pos, false)
-        .chain_err(|| "in actions::get_item")?
-    {
+    if !dungeon.remove_object(&player.pos, false) {
         warn!("[actions::get_item] couldn't remove object!!!")
     }
     item_handle.remove_from_place(&player.pos);
