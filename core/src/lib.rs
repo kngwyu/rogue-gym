@@ -15,9 +15,8 @@ extern crate log;
 extern crate rand;
 extern crate rect_iter;
 extern crate regex;
-extern crate serde;
 #[macro_use]
-extern crate serde_derive;
+extern crate serde;
 extern crate serde_json;
 extern crate smallvec;
 #[cfg(feature = "termion")]

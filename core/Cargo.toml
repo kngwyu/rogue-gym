@@ -12,10 +12,12 @@ fixedbitset = "0.1.9"
 log = "0.4.1"
 num-traits = "0.2"
 regex = "1.0"
-serde = "1.0"
-serde_derive = "1.0"
 serde_json = "1.0"
 tuple-map = "0.4"
+
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]
 
 [dependencies.smallvec]
 version = "0.6"

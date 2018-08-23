@@ -1,33 +1,22 @@
-#![feature(use_extern_macros, specialization)]
+#![feature(specialization)]
 
+extern crate numpy;
 extern crate pyo3;
 extern crate rect_iter;
 extern crate rogue_gym_core;
 extern crate rogue_gym_devui as devui;
 
-use pyo3::prelude::*;
-use pyo3::{IntoPyDictPointer, PyBytes, PyList, PyDict};
+use pyo3::{exc, prelude::*, IntoPyDictPointer};
 use rect_iter::GetMut2D;
 use rogue_gym_core::character::player::Status;
 use rogue_gym_core::dungeon::{Positioned, X, Y};
-use rogue_gym_core::error::{GameResult, ResultExt};
+use rogue_gym_core::error::*;
 use rogue_gym_core::{
     input::{Key, KeyMap},
-    GameConfig, Reaction, RunTime, tile::Tile,
+    GameConfig, Reaction, RunTime,
 };
 
-
 type Console = devui::screen::Screen<std::io::Stdout>;
-
-#[pyclass]
-struct GameState {
-    runtime: RunTime,
-    state: PlayerState,
-    config: GameConfig,
-    token: PyToken,
-    prev_actions: Vec<Reaction>,
-    console: Option<Console>,
-}
 
 /// result of the action(map as list of byte array, status as dict)
 type ActionResult<'p> = (&'p PyList, PyObject);
@@ -65,6 +54,16 @@ impl PlayerState {
         let status = unsafe { PyObject::from_owned_ptr(py, status) };
         (map, status)
     }
+}
+
+#[pyclass]
+struct GameState {
+    runtime: RunTime,
+    state: PlayerState,
+    config: GameConfig,
+    token: PyToken,
+    prev_actions: Vec<Reaction>,
+    console: Option<Console>,
 }
 
 #[pymethods]
@@ -114,16 +113,12 @@ impl GameState {
         Ok(self.state.res(self.token.py()))
     }
     fn react(&mut self, input: u8) -> PyResult<ActionResult> {
-        let res = self.runtime.react_to_key(Key::Char(input as char));
-        let res = match res {
-            Ok(ok) => ok,
-            Err(e) => {
-                if e.kind().can_allow() {
-                    return Ok(self.state.res(self.token.py()));
-                }
-                panic!("error in game: {}", e);
-            }
-        };
+        let res = self
+            .runtime
+            .react_to_key(Key::Char(input as char))
+            .map_err(|e| {
+                PyErr::new::<exc::TypeError, _>(format!("error in rogue_gym_core: {}", e))
+            })?;
         res.iter().for_each(|reaction| match reaction {
             Reaction::Redraw => {
                 self.state.draw_map(&self.runtime).unwrap();
@@ -131,6 +126,7 @@ impl GameState {
             Reaction::StatusUpdated => {
                 self.state.status = self.runtime.player_status();
             }
+            // ignore ui transition
             Reaction::UiTransition(_) => {}
             Reaction::Notify(_) => {}
         });

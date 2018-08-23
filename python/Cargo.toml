@@ -8,10 +8,11 @@ name = "rogue_gym_python"
 crate-type = ["cdylib"]
 
 [dependencies]
+numpy = "0.3"
 rect-iter = "0.1.9"
 
 [dependencies.pyo3]
-version = "0.4"
+version = "0.4.1"
 features = ["extension-module"]
 
 [dependencies.rogue-gym-core]
