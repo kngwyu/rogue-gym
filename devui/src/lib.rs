@@ -3,6 +3,7 @@ extern crate clap;
 #[macro_use]
 extern crate failure;
 extern crate fern;
+#[macro_use]
 extern crate log;
 extern crate rogue_gym_core;
 extern crate termion;
@@ -114,6 +115,7 @@ pub fn draw_dungeon<W: Write>(screen: &mut Screen<W>, runtime: &mut RunTime) -> 
     let mut player_pos = None;
     runtime.draw_screen(|Positioned(cd, tile)| {
         if tile.to_byte() == b'@' {
+            debug!("player: {:?}", cd);
             player_pos = Some(cd);
         }
         screen.draw_tile(cd, tile)

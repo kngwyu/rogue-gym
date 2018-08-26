@@ -178,13 +178,13 @@ impl DungeonPath {
 impl From<rogue::Address> for DungeonPath {
     fn from(r: rogue::Address) -> DungeonPath {
         let buf = [r.level as i32, r.cd.x.0, r.cd.y.0, 0];
-        DungeonPath(PathVec::from_buf(buf))
+        DungeonPath(PathVec::from_buf_and_len(buf, 3))
     }
 }
 
 impl From<[i32; 4]> for DungeonPath {
     fn from(buf: [i32; 4]) -> DungeonPath {
-        DungeonPath(PathVec::from_buf(buf))
+        DungeonPath(PathVec::from_buf_and_len(buf, 4))
     }
 }
 
