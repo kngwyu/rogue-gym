@@ -48,7 +48,7 @@ use ui::{MordalKind, MordalMsg, UiState};
 /// it's inteded to construct from json
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct GameConfig {
-    /// screen widt
+    /// screen width
     pub width: i32,
     /// screen height
     pub height: i32,
