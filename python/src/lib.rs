@@ -6,11 +6,13 @@ extern crate rect_iter;
 extern crate rogue_gym_core;
 extern crate rogue_gym_devui as devui;
 
+use numpy::{IntoPyResult, PyArray, PyArrayModule};
 use pyo3::{exc, prelude::*, IntoPyDictPointer};
 use rect_iter::GetMut2D;
 use rogue_gym_core::character::player::Status;
 use rogue_gym_core::dungeon::{Positioned, X, Y};
 use rogue_gym_core::error::*;
+use rogue_gym_core::tile::Symbol;
 use rogue_gym_core::{
     input::{Key, KeyMap},
     GameConfig, Reaction, RunTime,
@@ -142,6 +144,12 @@ impl GameState {
             self.console = Some(console);
         }
         Ok(())
+    }
+    fn numpy_exp(&self) -> PyResult<PyArray<u8>> {
+        let py = self.token.py();
+        let np = PyArrayModule::import(py)?;
+        PyArray::from_vec2(py, &np, &self.state.map)
+            .into_pyresult("[rogue_gym_python::GameState] array cast failed")
     }
 }
 
