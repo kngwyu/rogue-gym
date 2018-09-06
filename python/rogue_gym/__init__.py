@@ -1,5 +1,5 @@
 from gym.envs.registration import register
-
+from .envs import RogueEnv
 register(
     id = 'Rogue-v0',
     entry_point = 'rogue_gym.envs:RogueEnv',

@@ -3,16 +3,13 @@ import sys
 import gym
 import numpy as np
 
-try:
-    from rogue_gym_python._rogue_gym import GameState
-except ImportErroor as e:
-    raise error.DependencyNotInstalled("{}. (Did you install cargo and rust?)")
+from rogue_gym_python._rogue_gym import GameState
 
 
 class RogueEnv(gym.Env):
     metadata = {'render.modes': ['human', 'ascii']}
 
-    def __init__(self, seed = None, config_path = None, console = True):
+    def __init__(self, seed=None, config_path=None):
         """
         @param config_path(string): path to config file
         """
@@ -21,7 +18,7 @@ class RogueEnv(gym.Env):
         if config_path:
             f = open(config_path, 'r')
             config = f.read()
-        self.game = GameState(config, seed, console)
+        self.game = GameState(config, seed)
         self.__cache()
 
     def __cache(self):
@@ -34,7 +31,7 @@ class RogueEnv(gym.Env):
         """reset game state"""
         self.game.reset()
         self.__cache()
-    
+
     def step(self, actions):
         """
         Do action.
@@ -47,7 +44,7 @@ class RogueEnv(gym.Env):
         gold_after = self.cached_state["gold"]
         reward = gold_after - gold_before
         return self.cached_dungeon, self.cached_state, reward
-    
+
     def seed(self, seed):
         """
         Set seed.
@@ -56,37 +53,39 @@ class RogueEnv(gym.Env):
         """
         self.game.set_seed(seed)
 
-    def get_screen(self, is_ascii = True):
+    def get_screen(self, is_ascii=True):
         """
         @param is_ascii(bool): STUB
         """
         return self.cached_dungeon
 
-    def show_screen(self, is_ascii = True):
+    def show_screen(self, is_ascii=True):
         """
         @param is_ascii(bool): STUB
         """
         for b in self.cached_dungeon:
             print(b)
 
-    def render(self, mode = 'human', close = False):
+    def render(self, mode='human', close=False):
         if mode == 'ascii':
             return self.cached_dungeon
         elif mode == 'human':
-            self.game.render_console()
+            self.game.show_screen()
+
+    # Same as data/keymaps/ai.json
+    ACTION_MEANINGS = {
+        "h": "MOVE_LEFT",
+        "j": "MOVE_UP",
+        "k": "MOVE_DOWN",
+        "l": "MOVE_RIGHT",
+        "n": "MOVE_RIGHTDOWN",
+        "b": "MOVE_LEFTDOWN",
+        "u": "MOVE_RIGHTUP",
+        "y": "MOVE_LEFTDOWN",
+        ">": "DOWNSTAIR",
+    }
 
     def get_key_to_action(self):
-        return ACION_MEANINGS
+        return self.ACION_MEANINGS
 
-# Same as data/keymaps/ai.json
-ACTION_MEANINGS = {
-    "h": "MOVE_LEFT",
-    "j": "MOVE_UP",
-    "k": "MOVE_DOWN",
-    "l": "MOVE_RIGHT",
-    "n": "MOVE_RIGHTDOWN",
-    "b": "MOVE_LEFTDOWN",
-    "u": "MOVE_RIGHTUP",
-    "y": "MOVE_LEFTDOWN",
-    ">": "DOWNSTAIR",
-}
+

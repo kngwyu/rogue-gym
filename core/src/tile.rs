@@ -61,3 +61,7 @@ impl Symbol {
         }
     }
 }
+
+pub fn tile_to_sym(t: u8) -> Option<u8> {
+    Symbol::from_tile(Tile(t)).map(|s| s.0)
+}

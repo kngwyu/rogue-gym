@@ -1,10 +1,8 @@
 #![feature(specialization)]
-
 extern crate numpy;
 extern crate pyo3;
 extern crate rect_iter;
 extern crate rogue_gym_core;
-extern crate rogue_gym_devui as devui;
 
 use numpy::{IntoPyResult, PyArray, PyArrayModule};
 use pyo3::{exc, prelude::*, IntoPyDictPointer};
@@ -12,18 +10,16 @@ use rect_iter::GetMut2D;
 use rogue_gym_core::character::player::Status;
 use rogue_gym_core::dungeon::{Positioned, X, Y};
 use rogue_gym_core::error::*;
-use rogue_gym_core::tile::Symbol;
+use rogue_gym_core::tile;
 use rogue_gym_core::{
     input::{Key, KeyMap},
     GameConfig, Reaction, RunTime,
 };
 
-type Console = devui::screen::Screen<std::io::Stdout>;
-
 /// result of the action(map as list of byte array, status as dict)
 type ActionResult<'p> = (&'p PyList, PyObject);
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 struct PlayerState {
     map: Vec<Vec<u8>>,
     status: Status,
@@ -31,8 +27,9 @@ struct PlayerState {
 
 impl PlayerState {
     fn new(w: X, h: Y) -> Self {
+        let (w, h) = (w.0 as usize, h.0 as usize);
         PlayerState {
-            map: vec![vec![b' '; w.0 as usize]; h.0 as usize],
+            map: vec![vec![b' '; w]; h],
             status: Status::default(),
         }
     }
@@ -63,41 +60,29 @@ struct GameState {
     runtime: RunTime,
     state: PlayerState,
     config: GameConfig,
-    token: PyToken,
     prev_actions: Vec<Reaction>,
-    console: Option<Console>,
+    token: PyToken,
 }
 
 #[pymethods]
 impl GameState {
     #[new]
-    fn __new__(
-        obj: &PyRawObject,
-        config: Option<String>,
-        seed: Option<u64>,
-        console: bool,
-    ) -> PyResult<()> {
+    fn __new__(obj: &PyRawObject, config: Option<String>, seed: Option<u64>) -> PyResult<()> {
         let mut config = config.map_or_else(GameConfig::default, |cfg| {
             GameConfig::from_json(&cfg).unwrap()
         });
         config.seed = seed.map(|u| u as u128);
         let mut runtime = config.clone().build().unwrap();
         let (w, h) = runtime.screen_size();
-        let mut state = PlayerState::new(w, h);
         runtime.keymap = KeyMap::ai();
+        let mut state = PlayerState::new(w, h);
         state.update(&mut runtime).unwrap();
-        let console = if console {
-            Some(Console::from_stdout(w.0, h.0).unwrap())
-        } else {
-            None
-        };
         obj.init(|token| GameState {
             runtime,
             state,
             config,
-            token,
             prev_actions: vec![Reaction::Redraw],
-            console,
+            token,
         })
     }
     fn set_seed(&mut self, seed: u64) -> PyResult<()> {
@@ -135,20 +120,19 @@ impl GameState {
         self.prev_actions = res;
         Ok(self.state.res(self.token.py()))
     }
-    fn render_console(&mut self) -> PyResult<()> {
-        if let Some(mut console) = self.console.take() {
-            let actions = self.prev_actions.clone();
-            actions.into_iter().for_each(|r| {
-                devui::process_reaction(&mut console, &mut self.runtime, r).unwrap();
-            });
-            self.console = Some(console);
-        }
-        Ok(())
-    }
     fn numpy_exp(&self) -> PyResult<PyArray<u8>> {
         let py = self.token.py();
         let np = PyArrayModule::import(py)?;
-        PyArray::from_vec2(py, &np, &self.state.map)
+        let sym_map: Vec<Vec<_>> = self
+            .state
+            .map
+            .iter()
+            .map(|v| {
+                v.iter()
+                    .map(|&t| tile::tile_to_sym(t).expect("Invalide Tile"))
+                    .collect()
+            }).collect();
+        PyArray::from_vec2(py, &np, &sym_map)
             .into_pyresult("[rogue_gym_python::GameState] array cast failed")
     }
 }
