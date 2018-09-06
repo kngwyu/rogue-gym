@@ -5,19 +5,19 @@ extern crate rect_iter;
 extern crate rogue_gym_core;
 
 use numpy::{IntoPyResult, PyArray, PyArrayModule};
-use pyo3::{exc, prelude::*, IntoPyDictPointer};
+use pyo3::{exc, prelude::*};
 use rect_iter::GetMut2D;
 use rogue_gym_core::character::player::Status;
 use rogue_gym_core::dungeon::{Positioned, X, Y};
 use rogue_gym_core::error::*;
-use rogue_gym_core::tile;
+use rogue_gym_core::tile::{self, construct_symbol_map, Tile};
 use rogue_gym_core::{
     input::{Key, KeyMap},
     GameConfig, Reaction, RunTime,
 };
 
 /// result of the action(map as list of byte array, status as dict)
-type ActionResult<'p> = (&'p PyList, PyObject);
+type ActionResult<'p> = (&'p PyList, &'p PyDict, Option<PyArray<f32>>);
 
 #[derive(Debug)]
 struct PlayerState {
@@ -46,12 +46,20 @@ impl PlayerState {
             Ok(())
         })
     }
-    fn res<'p>(&self, py: Python<'p>) -> ActionResult<'p> {
+    fn res<'p>(&self, py: Python<'p>) -> PyResult<ActionResult<'p>> {
         let map: Vec<_> = self.map.iter().map(|v| PyBytes::new(py, &v)).collect();
         let map = PyList::new(py, &map);
-        let status = self.status.to_vec().into_dict_ptr(py);
-        let status = unsafe { PyObject::from_owned_ptr(py, status) };
-        (map, status)
+        let status = PyDict::new(py);
+        for (k, v) in self.status.to_vec() {
+            status.set_item(k, v)?;
+        }
+        let np = PyArrayModule::import(py)?;
+        let sym_map = construct_symbol_map(&self.map).and_then(|mut v| {
+            let (w, h) = (v[0][0].len(), v[0].len());
+            v.extend(self.status.to_image(w, h));
+            PyArray::from_vec3(py, &np, &v).ok()
+        });
+        Ok((map, status, sym_map))
     }
 }
 
@@ -97,7 +105,7 @@ impl GameState {
         Ok(())
     }
     fn prev(&self) -> PyResult<ActionResult> {
-        Ok(self.state.res(self.token.py()))
+        self.state.res(self.token.py())
     }
     fn react(&mut self, input: u8) -> PyResult<ActionResult> {
         let res = self
@@ -118,7 +126,7 @@ impl GameState {
             Reaction::Notify(_) => {}
         });
         self.prev_actions = res;
-        Ok(self.state.res(self.token.py()))
+        self.state.res(self.token.py())
     }
     fn numpy_exp(&self) -> PyResult<PyArray<u8>> {
         let py = self.token.py();

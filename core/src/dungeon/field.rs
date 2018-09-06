@@ -4,6 +4,7 @@ use num_traits::ToPrimitive;
 use rect_iter::{Get2D, GetMut2D, IndexError, RectRange};
 use std::fmt;
 use tile::{Drawable, Tile};
+use tuple_map::TupleMap2;
 
 /// Generic representation of Cell
 #[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
@@ -113,19 +114,17 @@ bitflags! {
 /// generic representation of Field
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Field<S> {
-    inner: Vec<Vec<Cell<S>>>,
+    inner: Vec<Cell<S>>,
+    width: X,
+    height: Y,
 }
 
 impl<S> Field<S> {
     pub fn size(&self) -> Option<RectRange<i32>> {
-        let y = self.inner.len();
-        let x = self.inner.get(0)?.len();
-        RectRange::zero_start(x as i32, y as i32)
+        RectRange::zero_start(self.width.0, self.height.0)
     }
     pub fn size_ytrimed(&self) -> Option<RectRange<i32>> {
-        let y = self.inner.len();
-        let x = self.inner.get(0)?.len();
-        RectRange::from_corners((0, 1), (x as i32, y as i32 - 1))
+        RectRange::from_corners((0, 1), (self.width.0, self.height.0))
     }
 }
 
@@ -133,7 +132,9 @@ impl<S: Clone> Field<S> {
     pub fn new(width: X, height: Y, init: Cell<S>) -> Self {
         let (w, h) = (width.0 as usize, height.0 as usize);
         Field {
-            inner: vec![vec![init; w]; h],
+            inner: vec![init; w * h],
+            width,
+            height,
         }
     }
 }
@@ -141,7 +142,15 @@ impl<S: Clone> Field<S> {
 impl<S> Get2D for Field<S> {
     type Item = Cell<S>;
     fn try_get_xy<T: ToPrimitive>(&self, x: T, y: T) -> Result<&Self::Item, IndexError> {
-        self.inner.try_get_xy(x, y)
+        let (x, y) = (x, y).map(|n| n.to_usize().unwrap());
+        if x > self.width.0 as usize {
+            return Err(IndexError::X(x as i64));
+        }
+        if y > self.height.0 as usize {
+            return Err(IndexError::Y(y as i64));
+        }
+        let id = y * self.width.0 as usize + x;
+        Ok(&self.inner[id])
     }
 }
 
@@ -151,14 +160,23 @@ impl<S> GetMut2D for Field<S> {
         x: T,
         y: T,
     ) -> Result<&mut Self::Item, IndexError> {
-        self.inner.try_get_mut_xy(x, y)
+        let (x, y) = (x, y).map(|n| n.to_usize().unwrap());
+        if x > self.width.0 as usize {
+            return Err(IndexError::X(x as i64));
+        }
+        if y > self.height.0 as usize {
+            return Err(IndexError::Y(y as i64));
+        }
+        let id = y * self.width.0 as usize + x;
+        Ok(&mut self.inner[id])
     }
 }
 
 impl<S: Drawable> fmt::Display for Field<S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for v in &self.inner {
-            for cell in v {
+        for y in 0..self.height.0 as usize {
+            for x in 0..self.width.0 as usize {
+                let cell = &self.inner[y * self.width.0 as usize + x];
                 write!(f, "{}", cell.surface.tile())?;
             }
             writeln!(f)?;

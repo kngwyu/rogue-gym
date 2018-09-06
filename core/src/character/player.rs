@@ -230,6 +230,19 @@ impl Status {
             ("hunger", self.hunger_level.to_u32()),
         ]
     }
+    pub fn to_image(&self, w: usize, h: usize) -> Vec<Vec<Vec<f32>>> {
+        let mut res = vec![];
+        let cst = |v| vec![vec![v as f32; w]; h];
+        res.push(cst(self.dungeon_level));
+        res.push(cst(self.gold));
+        res.push(cst(self.hp.current.0 as u32));
+        res.push(cst(self.strength.current.0 as u32));
+        res.push(cst(self.defense.0 as u32));
+        res.push(cst(self.player_level));
+        res.push(cst(self.exp.0));
+        res.push(cst(self.hunger_level.to_u32()));
+        res
+    }
 }
 
 impl fmt::Display for Status {
