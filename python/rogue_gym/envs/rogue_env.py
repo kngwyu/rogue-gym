@@ -91,7 +91,7 @@ class RogueEnv(gym.Env):
         """
         @param is_ascii(bool): STUB
         """
-        return self.result
+        return self.result.dungeon
 
     def show_screen(self, is_ascii=True):
         """
