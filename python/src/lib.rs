@@ -10,14 +10,14 @@ use rect_iter::GetMut2D;
 use rogue_gym_core::character::player::Status;
 use rogue_gym_core::dungeon::{Positioned, X, Y};
 use rogue_gym_core::error::*;
-use rogue_gym_core::tile::{self, construct_symbol_map, Tile};
+use rogue_gym_core::tile::{self, construct_symbol_map};
 use rogue_gym_core::{
     input::{Key, KeyMap},
     GameConfig, Reaction, RunTime,
 };
 
 /// result of the action(map as list of byte array, status as dict)
-type ActionResult<'p> = (&'p PyList, &'p PyDict, Option<PyArray<f32>>);
+type ActionResult<'p> = (&'p PyList, &'p PyDict, Py<PyString>, Option<PyArray<f32>>);
 
 #[derive(Debug)]
 struct PlayerState {
@@ -53,13 +53,14 @@ impl PlayerState {
         for (k, v) in self.status.to_vec() {
             status.set_item(k, v)?;
         }
+        let status_str = PyString::new(py, &format!("{}", self.status));
         let np = PyArrayModule::import(py)?;
         let sym_map = construct_symbol_map(&self.map).and_then(|mut v| {
             let (w, h) = (v[0][0].len(), v[0].len());
             v.extend(self.status.to_image(w, h));
             PyArray::from_vec3(py, &np, &v).ok()
         });
-        Ok((map, status, sym_map))
+        Ok((map, status, status_str, sym_map))
     }
 }
 
