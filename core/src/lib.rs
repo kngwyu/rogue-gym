@@ -138,7 +138,7 @@ impl GameConfig {
             .chain_err(|| ERR_STR)?;
         // TODO: invalid checking
         let mut player = self.player.build();
-        item.init_player_items(&mut player.items, &player.config.init_items)
+        item.init_player_items(&mut player.itembox, &player.config.init_items)
             .chain_err(|| ERR_STR)?;
         actions::new_level(&game_info, &mut dungeon, &mut item, &mut player, true)
             .chain_err(|| ERR_STR)?;
@@ -155,7 +155,6 @@ impl GameConfig {
 }
 
 /// API entry point of rogue core
-#[derive(Clone, Serialize, Deserialize)]
 pub struct RunTime {
     game_info: GameInfo,
     config: GlobalConfig,
@@ -194,9 +193,6 @@ impl RunTime {
             if self.player.pos == path {
                 return drawer(Positioned(cd, self.player.tile()));
             };
-            if let Some(item) = self.item.get_by_path(&path) {
-                return drawer(Positioned(cd, item.tile()));
-            }
             Ok(())
         })
     }
@@ -258,17 +254,10 @@ impl RunTime {
         self.player.fill_status(&mut status);
         status.gold = self
             .player
-            .items
-            .ids()
-            .filter_map(|&id| {
-                let item = self.item.get(id)?;
-                if item.kind == ItemKind::Gold {
-                    Some(item.how_many.0)
-                } else {
-                    None
-                }
-            }).nth(0)
-            .unwrap_or(0);
+            .itembox
+            .tokens()
+            .find(|token| token.get().kind == ItemKind::Gold)
+            .map_or(0, |token| token.get().how_many.0);
         status.dungeon_level = self.dungeon.level();
         status
     }

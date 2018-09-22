@@ -1,6 +1,6 @@
 use super::{Defense, Exp, HitPoint, Maxed, Strength};
 use dungeon::{Direction, DungeonPath};
-use item::{food::Food, pack::ItemPack, Item, ItemKind};
+use item::{food::Food, itembox::ItemBox, Item, ItemKind};
 use std::fmt;
 use tile::{Drawable, Tile};
 /// Player configuration
@@ -63,14 +63,14 @@ impl Config {
         Player {
             pos: DungeonPath::default(),
             status,
-            items: ItemPack::from_max_len(self.max_items),
+            itembox: ItemBox::with_capacity(self.max_items),
             config: self,
         }
     }
 }
 
 /// Representation of player
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug)]
 pub struct Player {
     /// player position
     crate pos: DungeonPath,
@@ -78,8 +78,8 @@ pub struct Player {
     crate status: StatusInner,
     /// configuration
     crate config: Config,
-    /// items
-    crate items: ItemPack,
+    /// item box
+    crate itembox: ItemBox,
 }
 
 impl Player {

@@ -5,7 +5,7 @@ mod rogue;
 pub use self::coord::{Coord, Direction, Positioned, X, Y};
 pub use self::field::{Cell, CellAttr, Field};
 use error::*;
-use item::ItemHandler;
+use item::{ItemHandler, ItemToken};
 use smallvec::SmallVec;
 use tile::Tile;
 use {GameInfo, GameMsg, GlobalConfig};
@@ -159,6 +159,12 @@ impl Dungeon {
             }
             _ => unimplemented!(),
         }
+    }
+    crate fn get_item(&self, path: &DungeonPath) -> Option<&ItemToken> {
+        None
+    }
+    crate fn remove_item(&mut self, path: &DungeonPath) -> Option<ItemToken> {
+        None
     }
 }
 

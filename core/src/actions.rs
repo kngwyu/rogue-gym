@@ -3,7 +3,7 @@
 use character::{Action, Player};
 use dungeon::{Direction, Dungeon};
 use error::*;
-use item::{pack::PackEntry, ItemHandler};
+use item::{itembox::Entry as ItemEntry, ItemHandler, ItemToken};
 use std::iter;
 use {GameInfo, GameMsg, Reaction};
 
@@ -27,7 +27,7 @@ crate fn process_action(
         Action::UpStair => {
             Err(ErrorId::Unimplemented.into_with(|| "UpStair Command is unimplemented"))
         }
-        Action::Move(d) => move_player(d, dungeon, item, player),
+        Action::Move(d) => move_player(d, dungeon, player),
         Action::Search => search(dungeon, player),
     }
 }
@@ -53,7 +53,6 @@ crate fn new_level(
 fn move_player(
     direction: Direction,
     dungeon: &mut Dungeon,
-    item: &mut ItemHandler,
     player: &mut Player,
 ) -> GameResult<Vec<Reaction>> {
     if !dungeon.can_move_player(&player.pos, direction) {
@@ -65,7 +64,7 @@ fn move_player(
     player.pos = new_pos;
     player.running(true);
     let mut res = vec![Reaction::Redraw];
-    if let Some(msg) = get_item(dungeon, item, player).chain_err(|| "in actions::move_player")? {
+    if let Some(msg) = get_item(dungeon, player).chain_err(|| "in actions::move_player")? {
         res.push(Reaction::Notify(msg));
         res.push(Reaction::StatusUpdated);
     }
@@ -80,11 +79,7 @@ fn search(dungeon: &mut Dungeon, player: &mut Player) -> GameResult<Vec<Reaction
     })
 }
 
-fn get_item(
-    dungeon: &mut Dungeon,
-    item_handle: &mut ItemHandler,
-    player: &mut Player,
-) -> GameResult<Option<GameMsg>> {
+fn get_item(dungeon: &mut Dungeon, player: &mut Player) -> GameResult<Option<GameMsg>> {
     macro_rules! try_or_ok {
         ($res:expr) => {
             match $res {
@@ -93,37 +88,20 @@ fn get_item(
             }
         };
     }
-    let placed_id = try_or_ok!(item_handle.get_placed_id(&player.pos));
-    let pack_entry = try_or_ok!(player.items.entry(placed_id, item_handle));
-    let show_id = match pack_entry {
-        PackEntry::Insert(player_entry) => {
-            player_entry.exec(&mut player.items, placed_id);
-            placed_id
-        }
-        PackEntry::Merge(player_entry) => {
-            let item = match item_handle.remove(placed_id) {
-                Some(i) => i,
-                None => {
-                    return Err(ErrorId::MaybeBug
-                        .into_with(|| "[actions::get_item] Invalid ItemId in player's pack"))
-                }
-            };
-            player_entry
-                .exec(item_handle, item)
-                .chain_err(|| "in actions::get_item")?;
-            player_entry.id()
+    let got_item = {
+        let item_ref = try_or_ok!(dungeon.get_item(&player.pos));
+        let pack_entry = try_or_ok!(player.itembox.entry(item_ref));
+        match pack_entry {
+            ItemEntry::Insert(player_entry) => player_entry.exec(ItemToken::clone(item_ref)),
+            ItemEntry::Merge(player_entry) => player_entry.exec(item_ref.get().clone()),
         }
     };
-
     if !dungeon.remove_object(&player.pos, false) {
         warn!("[actions::get_item] couldn't remove object!!!")
     }
-    item_handle.remove_from_place(&player.pos);
-    let item = item_handle.get(show_id).ok_or_else(|| {
-        ErrorId::MaybeBug.into_with(|| "[actions::get_item] No item for placed_id(bug)")
-    })?;
+    //dungeon.remove_from_place(&player.pos);
     Ok(Some(GameMsg::GotItem {
-        kind: item.kind.clone(),
-        num: item.how_many.0,
+        kind: got_item.kind.clone(),
+        num: got_item.how_many.0,
     }))
 }

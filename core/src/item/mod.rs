@@ -1,15 +1,17 @@
 //! module for item
-
 pub mod food;
 mod gold;
-pub mod pack;
+pub mod itembox;
 
 use self::food::Food;
-use self::pack::ItemPack;
+use self::itembox::ItemBox;
 use dungeon::DungeonPath;
 use error::*;
 use rng::RngHandle;
+use std::cell::UnsafeCell;
 use std::collections::BTreeMap;
+use std::ops::{Deref, DerefMut};
+use std::rc::{Rc, Weak};
 use tile::{Drawable, Tile};
 /// Item configuration
 #[derive(Clone, Debug, Default, Serialize, Deserialize, Eq, PartialEq)]
@@ -144,14 +146,54 @@ impl Drawable for Item {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct ItemToken {
+    inner: Rc<UnsafeCell<Item>>,
+    id: ItemId,
+}
+
+impl Deref for ItemToken {
+    type Target = Item;
+    fn deref(&self) -> &Item {
+        self.get()
+    }
+}
+
+impl DerefMut for ItemToken {
+    fn deref_mut(&mut self) -> &mut Item {
+        self.get_mut()
+    }
+}
+
+impl ItemToken {
+    pub fn clone(&self) -> ItemToken {
+        ItemToken {
+            inner: Rc::clone(&self.inner),
+            id: self.id,
+        }
+    }
+    #[inline(always)]
+    pub fn get(&self) -> &Item {
+        unsafe { &*UnsafeCell::get(&self.inner) }
+    }
+    #[inline(always)]
+    pub fn get_mut(&mut self) -> &mut Item {
+        unsafe { &mut *UnsafeCell::get(&self.inner) }
+    }
+    pub fn get_cloned(&self) -> Item {
+        self.get().clone()
+    }
+    /// Returns the unique id of item
+    pub fn id(&self) -> ItemId {
+        self.id.clone()
+    }
+}
+
 /// generate and management all items
-#[derive(Clone, Serialize, Deserialize)]
 pub struct ItemHandler {
     /// stores all items in the game
-    items: BTreeMap<ItemId, Item>,
-    /// items placed in the dungeon
-    // we use BtreeMap here, because we can expect locality of access
-    placed_items: BTreeMap<DungeonPath, ItemId>,
+    /// only for save/load
+    items: BTreeMap<ItemId, Weak<UnsafeCell<Item>>>,
     config: Config,
     rng: RngHandle,
     next_id: ItemId,
@@ -162,31 +204,13 @@ impl ItemHandler {
     pub fn new(config: Config, seed: u128) -> Self {
         ItemHandler {
             items: BTreeMap::new(),
-            placed_items: BTreeMap::new(),
             config,
             rng: RngHandle::from_seed(seed),
             next_id: ItemId(0),
         }
     }
-    /// get reference to item by ItemId
-    pub fn get_mut(&mut self, id: ItemId) -> Option<&mut Item> {
-        self.items.get_mut(&id)
-    }
-    /// get reference to item by ItemId
-    pub fn get(&self, id: ItemId) -> Option<&Item> {
-        self.items.get(&id)
-    }
-    /// get reference to item by DungeonPath
-    pub fn get_by_path(&self, path: &DungeonPath) -> Option<&Item> {
-        let id = self.placed_items.get(path)?;
-        self.items.get(id)
-    }
-    /// get entry to an item in dungeon
-    pub fn get_placed_id(&self, path: &DungeonPath) -> Option<ItemId> {
-        self.placed_items.get(path).cloned()
-    }
     /// generate and register an item
-    fn gen_item<F>(&mut self, itemgen: F) -> ItemId
+    fn gen_item<F>(&mut self, itemgen: F) -> ItemToken
     where
         F: FnOnce() -> Item,
     {
@@ -194,12 +218,10 @@ impl ItemHandler {
         let id = self.next_id;
         debug!("[gen_item] now new item {:?} is generated", item);
         // register the generated item
-        self.items.insert(id, item);
+        let item_rc = Rc::new(UnsafeCell::new(item));
+        self.items.insert(id, Rc::downgrade(&item_rc));
         self.next_id.increment();
-        id
-    }
-    pub fn set_to_path(&mut self, place: DungeonPath, id: ItemId) {
-        self.placed_items.insert(place, id);
+        ItemToken { inner: item_rc, id }
     }
     /// Sets up gold for 1 room
     pub fn setup_gold<F>(&mut self, level: u32, mut empty_cell: F) -> GameResult<()>
@@ -209,12 +231,12 @@ impl ItemHandler {
         if let Some(num) = self.config.gold.gen(&mut self.rng, level) {
             let item_id = self.gen_item(|| ItemKind::Gold.numbered(num).many());
             let place = empty_cell().chain_err(|| "ItemHandler::setup_gold")?;
-            self.set_to_path(place, item_id);
+            //self.set_to_path(place, item_id);
         }
         Ok(())
     }
     /// Sets up player items
-    pub fn init_player_items(&mut self, pack: &mut ItemPack, items: &[Item]) -> GameResult<()> {
+    pub fn init_player_items(&mut self, pack: &mut ItemBox, items: &[Item]) -> GameResult<()> {
         items
             .iter()
             .try_for_each(|item| {
@@ -226,11 +248,5 @@ impl ItemHandler {
                         .into_with(|| format!("You can't add {} items", items.len())))
                 }
             }).chain_err(|| "in ItemHandler::init_player_items")
-    }
-    pub fn remove(&mut self, id: ItemId) -> Option<Item> {
-        self.items.remove(&id)
-    }
-    pub fn remove_from_place(&mut self, path: &DungeonPath) -> Option<ItemId> {
-        self.placed_items.remove(path)
     }
 }
