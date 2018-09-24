@@ -81,7 +81,7 @@ fn search(dungeon: &mut Dungeon, player: &mut Player) -> GameResult<Vec<Reaction
 
 fn get_item(dungeon: &mut Dungeon, player: &mut Player) -> GameResult<Option<GameMsg>> {
     macro_rules! try_or_ok {
-        ($res:expr) => {
+        ($res: expr) => {
             match $res {
                 Some(v) => v,
                 None => return Ok(None),
@@ -96,7 +96,7 @@ fn get_item(dungeon: &mut Dungeon, player: &mut Player) -> GameResult<Option<Gam
             ItemEntry::Merge(player_entry) => player_entry.exec(item_ref.get().clone()),
         }
     };
-    if !dungeon.remove_object(&player.pos, false) {
+    if dungeon.remove_item(&player.pos).is_none() {
         warn!("[actions::get_item] couldn't remove object!!!")
     }
     //dungeon.remove_from_place(&player.pos);

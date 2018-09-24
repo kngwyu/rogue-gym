@@ -224,16 +224,9 @@ impl ItemHandler {
         ItemToken { inner: item_rc, id }
     }
     /// Sets up gold for 1 room
-    pub fn setup_gold<F>(&mut self, level: u32, mut empty_cell: F) -> GameResult<()>
-    where
-        F: FnMut() -> GameResult<DungeonPath>,
-    {
-        if let Some(num) = self.config.gold.gen(&mut self.rng, level) {
-            let item_id = self.gen_item(|| ItemKind::Gold.numbered(num).many());
-            let place = empty_cell().chain_err(|| "ItemHandler::setup_gold")?;
-            //self.set_to_path(place, item_id);
-        }
-        Ok(())
+    pub fn setup_gold(&mut self, level: u32) -> Option<ItemToken> {
+        let num = self.config.gold.gen(&mut self.rng, level)?;
+        Some(self.gen_item(|| ItemKind::Gold.numbered(num).many()))
     }
     /// Sets up player items
     pub fn init_player_items(&mut self, pack: &mut ItemBox, items: &[Item]) -> GameResult<()> {

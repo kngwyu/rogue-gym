@@ -7,7 +7,7 @@ use self::floor::Floor;
 pub use self::rooms::{Room, RoomKind};
 use super::{Coord, Direction, DungeonPath, Positioned, X, Y};
 use error::*;
-use item::ItemHandler;
+use item::{ItemHandler, ItemToken};
 use rect_iter::{Get2D, GetMut2D, RectRange};
 use rng::RngHandle;
 use tile::{Drawable, Tile};
@@ -177,7 +177,7 @@ impl Surface {
 }
 
 /// representation of rogue dungeon
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone)]
 pub struct Dungeon {
     /// current level
     pub level: u32,
@@ -249,9 +249,7 @@ impl Dungeon {
         // setup gold
         let set_gold = !game_info.is_cleared || level >= self.max_level;
         debug!("[Dungeon::new_level] set_gold: {}", set_gold);
-        floor
-            .setup_items(level, item_handle, set_gold, &mut self.rng)
-            .chain_err(|| ERR_STR)?;
+        floor.setup_items(level, item_handle, set_gold, &mut self.rng);
         // place traps (STUB)        // place stair
         floor.setup_stair(&mut self.rng).chain_err(|| ERR_STR)?;
         if !self.config_global.hide_dungeon {
@@ -328,7 +326,6 @@ impl Dungeon {
             .select_cell(&mut self.rng, is_character)
             .map(|cd| [self.level as i32, cd.x.0, cd.y.0].into())
     }
-
     crate fn remove_object(&mut self, address: Address, is_character: bool) -> bool {
         self.current_floor.remove_obj(address.cd, is_character)
     }
@@ -344,11 +341,25 @@ impl Dungeon {
             .size_ytrimed()
             .ok_or_else(|| ErrorId::MaybeBug.into_with(|| ERR_STR))?;
         range.into_iter().try_for_each(|cd| {
-            let cell = self.current_floor.field.try_get_p(cd)?;
             let cd = Coord::from(cd);
-            let tile = cell.tile();
-            drawer(Positioned(cd, tile))
+            let cell = self.current_floor.field.try_get_p(cd)?;
+            drawer(Positioned(cd, cell.tile()))
         })
+    }
+    crate fn get_item(&self, addr: Address) -> Option<&ItemToken> {
+        if addr.level != self.level {
+            return None;
+        }
+        self.current_floor.items.get(&addr.cd)
+    }
+    crate fn remove_item(&mut self, addr: Address) -> Option<ItemToken> {
+        if addr.level != self.level {
+            return None;
+        }
+        if !self.current_floor.remove_obj(addr.cd, false) {
+            return None;
+        }
+        self.current_floor.items.remove(&addr.cd)
     }
 }
 

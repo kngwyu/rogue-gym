@@ -193,6 +193,9 @@ impl RunTime {
             if self.player.pos == path {
                 return drawer(Positioned(cd, self.player.tile()));
             };
+            if let Some(item) = self.dungeon.get_item(&path) {
+                return drawer(Positioned(cd, item.tile()));
+            }
             Ok(())
         })
     }

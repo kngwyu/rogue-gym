@@ -28,13 +28,18 @@ fn main() {
 
 fn main_() -> GameResult<()> {
     let args = parse_args();
-    let config = get_config(&args)?;
+    let (config, is_default) = get_config(&args)?;
     setup_logger(&args)?;
-    play_game(config)
+    play_game(config, is_default)
 }
 
-fn get_config(args: &ArgMatches) -> GameResult<GameConfig> {
-    let file_name = args.value_of("config").expect("No config file");
+fn get_config(args: &ArgMatches) -> GameResult<(GameConfig, bool)> {
+    let file_name = match args.value_of("config") {
+        Some(fname) => fname,
+        None => {
+            return Ok((GameConfig::default(), true));
+        }
+    };
     if !file_name.ends_with(".json") {
         return Err(
             ErrorID::InvalidArg.into_with(|| "Only .json file is allowed as configuration file")
@@ -44,7 +49,7 @@ fn get_config(args: &ArgMatches) -> GameResult<GameConfig> {
     let mut buf = String::new();
     file.read_to_string(&mut buf)
         .into_chained(|| "get_config")?;
-    GameConfig::from_json(&buf)
+    Ok((GameConfig::from_json(&buf)?, false))
 }
 
 fn parse_args<'a>() -> ArgMatches<'a> {
@@ -58,7 +63,6 @@ fn parse_args<'a>() -> ArgMatches<'a> {
                 .long("config")
                 .value_name("FILE")
                 .help("Sets your config json file")
-                .required(true)
                 .takes_value(true),
         ).arg(
             clap::Arg::with_name("log")

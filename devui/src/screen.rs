@@ -107,8 +107,17 @@ impl<T: Write> Screen<T> {
             clear::All,
             cursor::Goto(1, 1),
             cursor::Goto(1, 2)
-        ).into_chained(|| "in Screen::from_stdout")?;
-        self.flush().chain_err(|| "in Screen::from_stdout")
+        ).into_chained(|| "in Screen::welcome")?;
+        self.flush().chain_err(|| "in Screen::welcome")
+    }
+
+    pub fn default_config(&mut self) -> GameResult<()> {
+        write!(
+            self.term,
+            "{} No config file is specified, use default settings",
+            cursor::Goto(1, 3),
+        ).into_chained(|| "in Screen::default_config")?;
+        self.flush().chain_err(|| "in Screen::default_config")
     }
 
     pub fn status(&mut self, status: player::Status) -> GameResult<()> {

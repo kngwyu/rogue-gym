@@ -4,14 +4,14 @@ use dungeon::{Cell, CellAttr, Coord, Direction, Field, Positioned, X, Y};
 use enum_iterator::IntoEnumIterator;
 use error::*;
 use fenwick::FenwickSet;
-use item::ItemHandler;
+use item::{ItemHandler, ItemToken};
 use rect_iter::{Get2D, GetMut2D};
 use rng::RngHandle;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use GameMsg;
 
 /// representation of 'floor'
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default)]
 pub struct Floor {
     /// rooms
     pub rooms: Vec<Room>,
@@ -21,6 +21,8 @@ pub struct Floor {
     pub field: Field<Surface>,
     /// ids of rooms which are not empty
     pub non_empty_rooms: FenwickSet,
+    /// items
+    pub items: HashMap<Coord, ItemToken>,
 }
 
 impl Floor {
@@ -34,6 +36,7 @@ impl Floor {
             doors,
             field,
             non_empty_rooms: FenwickSet::from_range(0..num_non_empty),
+            items: Default::default(),
         }
     }
 
@@ -99,23 +102,22 @@ impl Floor {
         item_handle: &mut ItemHandler,
         set_gold: bool,
         rng: &mut RngHandle,
-    ) -> GameResult<()> {
+    ) {
         // setup gold
+        let mut res = HashMap::new();
         if set_gold {
-            self.rooms
+            for (cd, room) in self
+                .rooms
                 .iter_mut()
-                .filter(|room| !room.is_empty())
-                .try_for_each(|room| {
-                    item_handle.setup_gold(level, || {
-                        let cd = room.select_cell(rng, false).ok_or_else(|| {
-                            ErrorId::MaybeBug.into_with(|| "rogue::Dungeon::setup_items")
-                        })?;
-                        room.fill_cell(cd, false);
-                        Ok([level as i32, cd.x.0, cd.y.0].into())
-                    })
-                })?;
+                .filter_map(|room| Some((room.select_cell(rng, false)?, room)))
+            {
+                if let Some(gold) = item_handle.setup_gold(level) {
+                    room.fill_cell(cd, false);
+                    res.insert(cd, gold);
+                }
+            }
         }
-        Ok(())
+        self.items = res;
     }
 
     /// set stair
@@ -293,7 +295,7 @@ impl Floor {
         impl_() == Some(true)
     }
 
-    /// select an empty cell randomly
+    /// select an empty cell from rooms randomly
     crate fn select_cell(&self, rng: &mut RngHandle, is_character: bool) -> Option<Coord> {
         let mut candidates = self.non_empty_rooms.clone();
         while candidates.len() > 0 {

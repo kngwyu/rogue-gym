@@ -8,7 +8,7 @@ Highly customizable rogue-like implmentation for AI expmeriments
 ```
 git clone https://github.com/kngwyu/rogue-gym.git
 cd rogue-gym/rogue-gym-devui
-cargo run --release -- --config ../data/config-minimum.json
+cargo run --release
 ```
 
 # Python API

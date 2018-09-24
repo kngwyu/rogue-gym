@@ -48,7 +48,7 @@ impl DungeonStyle {
 }
 
 /// Dungeon Implementation
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone)]
 pub enum Dungeon {
     Rogue(Box<rogue::Dungeon>),
     /// not implemented now
@@ -161,10 +161,22 @@ impl Dungeon {
         }
     }
     crate fn get_item(&self, path: &DungeonPath) -> Option<&ItemToken> {
-        None
+        match self {
+            Dungeon::Rogue(dungeon) => {
+                let address = rogue::Address::from_path(path);
+                dungeon.get_item(address)
+            }
+            _ => unimplemented!(),
+        }
     }
     crate fn remove_item(&mut self, path: &DungeonPath) -> Option<ItemToken> {
-        None
+        match self {
+            Dungeon::Rogue(dungeon) => {
+                let address = rogue::Address::from_path(path);
+                dungeon.remove_item(address)
+            }
+            _ => unimplemented!(),
+        }
     }
 }
 
