@@ -243,10 +243,7 @@ impl RunTime {
     pub fn react_to_key(&mut self, key: Key) -> GameResult<Vec<Reaction>> {
         match self.keymap.get(key) {
             Some(i) => self.react_to_input(i),
-            None => {
-                Err(ErrorId::InvalidInput(key)
-                    .into_with(|| "rogue_gym_core::RunTime::react_to_key"))
-            }
+            None => Err(ErrorId::InvalidInput(key).into()),
         }
     }
     pub fn screen_size(&self) -> (X, Y) {

@@ -124,7 +124,7 @@ impl<S> Field<S> {
         RectRange::zero_start(self.width.0, self.height.0)
     }
     pub fn size_ytrimed(&self) -> Option<RectRange<i32>> {
-        RectRange::from_corners((0, 1), (self.width.0, self.height.0))
+        RectRange::from_corners((0, 1), (self.width.0, self.height.0 - 1))
     }
 }
 

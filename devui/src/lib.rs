@@ -13,7 +13,7 @@ pub mod error;
 #[macro_use]
 pub mod screen;
 use error::*;
-use rogue_gym_core::dungeon::{Coord, Positioned};
+use rogue_gym_core::dungeon::Positioned;
 use rogue_gym_core::ui::{MordalKind, UiState};
 use rogue_gym_core::{GameConfig, GameMsg, Reaction, RunTime};
 use screen::Screen;
@@ -34,13 +34,9 @@ pub fn play_game(config: GameConfig, is_default: bool) -> GameResult<()> {
     draw_dungeon(&mut screen, &mut runtime)?;
     screen.status(runtime.player_status())?;
     let stdin = io::stdin();
-    // let's receive keyboard inputs(out main loop)
-    let mut player_cursor = None;
+    // let's receive keyboard inputs(our main loop)
     for keys in stdin.keys() {
         screen.clear_notification()?;
-        if let Some(cd) = player_cursor {
-            screen.cursor(cd);
-        }
         let key = keys.into_chained(|| "in play_game")?;
         let res = runtime.react_to_key(key.into());
         let res = match res {
@@ -51,14 +47,12 @@ pub fn play_game(config: GameConfig, is_default: bool) -> GameResult<()> {
                 continue;
             }
         };
-
         for reaction in res {
             let result = process_reaction(&mut screen, &mut runtime, reaction)
                 .chain_err(|| "in play_game")?;
             if let Some(transition) = result {
                 match transition {
                     Transition::Exit => return Ok(()),
-                    Transition::PlayerCursor(cd) => player_cursor = Some(cd),
                 }
             }
         }
@@ -69,7 +63,6 @@ pub fn play_game(config: GameConfig, is_default: bool) -> GameResult<()> {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Transition {
-    PlayerCursor(Coord),
     Exit,
 }
 
@@ -98,9 +91,9 @@ pub fn process_reaction<W: Write>(
             Ok(None)
         }
         Reaction::Redraw => {
-            let cd = draw_dungeon(screen, runtime)
+            draw_dungeon(screen, runtime)
                 .chain_err(|| "in process_action attempt to draw dungeon")?;
-            Ok(cd.map(|cd| Transition::PlayerCursor(cd)))
+            Ok(None)
         }
         Reaction::StatusUpdated => {
             let status = runtime.player_status();
@@ -119,22 +112,17 @@ pub fn process_reaction<W: Write>(
     }
 }
 
-pub fn draw_dungeon<W: Write>(
-    screen: &mut Screen<W>,
-    runtime: &mut RunTime,
-) -> GameResult<Option<Coord>> {
-    // screen.clear_dungeon()?;
+pub fn draw_dungeon<W: Write>(screen: &mut Screen<W>, runtime: &mut RunTime) -> GameResult<()> {
+    screen.clear_dungeon()?;
     let mut player_pos = None;
     runtime.draw_screen(|Positioned(cd, tile)| {
         if tile.to_byte() == b'@' {
-            debug!("player: {:?}", cd);
             player_pos = Some(cd);
         }
         screen.draw_tile(cd, tile)
     })?;
-    if let Some(cd) = player_pos {
-        screen.cursor(cd)?;
+    if let Some(pos) = player_pos {
+        screen.cursor(pos)?;
     }
-    screen.flush()?;
-    Ok(player_pos)
+    screen.flush()
 }

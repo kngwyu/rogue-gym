@@ -121,11 +121,10 @@ impl<T: Write> Screen<T> {
     }
 
     pub fn status(&mut self, status: player::Status) -> GameResult<()> {
-        let line = self.height;
         write!(
             self.term,
             "{}{}{}",
-            cursor::Goto(1, line),
+            cursor::Goto(1, self.height),
             clear::CurrentLine,
             status,
         ).into_chained(|| "in Screen::status")?;
