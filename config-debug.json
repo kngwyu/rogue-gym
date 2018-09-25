@@ -1,7 +1,7 @@
 {
     "width": 80,
     "height": 24,
-    "seed": null,
+    "seed": 1,
     "dungeon-style": "rogue",
     "dungeon-setting": {
         "room_num_x": 3,
@@ -16,7 +16,7 @@
         "maze_rate_inv": 15,
         "dark_level": 10,
         "hidden_passage_rate_inv": 40,
-        "locked_door_rate_inv": 1,
+        "locked_door_rate_inv": 5,
         "max_extra_edges": 5,
         "door_unlock_rate_inv": 5,
         "passage_unlock_rate_inv": 3

@@ -4,19 +4,20 @@ extern crate pyo3;
 extern crate rect_iter;
 extern crate rogue_gym_core;
 
-use numpy::{IntoPyResult, PyArray, PyArrayModule};
+use numpy::{PyArray, PyArrayModule};
 use pyo3::{exc, prelude::*};
 use rect_iter::GetMut2D;
 use rogue_gym_core::character::player::Status;
 use rogue_gym_core::dungeon::{Positioned, X, Y};
 use rogue_gym_core::error::*;
-use rogue_gym_core::tile::{self, construct_symbol_map};
+use rogue_gym_core::tile::construct_symbol_map;
 use rogue_gym_core::{
     input::{Key, KeyMap},
     GameConfig, Reaction, RunTime,
 };
 
-/// result of the action(map as list of byte array, status as dict)
+/// result of the action
+/// (map as list of byte array, status as dict, status to display, feature map)
 type ActionResult<'p> = (&'p PyList, &'p PyDict, Py<PyString>, Option<PyArray<f32>>);
 
 #[derive(Debug)]
@@ -128,21 +129,6 @@ impl GameState {
         });
         self.prev_actions = res;
         self.state.res(self.token.py())
-    }
-    fn numpy_exp(&self) -> PyResult<PyArray<u8>> {
-        let py = self.token.py();
-        let np = PyArrayModule::import(py)?;
-        let sym_map: Vec<Vec<_>> = self
-            .state
-            .map
-            .iter()
-            .map(|v| {
-                v.iter()
-                    .map(|&t| tile::tile_to_sym(t).expect("Invalide Tile"))
-                    .collect()
-            }).collect();
-        PyArray::from_vec2(py, &np, &sym_map)
-            .into_pyresult("[rogue_gym_python::GameState] array cast failed")
     }
 }
 

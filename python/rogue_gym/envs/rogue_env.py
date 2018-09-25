@@ -1,8 +1,8 @@
 """module for wrapper of rogue_gym_core::Runtime as gym environment"""
-import sys
 import gym
 import numpy as np
-from typing import ByteString, Dict, List, Tuple, Union
+from numpy import ndarray
+from typing import Any, ByteString, Dict, List, Optional, Tuple, Union
 from rogue_gym_python._rogue_gym import GameState
 
 
@@ -21,7 +21,7 @@ class RogueResult():
         return res
 
 
-class RogueEnv(gym.Env):
+class BaseEnv(gym.Env):
     metadata = {'render.modes': ['human', 'ascii']}
     # Same as data/keymaps/ai.json
     ACTION_MEANINGS = {
@@ -34,6 +34,18 @@ class RogueEnv(gym.Env):
         "u": "MOVE_RIGHTUP",
         "y": "MOVE_LEFTDOWN",
         ">": "DOWNSTAIR",
+    }
+
+    ACTION_MAPPINGS = {
+        0: "h",
+        1: "j",
+        2: "k",
+        3: "l",
+        4: "n",
+        5: "b",
+        6: "u",
+        7: "y",
+        8: ">",
     }
 
     def __init__(self, seed: int = None, config_path: str = None) -> None:
@@ -61,7 +73,7 @@ class RogueEnv(gym.Env):
         for act in actions:
             self.game.react(ord(act))
 
-    def step(self, action: Union[int, str]):
+    def step(self, action: Union[int, str]) -> Tuple[ndarray, float, bool, RogueResult]:
         """
         Do action.
         @param actions(string):
@@ -69,7 +81,8 @@ class RogueEnv(gym.Env):
         """
         gold_before = self.result.gold()
         if type(action) is int:
-            self.game.react(action)
+            s = self.ACTION_MAPPINGS[action]
+            self.__step_str(s)
         elif type(action) is str:
             self.__step_str(action)
         else:
@@ -77,9 +90,9 @@ class RogueEnv(gym.Env):
         self.__cache()
         gold_after = self.result.gold()
         reward = gold_after - gold_before
-        return self.result, reward
+        return self.result.feature_map, reward, False, self.result
 
-    def seed(self, seed):
+    def seed(self, seed: int) -> None:
         """
         Set seed.
         This seed is not used till the game is reseted.
@@ -87,25 +100,31 @@ class RogueEnv(gym.Env):
         """
         self.game.set_seed(seed)
 
-    def get_screen(self, is_ascii=True):
+    def get_screen(self, is_ascii: bool = True) -> List[ByteString]:
         """
         @param is_ascii(bool): STUB
         """
         return self.result.dungeon
 
-    def show_screen(self, is_ascii=True):
+    def show_screen(self, is_ascii: bool = True) -> None:
         """
         @param is_ascii(bool): STUB
         """
         print(self.result)
 
-    def render(self, mode='human', close=False):
-        if mode == 'ascii':
-            return self.get_screen()
-        elif mode == 'human':
-            print(self.result)
+    def render(self, mode='human', close: bool = False) -> None:
+        print(self.result)
 
-    def get_key_to_action(self):
+    def get_key_to_action(self) -> Dict[str, str]:
         return self.ACION_MEANINGS
+
+
+class FirstFloorEnv(BaseEnv):
+    def step(self, action: Union[int, str]) -> Tuple[ndarray, float, bool, RogueResult]:
+        features, reward, _, res = super().step(action)
+        end = False
+        if self.result.status["dungeon_level"] == 2:
+            end = True
+        return self.result.feature_map, reward, end, res
 
 

@@ -1,1 +1,1 @@
-from .rogue_env import RogueEnv
+from .rogue_env import BaseEnv, FirstFloorEnv
