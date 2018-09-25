@@ -35,8 +35,8 @@ impl Screen<RawTerminal<Stdout>> {
         Ok(Screen {
             term,
             has_notification: false,
-            width,
-            height,
+            width: w,
+            height: h,
         })
     }
 }
