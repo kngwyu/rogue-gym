@@ -49,8 +49,10 @@ use ui::{MordalKind, MordalMsg, UiState};
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct GameConfig {
     /// screen width
+    #[serde(default = "default_screen_width")]
     pub width: i32,
     /// screen height
+    #[serde(default = "default_screen_height")]
     pub height: i32,
     /// seed of random number generator
     /// if None, we use random value chosen by `thread_rng().gen()`
@@ -58,6 +60,7 @@ pub struct GameConfig {
     pub seed: Option<u128>,
     /// dungeon configuration
     #[serde(flatten)]
+    #[serde(default)]
     pub dungeon: DungeonStyle,
     /// item configuration
     #[serde(default)]
@@ -69,9 +72,17 @@ pub struct GameConfig {
     #[serde(default)]
     pub player: player::Config,
     /// hide dungeon or not
-    /// this setting is only for debug and don't use it when you play game
+    /// this setting is only for debugging and don't use it when you play game
     #[serde(default = "default_hide_dungeon")]
     pub hide_dungeon: bool,
+}
+
+const fn default_screen_width() -> i32 {
+    MIN_WIDTH
+}
+
+const fn default_screen_height() -> i32 {
+    MAX_HEIGHT
 }
 
 const fn default_hide_dungeon() -> bool {

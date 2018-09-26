@@ -48,7 +48,12 @@ class BaseEnv(gym.Env):
         8: ">",
     }
 
-    def __init__(self, seed: int = None, config_path: str = None) -> None:
+    def __init__(
+            self,
+            seed: int = None,
+            config_path: str = None,
+            config_dict: dict = None
+    ) -> None:
         """
         @param config_path(string): path to config file
         """

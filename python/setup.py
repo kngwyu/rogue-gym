@@ -7,6 +7,7 @@ from setuptools import setup
 from setuptools import find_packages
 from setuptools.command.test import test as TestCommand
 
+
 try:
     from setuptools_rust import RustExtension
 except ImportError:

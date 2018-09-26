@@ -24,6 +24,12 @@ pub enum DungeonStyle {
     Custom,
 }
 
+impl Default for DungeonStyle {
+    fn default() -> DungeonStyle {
+        DungeonStyle::Rogue(rogue::Config::default())
+    }
+}
+
 impl DungeonStyle {
     pub fn rogue() -> Self {
         DungeonStyle::Rogue(rogue::Config::default())

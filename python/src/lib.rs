@@ -15,6 +15,8 @@ use rogue_gym_core::{
     input::{Key, KeyMap},
     GameConfig, Reaction, RunTime,
 };
+use std::fs::File;
+use std::io::prelude::*;
 
 /// result of the action
 /// (map as list of byte array, status as dict, status to display, feature map)
@@ -77,10 +79,14 @@ struct GameState {
 #[pymethods]
 impl GameState {
     #[new]
-    fn __new__(obj: &PyRawObject, config: Option<String>, seed: Option<u64>) -> PyResult<()> {
-        let mut config = config.map_or_else(GameConfig::default, |cfg| {
-            GameConfig::from_json(&cfg).unwrap()
-        });
+    fn __new__(obj: &PyRawObject, seed: Option<u64>, config_str: Option<String>) -> PyResult<()> {
+        let mut config = if let Some(cfg) = config_str {
+            GameConfig::from_json(&cfg).map_err(|e| {
+                PyErr::new::<exc::RuntimeError, _>(format!("failed to parse config, {}", e))
+            })?
+        } else {
+            GameConfig::default()
+        };
         config.seed = seed.map(|u| u as u128);
         let mut runtime = config.clone().build().unwrap();
         let (w, h) = runtime.screen_size();
