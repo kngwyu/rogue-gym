@@ -2,7 +2,7 @@
 import gym
 import numpy as np
 from numpy import ndarray
-from typing import Any, ByteString, Dict, List, Optional, Tuple, Union
+from typing import ByteString, Dict, List, Tuple, Union
 from rogue_gym_python._rogue_gym import GameState
 
 
@@ -21,8 +21,9 @@ class RogueResult():
         return res
 
 
-class BaseEnv(gym.Env):
+class RogueEnv(gym.Env):
     metadata = {'render.modes': ['human', 'ascii']}
+
     # Same as data/keymaps/ai.json
     ACTION_MEANINGS = {
         "h": "MOVE_LEFT",
@@ -33,6 +34,7 @@ class BaseEnv(gym.Env):
         "b": "MOVE_LEFTDOWN",
         "u": "MOVE_RIGHTUP",
         "y": "MOVE_LEFTDOWN",
+        "s": "SEARCH",
         ">": "DOWNSTAIR",
     }
 
@@ -46,6 +48,7 @@ class BaseEnv(gym.Env):
         6: "u",
         7: "y",
         8: ">",
+        9: "s",
     }
 
     def __init__(
@@ -124,14 +127,4 @@ class BaseEnv(gym.Env):
 
     def get_key_to_action(self) -> Dict[str, str]:
         return self.ACION_MEANINGS
-
-
-class FirstFloorEnv(BaseEnv):
-    def step(self, action: Union[int, str]) -> Tuple[ndarray, float, bool, RogueResult]:
-        features, reward, _, res = super().step(action)
-        end = False
-        if self.result.status["dungeon_level"] == 2:
-            end = True
-        return self.result.feature_map, reward, end, res
-
 
