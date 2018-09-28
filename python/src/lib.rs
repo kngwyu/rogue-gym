@@ -15,8 +15,6 @@ use rogue_gym_core::{
     input::{Key, KeyMap},
     GameConfig, Reaction, RunTime,
 };
-use std::fs::File;
-use std::io::prelude::*;
 
 /// result of the action
 /// (map as list of byte array, status as dict, status to display, feature map)
@@ -87,7 +85,9 @@ impl GameState {
         } else {
             GameConfig::default()
         };
-        config.seed = seed.map(|u| u as u128);
+        if let Some(seed) = seed {
+            config.seed = Some(u128::from(seed));
+        }
         let mut runtime = config.clone().build().unwrap();
         let (w, h) = runtime.screen_size();
         runtime.keymap = KeyMap::ai();

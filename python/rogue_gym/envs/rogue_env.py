@@ -1,5 +1,6 @@
 """module for wrapper of rogue_gym_core::Runtime as gym environment"""
 import gym
+import json
 import numpy as np
 from numpy import ndarray
 from typing import ByteString, Dict, List, Tuple, Union
@@ -23,6 +24,27 @@ class RogueResult():
 
 class RogueEnv(gym.Env):
     metadata = {'render.modes': ['human', 'ascii']}
+
+    # defined in core/src/tile.rs
+    SYMBOLS = [
+        b' ',
+        b'@',
+        b'#',
+        b'.',
+        b'-',
+        b'%',
+        b'+',
+        b'^',
+        b'!',
+        b'?',
+        b']',
+        b')',
+        b'/',
+        b'*',
+        b':',
+        b'=',
+        b',',
+    ]
 
     # Same as data/keymaps/ai.json
     ACTION_MEANINGS = {
@@ -55,16 +77,16 @@ class RogueEnv(gym.Env):
             self,
             seed: int = None,
             config_path: str = None,
-            config_str: str = None
+            config_dict: dict = None
     ) -> None:
         """
         @param config_path(string): path to config file
         """
         super().__init__()
         config = None
-        if config_str:
-            config = config_str
-        if not config and config_path:
+        if config_dict:
+            config = json.dumps(config_dict)
+        elif config_path:
             f = open(config_path, 'r')
             config = f.read()
         self.game = GameState(seed, config)

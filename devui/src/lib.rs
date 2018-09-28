@@ -23,6 +23,7 @@ use std::time::Duration;
 use termion::input::TermRead;
 
 pub fn play_game(config: GameConfig, is_default: bool) -> GameResult<()> {
+    debug!("{:?}", config);
     let (w, h) = (config.width, config.height);
     let mut screen = Screen::from_raw(w, h)?;
     screen.welcome()?;

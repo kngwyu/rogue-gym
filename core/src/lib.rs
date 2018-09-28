@@ -60,7 +60,6 @@ pub struct GameConfig {
     pub seed: Option<u128>,
     /// dungeon configuration
     #[serde(flatten)]
-    #[serde(default)]
     pub dungeon: DungeonStyle,
     /// item configuration
     #[serde(default)]
@@ -82,7 +81,7 @@ const fn default_screen_width() -> i32 {
 }
 
 const fn default_screen_height() -> i32 {
-    MAX_HEIGHT
+    MIN_HEIGHT
 }
 
 const fn default_hide_dungeon() -> bool {
