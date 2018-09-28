@@ -52,17 +52,19 @@ class BaseEnv(gym.Env):
             self,
             seed: int = None,
             config_path: str = None,
-            config_dict: dict = None
+            config_str: str = None
     ) -> None:
         """
         @param config_path(string): path to config file
         """
         super().__init__()
         config = None
-        if config_path:
+        if config_str:
+            config = config_str
+        if not config and config_path:
             f = open(config_path, 'r')
             config = f.read()
-        self.game = GameState(config, seed)
+        self.game = GameState(seed, config)
         self.result = RogueResult()
         self.__cache()
 
