@@ -67,15 +67,15 @@ pub fn tile_to_sym(t: u8) -> Option<u8> {
 }
 
 pub fn construct_symbol_map(map: &Vec<Vec<u8>>) -> Option<Vec<Vec<Vec<f32>>>> {
-    let max = map.iter().flatten().max().map(|&u| usize::from(u))?;
-    let mut res = Vec::with_capacity(max);
+    let max = Symbol::from_tile(Tile(b'Z')).unwrap().0;
+    let mut res = Vec::with_capacity(usize::from(max));
     let (h, w) = (map.len(), map[0].len());
     for i in 0..max {
         let mut sym_map = vec![vec![0f32; w]; h];
         for y in 0..h {
             for x in 0..w {
                 let sym = tile_to_sym(map[y][x])?;
-                if usize::from(sym) == i {
+                if sym == i {
                     sym_map[y][x] = 1.0;
                 }
             }
