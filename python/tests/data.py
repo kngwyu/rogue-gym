@@ -79,3 +79,4 @@ SEED1_DUNGEON_CLEAR = [
     b'                                                                                ',
     b'                                                                                ']
 
+CMD_STR2 = 'kkklllllkkkkkllllllllll>'
