@@ -91,19 +91,27 @@ class RogueEnv(gym.Env):
             config = f.read()
         self.game = GameState(seed, config)
         self.result = RogueResult()
+        self._size = self.game.screen_size()
         self.__cache()
 
     def __cache(self) -> None:
         self.result.update(self.game.prev())
+        self._size = self.game.screen_size()
 
-    def reset(self):
+    def reset(self) -> None:
         """reset game state"""
         self.game.reset()
         self.__cache()
 
-    def __step_str(self, actions: str):
+    def __step_str(self, actions: str) -> None:
         for act in actions:
             self.game.react(ord(act))
+
+    def screen_size(self) -> Tuple[int, int]:
+        """
+        returns (height, width)
+        """
+        return self._size
 
     def step(self, action: Union[int, str]) -> Tuple[ndarray, float, bool, RogueResult]:
         """

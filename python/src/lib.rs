@@ -101,6 +101,9 @@ impl GameState {
             token,
         })
     }
+    fn screen_size(&self) -> (i32, i32) {
+        (self.config.height, self.config.width)
+    }
     fn set_seed(&mut self, seed: u64) -> PyResult<()> {
         self.config.seed = Some(seed as u128);
         Ok(())
