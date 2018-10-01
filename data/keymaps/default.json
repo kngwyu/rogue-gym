@@ -1,1 +1,83 @@
-{"Left":{"Act":{"Move":"Left"}},"u":{"Act":{"Move":"RightUp"}},"n":{"Both":{"act":{"Move":"RightDown"},"sys":"No"}},"Esc":{"Sys":"Cancel"},"k":{"Act":{"Move":"Up"}},"l":{"Act":{"Move":"Right"}},"Right":{"Act":{"Move":"Right"}},"Q":{"Sys":"Quit"},">":{"Act":"DownStair"},"j":{"Act":{"Move":"Down"}},"y":{"Both":{"act":{"Move":"LeftUp"},"sys":"Yes"}},"Down":{"Act":{"Move":"Down"}},"Up":{"Act":{"Move":"Up"}},"b":{"Act":{"Move":"LeftDown"}},"h":{"Act":{"Move":"Left"}},"s":{"Act":"Search"},"S":{"Sys":"Save"}}
+{
+    "k": {
+        "Act": {
+            "Move": "Up"
+        }
+    },
+    "j": {
+        "Act": {
+            "Move": "Down"
+        }
+    },
+    "Esc": {
+        "Sys": "Cancel"
+    },
+    "Q": {
+        "Sys": "Quit"
+    },
+    ">": {
+        "Act": "DownStair"
+    },
+    "l": {
+        "Act": {
+            "Move": "Right"
+        }
+    },
+    "S": {
+        "Sys": "Save"
+    },
+    "u": {
+        "Act": {
+            "Move": "RightUp"
+        }
+    },
+    "b": {
+        "Act": {
+            "Move": "LeftDown"
+        }
+    },
+    "h": {
+        "Act": {
+            "Move": "Left"
+        }
+    },
+    "Left": {
+        "Act": {
+            "Move": "Left"
+        }
+    },
+    "y": {
+        "Both": {
+            "act": {
+                "Move": "LeftUp"
+            },
+            "sys": "Yes"
+        }
+    },
+    "s": {
+        "Act": "Search"
+    },
+    "Up": {
+        "Act": {
+            "Move": "Up"
+        }
+    },
+    "Down": {
+        "Act": {
+            "Move": "Down"
+        }
+    },
+    "n": {
+        "Both": {
+            "act": {
+                "Move": "RightDown"
+            },
+            "sys": "No"
+        }
+    },
+    "Right": {
+        "Act": {
+            "Move": "Right"
+        }
+    }
+}

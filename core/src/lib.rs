@@ -59,7 +59,7 @@ pub struct GameConfig {
     #[serde(default)]
     pub seed: Option<u128>,
     /// dungeon configuration
-    #[serde(flatten)]
+    #[serde(default)]
     pub dungeon: DungeonStyle,
     /// item configuration
     #[serde(default)]
@@ -97,7 +97,7 @@ impl Default for GameConfig {
             width: MIN_WIDTH,
             height: MIN_HEIGHT,
             seed: None,
-            dungeon: DungeonStyle::rogue(),
+            dungeon: DungeonStyle::default(),
             item: item::Config::default(),
             keymap: KeyMap::default(),
             player: player::Config::default(),

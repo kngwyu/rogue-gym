@@ -11,7 +11,7 @@ use tile::Tile;
 use {GameInfo, GameMsg, GlobalConfig};
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
-#[serde(tag = "dungeon-style", content = "dungeon-setting")]
+#[serde(tag = "style")]
 #[serde(rename_all = "lowercase")]
 pub enum DungeonStyle {
     /// rogue 5.4.4 like dungeon
@@ -24,10 +24,13 @@ pub enum DungeonStyle {
     Custom,
 }
 
-impl DungeonStyle {
-    pub fn rogue() -> Self {
+impl Default for DungeonStyle {
+    fn default() -> Self {
         DungeonStyle::Rogue(rogue::Config::default())
     }
+}
+
+impl DungeonStyle {
     pub fn build(
         self,
         config_global: &GlobalConfig,

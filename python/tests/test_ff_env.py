@@ -4,8 +4,6 @@ from data import CMD_STR2, SEED1_DUNGEON_CLEAR
 import unittest
 
 CONFIG = {
-    "dungeon-style": "rogue",
-    "dungeon-setting": {},
     "seed": 1,
     "hide_dungeon": False
 }

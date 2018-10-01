@@ -2,8 +2,8 @@
     "width": 80,
     "height": 24,
     "seed": null,
-    "dungeon-style": "rogue",
-    "dungeon-setting": {
+    "dungeon": {
+        "dungeon-style": "rogue",
         "room_num_x": 3,
         "room_num_y": 3,
         "min_room_size": {
@@ -30,63 +30,45 @@
         }
     },
     "keymap": {
-        "j": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
-        "s": {
-            "Act": "Search"
-        },
-        "n": {
-            "Both": {
-                "act": {
-                    "Move": "RightDown"
-                },
-                "sys": "No"
-            }
-        },
-        "l": {
-            "Act": {
-                "Move": "Right"
-            }
-        },
         "Left": {
             "Act": {
                 "Move": "Left"
             }
         },
-        "Down": {
+        "s": {
+            "Act": "Search"
+        },
+        "Right": {
             "Act": {
-                "Move": "Down"
+                "Move": "Right"
             }
-        },
-        "Esc": {
-            "Sys": "Cancel"
-        },
-        "u": {
-            "Act": {
-                "Move": "RightUp"
-            }
-        },
-        "Q": {
-            "Sys": "Quit"
         },
         "k": {
             "Act": {
                 "Move": "Up"
             }
         },
+        "h": {
+            "Act": {
+                "Move": "Left"
+            }
+        },
+        "S": {
+            "Sys": "Save"
+        },
+        "Esc": {
+            "Sys": "Cancel"
+        },
+        "Down": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "Q": {
+            "Sys": "Quit"
+        },
         ">": {
             "Act": "DownStair"
-        },
-        "y": {
-            "Both": {
-                "act": {
-                    "Move": "LeftUp"
-                },
-                "sys": "Yes"
-            }
         },
         "b": {
             "Act": {
@@ -98,17 +80,35 @@
                 "Move": "Up"
             }
         },
-        "S": {
-            "Sys": "Save"
-        },
-        "h": {
-            "Act": {
-                "Move": "Left"
-            }
-        },
-        "Right": {
+        "l": {
             "Act": {
                 "Move": "Right"
+            }
+        },
+        "n": {
+            "Both": {
+                "act": {
+                    "Move": "RightDown"
+                },
+                "sys": "No"
+            }
+        },
+        "u": {
+            "Act": {
+                "Move": "RightUp"
+            }
+        },
+        "y": {
+            "Both": {
+                "act": {
+                    "Move": "LeftUp"
+                },
+                "sys": "Yes"
+            }
+        },
+        "j": {
+            "Act": {
+                "Move": "Down"
             }
         }
     },

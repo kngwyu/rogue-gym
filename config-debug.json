@@ -2,8 +2,8 @@
     "width": 80,
     "height": 24,
     "seed": null,
-    "dungeon-style": "rogue",
-    "dungeon-setting": {
+    "dungeon": {
+        "dungeon-style": "rogue",
         "room_num_x": 3,
         "room_num_y": 3,
         "min_room_size": {
@@ -30,6 +30,69 @@
         }
     },
     "keymap": {
+        "Left": {
+            "Act": {
+                "Move": "Left"
+            }
+        },
+        "s": {
+            "Act": "Search"
+        },
+        "Right": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "k": {
+            "Act": {
+                "Move": "Up"
+            }
+        },
+        "h": {
+            "Act": {
+                "Move": "Left"
+            }
+        },
+        "S": {
+            "Sys": "Save"
+        },
+        "Esc": {
+            "Sys": "Cancel"
+        },
+        "Down": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "Q": {
+            "Sys": "Quit"
+        },
+        ">": {
+            "Act": "DownStair"
+        },
+        "b": {
+            "Act": {
+                "Move": "LeftDown"
+            }
+        },
+        "Up": {
+            "Act": {
+                "Move": "Up"
+            }
+        },
+        "l": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "n": {
+            "Both": {
+                "act": {
+                    "Move": "RightDown"
+                },
+                "sys": "No"
+            }
+        },
         "u": {
             "Act": {
                 "Move": "RightUp"
@@ -43,72 +106,9 @@
                 "sys": "Yes"
             }
         },
-        "Q": {
-            "Sys": "Quit"
-        },
-        "Left": {
-            "Act": {
-                "Move": "Left"
-            }
-        },
-        "Esc": {
-            "Sys": "Cancel"
-        },
-        "k": {
-            "Act": {
-                "Move": "Up"
-            }
-        },
-        "S": {
-            "Sys": "Save"
-        },
-        "b": {
-            "Act": {
-                "Move": "LeftDown"
-            }
-        },
-        "s": {
-            "Act": "Search"
-        },
-        ">": {
-            "Act": "DownStair"
-        },
         "j": {
             "Act": {
                 "Move": "Down"
-            }
-        },
-        "n": {
-            "Both": {
-                "act": {
-                    "Move": "RightDown"
-                },
-                "sys": "No"
-            }
-        },
-        "Down": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
-        "h": {
-            "Act": {
-                "Move": "Left"
-            }
-        },
-        "l": {
-            "Act": {
-                "Move": "Right"
-            }
-        },
-        "Up": {
-            "Act": {
-                "Move": "Up"
-            }
-        },
-        "Right": {
-            "Act": {
-                "Move": "Right"
             }
         }
     },
@@ -158,6 +158,39 @@
                 }
             }
         ]
+    },
+    "enemies": {
+        "builtin": {
+            "typ": "Rogue",
+            "include": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25
+            ]
+        }
     },
     "hide_dungeon": true
 }
