@@ -150,23 +150,14 @@ impl<T> Maxed<T> {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
-pub struct CharacterId(u64);
-
-// STUB
-pub struct CharacterHandler {
-    rng: RngHandle,
-    next_id: CharacterId,
-}
-
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Dice {
     times: i32,
     max: i32,
 }
 
 impl Dice {
-    pub fn new(n: i32, m: i32) -> Dice {
+    pub const fn new(n: i32, m: i32) -> Dice {
         Dice { times: n, max: m }
     }
 }

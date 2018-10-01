@@ -36,7 +36,7 @@ mod rng;
 pub mod tile;
 pub mod ui;
 
-use character::{player, Player};
+use character::{enemies, player, Player};
 use dungeon::{Direction, Dungeon, DungeonStyle, Positioned, X, Y};
 use error::*;
 use input::{InputCode, Key, KeyMap};
@@ -70,6 +70,9 @@ pub struct GameConfig {
     /// player configuration
     #[serde(default)]
     pub player: player::Config,
+    /// enemy configuration
+    #[serde(default)]
+    pub enemies: enemies::Config,
     /// hide dungeon or not
     /// this setting is only for debugging and don't use it when you play game
     #[serde(default = "default_hide_dungeon")]
@@ -98,6 +101,7 @@ impl Default for GameConfig {
             item: item::Config::default(),
             keymap: KeyMap::default(),
             player: player::Config::default(),
+            enemies: enemies::Config::default(),
             hide_dungeon: true,
         }
     }

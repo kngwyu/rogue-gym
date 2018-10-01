@@ -36,8 +36,8 @@ if (is_dir(name)) {
     console.log('formatted ' + sum + ' files')
 } else {
     if (format_file(name)) {
-        console.log('formatted ' + fname)
+        console.log('formatted ' + name)
     } else {
-        console.log('Error: ' + fname + 'is not a json file')
+        console.log('Error: ' + name + 'is not a json file')
     }
 }
