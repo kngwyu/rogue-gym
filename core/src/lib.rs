@@ -33,6 +33,8 @@ mod fenwick;
 pub mod input;
 pub mod item;
 mod rng;
+#[cfg(feature = "symbol")]
+pub mod symbol;
 pub mod tile;
 pub mod ui;
 
@@ -116,6 +118,13 @@ impl GameConfig {
     /// construct Game configuration from json string
     pub fn from_json(json: &str) -> GameResult<Self> {
         serde_json::from_str(json).into_chained(|| "GameConfig::from_json")
+    }
+    #[cfg(feature = "symbol")]
+    pub fn symbol_max(&self) -> Option<symbol::Symbol> {
+        match self.enemies.tile_max() {
+            Some(t) => symbol::Symbol::from_tile(t.into()),
+            None => symbol::Symbol::from_tile(b'A'.into()).map(|s| s.decrement()),
+        }
     }
     fn to_global(&self) -> GameResult<GlobalConfig> {
         let seed = self.seed.unwrap_or_else(rng::gen_seed);

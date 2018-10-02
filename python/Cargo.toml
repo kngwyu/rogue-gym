@@ -8,18 +8,19 @@ name = "rogue_gym_python"
 crate-type = ["cdylib"]
 
 [dependencies]
-numpy = "0.3"
+ndarray = "0.12.0"
 rect-iter = "0.1.9"
+
+[dependencies.numpy]
+git = "https://github.com/rust-numpy/rust-numpy.git"
+rev = "e372f0bdd61073abbbb48b08b21da5dfa4907b42"
 
 [dependencies.pyo3]
 version = "0.4.1"
 features = ["extension-module"]
 
 [dependencies.rogue-gym-core]
-features = ["termion"]
 path = "../core/"
 version = "0.1.0"
+features = ["symbol"]
 
-[dependencies.rogue-gym-devui]
-path = "../devui/"
-version = "0.1.0"

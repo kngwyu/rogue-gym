@@ -1,16 +1,18 @@
 #![feature(specialization)]
+extern crate ndarray;
 extern crate numpy;
 extern crate pyo3;
 extern crate rect_iter;
 extern crate rogue_gym_core;
 
-use numpy::{PyArray, PyArrayModule};
+use ndarray::Array3;
+use numpy::PyArray;
 use pyo3::{exc, prelude::*};
 use rect_iter::GetMut2D;
 use rogue_gym_core::character::player::Status;
 use rogue_gym_core::dungeon::{Positioned, X, Y};
 use rogue_gym_core::error::*;
-use rogue_gym_core::tile::construct_symbol_map;
+use rogue_gym_core::symbol;
 use rogue_gym_core::{
     input::{Key, KeyMap},
     GameConfig, Reaction, RunTime,
@@ -18,25 +20,31 @@ use rogue_gym_core::{
 
 /// result of the action
 /// (map as list of byte array, status as dict, status to display, feature map)
-type ActionResult<'p> = (&'p PyList, &'p PyDict, Py<PyString>, Option<PyArray<f32>>);
+type ActionResult<'p> = (&'p PyList, &'p PyDict, Py<PyString>, &'p PyArray<f32>);
 
 #[derive(Debug)]
 struct PlayerState {
     map: Vec<Vec<u8>>,
+    feature_map: Array3<f32>,
+    channels: u8,
     status: Status,
 }
 
 impl PlayerState {
-    fn new(w: X, h: Y) -> Self {
+    fn new(w: X, h: Y, channels: u8) -> Self {
         let (w, h) = (w.0 as usize, h.0 as usize);
         PlayerState {
             map: vec![vec![b' '; w]; h],
+            feature_map: Array3::zeros([usize::from(channels), h, w]),
+            channels,
             status: Status::default(),
         }
     }
     fn update(&mut self, runtime: &RunTime) -> GameResult<()> {
         self.status = runtime.player_status();
-        self.draw_map(runtime)
+        self.draw_map(runtime)?;
+        symbol::construct_symbol_map(&self.map, self.channels, &mut self.feature_map)?;
+        Ok(())
     }
     fn draw_map(&mut self, runtime: &RunTime) -> GameResult<()> {
         runtime.draw_screen(|Positioned(cd, tile)| -> GameResult<()> {
@@ -55,13 +63,12 @@ impl PlayerState {
             status.set_item(k, v)?;
         }
         let status_str = PyString::new(py, &format!("{}", self.status));
-        let np = PyArrayModule::import(py)?;
-        let sym_map = construct_symbol_map(&self.map).and_then(|mut v| {
-            let (w, h) = (v[0][0].len(), v[0].len());
-            v.extend(self.status.to_image(w, h));
-            PyArray::from_vec3(py, &np, &v).ok()
-        });
-        Ok((map, status, status_str, sym_map))
+        Ok((
+            map,
+            status,
+            status_str,
+            PyArray::from_ndarray(py, self.feature_map.clone()),
+        ))
     }
 }
 
@@ -91,7 +98,12 @@ impl GameState {
         let mut runtime = config.clone().build().unwrap();
         let (w, h) = runtime.screen_size();
         runtime.keymap = KeyMap::ai();
-        let mut state = PlayerState::new(w, h);
+        let channels = config
+            .symbol_max()
+            .expect("Failed to get symbol max")
+            .to_byte()
+            + 1;
+        let mut state = PlayerState::new(w, h, channels);
         state.update(&mut runtime).unwrap();
         obj.init(|token| GameState {
             runtime,
@@ -101,8 +113,18 @@ impl GameState {
             token,
         })
     }
+    fn channels(&self) -> i32 {
+        i32::from(self.state.channels)
+    }
     fn screen_size(&self) -> (i32, i32) {
         (self.config.height, self.config.width)
+    }
+    fn feature_dims(&self) -> (i32, i32, i32) {
+        (
+            i32::from(self.state.channels),
+            self.config.height,
+            self.config.width,
+        )
     }
     fn set_seed(&mut self, seed: u64) -> PyResult<()> {
         self.config.seed = Some(seed as u128);

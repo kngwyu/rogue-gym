@@ -18,10 +18,20 @@ pub enum Config {
 }
 
 impl Config {
-    pub fn num_enemies(&self) -> usize {
+    pub fn tile_max(&self) -> Option<u8> {
         match self {
-            Config::Builtin { typ: _, include } => include.len(),
-            Config::Custom(stats) => stats.len(),
+            Config::Builtin { typ: _, include } => {
+                let len = include.len() as u8;
+                if len == 0 {
+                    return None;
+                }
+                Some(len + b'A' - 1)
+            }
+            Config::Custom(stats) => {
+                let max = stats.iter().map(|s| s.tile.to_byte()).max()?;
+                assert!(max >= b'A');
+                Some(max)
+            }
         }
     }
     pub fn build(self, seed: u128) -> EnemyHandler {
@@ -152,7 +162,8 @@ impl StaticStatus {
                         tile: Tile::from(b'A' + i as u8),
                     }
                 },
-            ).collect()
+            )
+            .collect()
     }
 }
 

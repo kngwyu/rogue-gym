@@ -15,6 +15,10 @@ regex = "1.0"
 serde_json = "1.0"
 tuple-map = "0.4"
 
+[dependencies.ndarray]
+version = "0.12.0"
+optional = true
+
 [dependencies.serde]
 version = "1.0"
 features = ["derive"]
@@ -37,4 +41,5 @@ default-features = false
 features = ["serde"]
 
 [features]
-default = []
+default = ["symbol"]
+symbol = ["ndarray"]

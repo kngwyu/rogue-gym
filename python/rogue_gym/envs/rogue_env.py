@@ -83,12 +83,10 @@ class RogueEnv(gym.Env):
             config = f.read()
         self.game = GameState(seed, config)
         self.result = RogueResult()
-        self._size = self.game.screen_size()
         self.__cache()
 
     def __cache(self) -> None:
         self.result.update(self.game.prev())
-        self._size = self.game.screen_size()
 
     def reset(self) -> None:
         """reset game state"""
@@ -103,7 +101,16 @@ class RogueEnv(gym.Env):
         """
         returns (height, width)
         """
-        return self._size
+        return self.game.screen_size()
+
+    def channels(self) -> int:
+        """
+        returns the dimension of feature map
+        """
+        return self.game.channels()
+
+    def feature_dims(self) -> Tuple[int, int, int]:
+        return self.game.feature_dims()
 
     def step(self, action: Union[int, str]) -> Tuple[ndarray, float, bool, RogueResult]:
         """

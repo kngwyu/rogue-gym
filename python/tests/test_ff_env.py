@@ -5,7 +5,13 @@ import unittest
 
 CONFIG = {
     "seed": 1,
-    "hide_dungeon": False
+    "hide_dungeon": False,
+    "enemies": {
+        "builtin": {
+            "typ": "Rogue",
+            "include": []
+        }
+    },
 }
 
 
@@ -18,6 +24,7 @@ class TestSeed1(unittest.TestCase):
         _, rewards, done, _ = env.step(CMD_STR2)
         self.assertTrue(done)
         self.assertEqual(rewards, 102)
+        self.assertEqual(env.channels(), 17)
 
 
 if __name__ == "__main__":
