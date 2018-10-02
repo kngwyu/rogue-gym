@@ -1,7 +1,7 @@
 //! Symbol representation of tiles for neural network
 extern crate ndarray;
 
-use self::ndarray::Array3;
+use self::ndarray::{Array2, Array3};
 use tile::Tile;
 
 /// Symbol
@@ -50,6 +50,25 @@ pub fn tile_to_sym(t: u8) -> Option<u8> {
 pub struct InvalidTileError(Tile, u8);
 
 pub fn construct_symbol_map(
+    map: &Vec<Vec<u8>>,
+    symbol_max: u8,
+    res: &mut Array2<f32>,
+) -> Result<(), InvalidTileError> {
+    let (h, w) = (map.len(), map[0].len());
+    for y in 0..h {
+        for x in 0..w {
+            let t = map[y][x];
+            let sym = tile_to_sym(t).ok_or_else(|| InvalidTileError(t.into(), symbol_max))?;
+            if sym > symbol_max {
+                return Err(InvalidTileError(t.into(), symbol_max));
+            }
+            res[[y, x]] = f32::from(sym);
+        }
+    }
+    Ok(())
+}
+
+pub fn construct_channeled_symbol_map(
     map: &Vec<Vec<u8>>,
     symbol_max: u8,
     res: &mut Array3<f32>,

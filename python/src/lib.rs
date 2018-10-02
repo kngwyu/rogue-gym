@@ -43,7 +43,7 @@ impl PlayerState {
     fn update(&mut self, runtime: &RunTime) -> GameResult<()> {
         self.status = runtime.player_status();
         self.draw_map(runtime)?;
-        symbol::construct_symbol_map(&self.map, self.channels, &mut self.feature_map)?;
+        symbol::construct_channeled_symbol_map(&self.map, self.channels, &mut self.feature_map)?;
         Ok(())
     }
     fn draw_map(&mut self, runtime: &RunTime) -> GameResult<()> {
@@ -113,6 +113,14 @@ impl GameState {
             token,
         })
     }
+    // fn compress_feature_map(&self, arr: &PyArray<f32>) -> &PyArray<f32> {
+    //     let dims = arr.dims();
+    //     let array = PyArray::zeros(self.py(), [dims[1], dims[2]], false);
+    //     for dims
+    // }
+    // fn decompress_feature_map(&self, arr: &PyArray<f32>) -> &PyArray<f32> {
+    //     let array =
+    // }
     fn channels(&self) -> i32 {
         i32::from(self.state.channels)
     }

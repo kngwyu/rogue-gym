@@ -112,6 +112,10 @@ class RogueEnv(gym.Env):
     def feature_dims(self) -> Tuple[int, int, int]:
         return self.game.feature_dims()
 
+    def compress_feature_map(self, fmap: ndarray) -> ndarray:
+        assert fmap.ndim == 3
+        return 
+
     def step(self, action: Union[int, str]) -> Tuple[ndarray, float, bool, RogueResult]:
         """
         Do action.
@@ -125,7 +129,7 @@ class RogueEnv(gym.Env):
         elif type(action) is str:
             self.__step_str(action)
         else:
-            print("Invalid action: ", action)
+            raise ValueError("Invalid action: {}".format(action))
         self.__cache()
         gold_after = self.result.gold()
         reward = gold_after - gold_before
