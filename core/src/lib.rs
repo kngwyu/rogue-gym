@@ -2,6 +2,7 @@
 
 #[macro_use]
 extern crate bitflags;
+extern crate ndarray;
 #[macro_use]
 extern crate derive_more;
 #[macro_use]
@@ -33,7 +34,6 @@ mod fenwick;
 pub mod input;
 pub mod item;
 mod rng;
-#[cfg(feature = "symbol")]
 pub mod symbol;
 pub mod tile;
 pub mod ui;
@@ -119,7 +119,6 @@ impl GameConfig {
     pub fn from_json(json: &str) -> GameResult<Self> {
         serde_json::from_str(json).into_chained(|| "GameConfig::from_json")
     }
-    #[cfg(feature = "symbol")]
     pub fn symbol_max(&self) -> Option<symbol::Symbol> {
         match self.enemies.tile_max() {
             Some(t) => symbol::Symbol::from_tile(t.into()),

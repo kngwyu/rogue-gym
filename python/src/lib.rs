@@ -5,10 +5,10 @@ extern crate pyo3;
 extern crate rect_iter;
 extern crate rogue_gym_core;
 
-use ndarray::Array3;
+use ndarray::{Array2, Array3};
 use numpy::PyArray;
 use pyo3::{exc, prelude::*};
-use rect_iter::GetMut2D;
+use rect_iter::{GetMut2D, RectRange};
 use rogue_gym_core::character::player::Status;
 use rogue_gym_core::dungeon::{Positioned, X, Y};
 use rogue_gym_core::error::*;
@@ -20,22 +20,61 @@ use rogue_gym_core::{
 
 /// result of the action
 /// (map as list of byte array, status as dict, status to display, feature map)
-type ActionResult<'p> = (&'p PyList, &'p PyDict, Py<PyString>, &'p PyArray<f32>);
+type ActionResult<'p> = (&'p PyList, &'p PyDict, Py<PyString>, PlayerState);
+
+/// Memory efficient representation of State.
+#[pyclass]
+#[derive(Clone, Debug)]
+struct PlayerState {
+    symbol_map: Array2<u8>,
+    channels: u8,
+    status: Box<[u32]>,
+}
+
+impl PlayerState {
+    fn new(
+        map: &Vec<Vec<u8>>,
+        stats: &Status,
+        channels: u8,
+    ) -> Result<Self, symbol::InvalidTileError> {
+        let mut syms = Array2::zeros([map.len(), map[0].len()]);
+        symbol::construct_symbol_map(map, map.len(), map[0].len(), channels, &mut syms)?;
+        let status = stats.to_vec().into_boxed_slice();
+        Ok(PlayerState {
+            symbol_map: syms,
+            status,
+            channels,
+        })
+    }
+}
+
+impl ::pyo3::IntoPyObject for PlayerState {
+    fn into_object(self, py: ::pyo3::Python) -> ::pyo3::PyObject {
+        ::pyo3::Py::new(py, |_| self).unwrap().into_object(py)
+    }
+}
+
+#[pymethods]
+impl PlayerState {
+    fn to_symbol_image(&self) -> PyArray<f32> {}
+}
 
 #[derive(Debug)]
-struct PlayerState {
+struct PlayerStateInner {
     map: Vec<Vec<u8>>,
-    feature_map: Array3<f32>,
+    range: RectRange<usize>,
+    feature_buf: Array3<f32>,
     channels: u8,
     status: Status,
 }
 
-impl PlayerState {
+impl PlayerStateInner {
     fn new(w: X, h: Y, channels: u8) -> Self {
         let (w, h) = (w.0 as usize, h.0 as usize);
-        PlayerState {
+        PlayerStateInner {
             map: vec![vec![b' '; w]; h],
-            feature_map: Array3::zeros([usize::from(channels), h, w]),
+            range: RectRange::zero_start(w, h).unwrap(),
+            feature_buf: Array3::zeros([usize::from(channels), h, w]),
             channels,
             status: Status::default(),
         }
@@ -43,7 +82,6 @@ impl PlayerState {
     fn update(&mut self, runtime: &RunTime) -> GameResult<()> {
         self.status = runtime.player_status();
         self.draw_map(runtime)?;
-        symbol::construct_channeled_symbol_map(&self.map, self.channels, &mut self.feature_map)?;
         Ok(())
     }
     fn draw_map(&mut self, runtime: &RunTime) -> GameResult<()> {
@@ -59,23 +97,22 @@ impl PlayerState {
         let map: Vec<_> = self.map.iter().map(|v| PyBytes::new(py, &v)).collect();
         let map = PyList::new(py, &map);
         let status = PyDict::new(py);
-        for (k, v) in self.status.to_vec() {
+        for (k, v) in self.status.to_dict_vec() {
             status.set_item(k, v)?;
         }
         let status_str = PyString::new(py, &format!("{}", self.status));
-        Ok((
-            map,
-            status,
-            status_str,
-            PyArray::from_ndarray(py, self.feature_map.clone()),
-        ))
+        let player_status =
+            PlayerState::new(&self.map, &self.status, self.channels).map_err(|e| {
+                PyErr::new::<exc::RuntimeError, _>(format!("error in rogue_gym_core: {}", e))
+            })?;
+        Ok((map, status, status_str, player_status))
     }
 }
 
 #[pyclass]
 struct GameState {
     runtime: RunTime,
-    state: PlayerState,
+    state: PlayerStateInner,
     config: GameConfig,
     prev_actions: Vec<Reaction>,
     token: PyToken,
@@ -103,7 +140,7 @@ impl GameState {
             .expect("Failed to get symbol max")
             .to_byte()
             + 1;
-        let mut state = PlayerState::new(w, h, channels);
+        let mut state = PlayerStateInner::new(w, h, channels);
         state.update(&mut runtime).unwrap();
         obj.init(|token| GameState {
             runtime,
@@ -113,14 +150,6 @@ impl GameState {
             token,
         })
     }
-    // fn compress_feature_map(&self, arr: &PyArray<f32>) -> &PyArray<f32> {
-    //     let dims = arr.dims();
-    //     let array = PyArray::zeros(self.py(), [dims[1], dims[2]], false);
-    //     for dims
-    // }
-    // fn decompress_feature_map(&self, arr: &PyArray<f32>) -> &PyArray<f32> {
-    //     let array =
-    // }
     fn channels(&self) -> i32 {
         i32::from(self.state.channels)
     }
@@ -174,5 +203,6 @@ impl GameState {
 #[pymodinit(_rogue_gym)]
 fn init_mod(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<GameState>()?;
+    m.add_class::<PlayerState>()?;
     Ok(())
 }

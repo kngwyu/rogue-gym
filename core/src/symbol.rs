@@ -1,7 +1,6 @@
 //! Symbol representation of tiles for neural network
-extern crate ndarray;
-
-use self::ndarray::{Array2, Array3};
+use ndarray::{Array2, Array3};
+use rect_iter::Get2D;
 use tile::Tile;
 
 /// Symbol
@@ -50,34 +49,36 @@ pub fn tile_to_sym(t: u8) -> Option<u8> {
 pub struct InvalidTileError(Tile, u8);
 
 pub fn construct_symbol_map(
-    map: &Vec<Vec<u8>>,
+    map: &impl Get2D<Item = u8>,
+    max_y: usize,
+    max_x: usize,
     symbol_max: u8,
-    res: &mut Array2<f32>,
+    res: &mut Array2<u8>,
 ) -> Result<(), InvalidTileError> {
-    let (h, w) = (map.len(), map[0].len());
-    for y in 0..h {
-        for x in 0..w {
-            let t = map[y][x];
+    for y in 0..max_y {
+        for x in 0..max_x {
+            let t = *map.get_xy(x, y);
             let sym = tile_to_sym(t).ok_or_else(|| InvalidTileError(t.into(), symbol_max))?;
             if sym > symbol_max {
                 return Err(InvalidTileError(t.into(), symbol_max));
             }
-            res[[y, x]] = f32::from(sym);
+            res[[y, x]] = sym;
         }
     }
     Ok(())
 }
 
 pub fn construct_channeled_symbol_map(
-    map: &Vec<Vec<u8>>,
+    map: &impl Get2D<Item = u8>,
+    max_y: usize,
+    max_x: usize,
     symbol_max: u8,
     res: &mut Array3<f32>,
 ) -> Result<(), InvalidTileError> {
-    let (h, w) = (map.len(), map[0].len());
     for i in 0..usize::from(symbol_max) {
-        for y in 0..h {
-            for x in 0..w {
-                let t = map[y][x];
+        for y in 0..max_y {
+            for x in 0..max_x {
+                let t = *map.get_xy(x, y);
                 let sym = tile_to_sym(t).ok_or_else(|| InvalidTileError(t.into(), symbol_max))?;
                 if sym > symbol_max {
                     return Err(InvalidTileError(t.into(), symbol_max));

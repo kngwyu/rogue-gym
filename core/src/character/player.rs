@@ -155,7 +155,8 @@ impl Default for Leveling {
         let exps: Vec<Exp> = vec![
             10u32, 20, 40, 80, 160, 320, 640, 1300, 2600, 5200, 13000, 26000, 50000, 100_000,
             200_000, 400_000, 800_000, 2_000_000, 4_000_000, 8_000_000, 0,
-        ].into_iter()
+        ]
+        .into_iter()
         .map(|u| u.into())
         .collect();
         Leveling { exps }
@@ -216,7 +217,7 @@ pub struct Status {
 }
 
 impl Status {
-    pub fn to_vec(&self) -> Vec<(&'static str, u32)> {
+    pub fn to_dict_vec(&self) -> Vec<(&'static str, u32)> {
         vec![
             ("dungeon_level", self.dungeon_level),
             ("gold", self.gold),
@@ -228,6 +229,20 @@ impl Status {
             ("player_level", self.player_level),
             ("exp", self.exp.0),
             ("hunger", self.hunger_level.to_u32()),
+        ]
+    }
+    pub fn to_vec(&self) -> Vec<u32> {
+        vec![
+            self.dungeon_level,
+            self.gold,
+            self.hp.current.0 as u32,
+            self.hp.max.0 as u32,
+            self.strength.current.0 as u32,
+            self.strength.max.0 as u32,
+            self.defense.0 as u32,
+            self.player_level,
+            self.exp.0,
+            self.hunger_level.to_u32(),
         ]
     }
     pub fn to_image(&self, w: usize, h: usize) -> Vec<Vec<Vec<f32>>> {
