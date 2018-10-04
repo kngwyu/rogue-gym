@@ -8,7 +8,7 @@ use std::ops::Range;
 pub struct FenwickSet {
     inner: FenwickTree,
     num_elements: usize,
-    max_val: usize,
+    max_val_excluded: usize,
 }
 
 impl Default for FenwickSet {
@@ -28,7 +28,7 @@ impl FenwickSet {
         FenwickSet {
             inner: FenwickTree::new(n),
             num_elements: 0,
-            max_val: n - 1,
+            max_val_excluded: n,
         }
     }
     /// create a new set from range `range` with the capacity [0..range.end)
@@ -44,7 +44,7 @@ impl FenwickSet {
     /// if `elem` is already in the set, return false.
     /// if not, return true.
     pub fn insert(&mut self, elem: usize) -> bool {
-        if elem > self.max_val || self.contains(elem) {
+        if elem >= self.max_val_excluded || self.contains(elem) {
             false
         } else {
             self.inner.add(elem, 1);
@@ -56,7 +56,7 @@ impl FenwickSet {
     /// if `elem` is in the set, return true.
     /// if not, return false.
     pub fn remove(&mut self, elem: usize) -> bool {
-        if elem > self.max_val || !self.contains(elem) {
+        if elem >= self.max_val_excluded || !self.contains(elem) || self.num_elements == 0 {
             false
         } else {
             self.inner.add(elem, -1);
@@ -66,7 +66,7 @@ impl FenwickSet {
     }
     /// Checks if the set cotains a element `elem`
     pub fn contains(&self, elem: usize) -> bool {
-        if elem > self.max_val {
+        if elem >= self.max_val_excluded {
             return false;
         }
         self.inner.sum_range(elem..elem + 1) == 1
@@ -74,7 +74,7 @@ impl FenwickSet {
     /// return nth-smallest element in the set
     pub fn nth(&self, n: usize) -> Option<usize> {
         let res = self.inner.lower_bound(n as i32 + 1);
-        if res > self.max_val {
+        if res >= self.max_val_excluded {
             None
         } else {
             Some(res)

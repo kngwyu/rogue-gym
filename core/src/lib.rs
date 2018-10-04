@@ -82,11 +82,11 @@ pub struct GameConfig {
 }
 
 const fn default_screen_width() -> i32 {
-    MIN_WIDTH
+    DEFAULT_WIDTH
 }
 
 const fn default_screen_height() -> i32 {
-    MIN_HEIGHT
+    DEFAULT_HEIGHT
 }
 
 const fn default_hide_dungeon() -> bool {
@@ -96,8 +96,8 @@ const fn default_hide_dungeon() -> bool {
 impl Default for GameConfig {
     fn default() -> Self {
         GameConfig {
-            width: MIN_WIDTH,
-            height: MIN_HEIGHT,
+            width: DEFAULT_WIDTH,
+            height: DEFAULT_HEIGHT,
             seed: None,
             dungeon: DungeonStyle::default(),
             item: item::Config::default(),
@@ -109,10 +109,13 @@ impl Default for GameConfig {
     }
 }
 
-const MIN_WIDTH: i32 = 80;
-const MAX_WIDTH: i32 = MIN_WIDTH * 2;
-const MIN_HEIGHT: i32 = 24;
-const MAX_HEIGHT: i32 = MIN_HEIGHT * 2;
+pub const DEFAULT_WIDTH: i32 = 80;
+pub const DEFAULT_HEIGHT: i32 = 24;
+pub const MAX_WIDTH: i32 = DEFAULT_WIDTH * 2;
+pub const MAX_HEIGHT: i32 = DEFAULT_HEIGHT * 2;
+
+pub const MIN_WIDTH: i32 = 48;
+pub const MIN_HEIGHT: i32 = DEFAULT_HEIGHT;
 
 impl GameConfig {
     /// construct Game configuration from json string
@@ -152,6 +155,7 @@ impl GameConfig {
         const ERR_STR: &str = "GameConfig::build";
         let game_info = GameInfo::new();
         let config = self.to_global().chain_err(|| ERR_STR)?;
+        debug!("Building dungeon with seed {}", config.seed);
         // TODO: invalid checking
         let mut item = ItemHandler::new(self.item.clone(), config.seed);
         let mut dungeon = self
@@ -364,10 +368,7 @@ mod config_test {
     }
     #[test]
     fn minimum() {
-        let mut file = File::open("../data/config-minimum.json").unwrap();
-        let mut buf = String::new();
-        file.read_to_string(&mut buf).unwrap();
-        let config: GameConfig = serde_json::from_str(&buf).unwrap();
+        let config: GameConfig = serde_json::from_str("{}").unwrap();
         assert_eq!(config, GameConfig::default());
     }
 }

@@ -1,10 +1,28 @@
 {
-    "s": {
+    "u": {
+        "Act": {
+            "Move": "RightUp"
+        }
+    },
+    "k": {
+        "Act": {
+            "Move": "Up"
+        }
+    },
+    "b": {
+        "Act": {
+            "Move": "LeftDown"
+        }
+    },
+    ">": {
         "Act": "DownStair"
     },
-    "h": {
+    "s": {
+        "Act": "Search"
+    },
+    "y": {
         "Act": {
-            "Move": "Left"
+            "Move": "LeftUp"
         }
     },
     "n": {
@@ -17,32 +35,14 @@
             "Move": "Down"
         }
     },
-    "u": {
+    "h": {
         "Act": {
-            "Move": "RightUp"
+            "Move": "Left"
         }
-    },
-    "k": {
-        "Act": {
-            "Move": "Up"
-        }
-    },
-    ">": {
-        "Act": "DownStair"
     },
     "l": {
         "Act": {
             "Move": "Right"
-        }
-    },
-    "y": {
-        "Act": {
-            "Move": "LeftUp"
-        }
-    },
-    "b": {
-        "Act": {
-            "Move": "LeftDown"
         }
     }
 }

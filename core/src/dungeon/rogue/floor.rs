@@ -27,15 +27,20 @@ pub struct Floor {
 
 impl Floor {
     fn new(rooms: Vec<Room>, doors: HashSet<Coord>, field: Field<Surface>) -> Self {
-        let num_non_empty = rooms.iter().fold(0, |acc, room| {
-            let plus = if room.is_empty() { 0 } else { 1 };
-            acc + plus
-        });
+        let non_empty_rooms =
+            rooms
+                .iter()
+                .fold(FenwickSet::with_capacity(rooms.len()), |mut s, room| {
+                    if !room.is_empty() {
+                        s.insert(room.id);
+                    }
+                    s
+                });
         Floor {
             rooms,
             doors,
             field,
-            non_empty_rooms: FenwickSet::from_range(0..num_non_empty),
+            non_empty_rooms,
             items: Default::default(),
         }
     }
@@ -60,7 +65,8 @@ impl Floor {
                     .map(|mut_cell| {
                         mut_cell.surface = surface;
                         mut_cell.attr = gen_attr(surface, room.is_dark, rng, level, config);
-                    }).into_chained(|| "Error in gen_floor")
+                    })
+                    .into_chained(|| "Error in gen_floor")
             })
         })?;
         // sometimes door is hidden randomly so first we store positions to avoid borrow restriction
@@ -91,7 +97,8 @@ impl Floor {
                         if !cell.is_hidden() && !cell.is_locked() {
                             cell.surface = surface;
                         }
-                    }).into_chained(|| "Floor::new dig_passges returned invalid index")
+                    })
+                    .into_chained(|| "Floor::new dig_passges returned invalid index")
             })?;
         Ok(Floor::new(rooms, doors, field))
     }
@@ -225,7 +232,8 @@ impl Floor {
                 cell.attr |= CellAttr::HAS_DRAWN;
                 cell.visible(true);
             },
-        ).chain_err(|| "Floor::enters_room")
+        )
+        .chain_err(|| "Floor::enters_room")
     }
 
     /// player enters room
@@ -238,7 +246,8 @@ impl Floor {
                     cell.visible(false);
                 }
             },
-        ).chain_err(|| "Floor::leaves_room")
+        )
+        .chain_err(|| "Floor::leaves_room")
     }
 
     /// player walks in the cell
@@ -399,7 +408,8 @@ mod test {
                         let cd: Coord = cd.into();
                         let cell = floor.field.get_p(cd);
                         cell.surface != Surface::Door && floor.doors.contains(&cd)
-                    }).count();
+                    })
+                    .count();
             }
             assert!(before <= hidden + 10);
             before = hidden;

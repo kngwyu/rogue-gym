@@ -1,11 +1,11 @@
 {
-    "width": 80,
+    "width": 48,
     "height": 24,
-    "seed": null,
+    "seed": 205137725767938116673932234383213029327,
     "dungeon": {
-        "dungeon-style": "rogue",
-        "room_num_x": 3,
-        "room_num_y": 3,
+        "style": "rogue",
+        "room_num_x": 2,
+        "room_num_y": 2,
         "min_room_size": {
             "x": 4,
             "y": 4

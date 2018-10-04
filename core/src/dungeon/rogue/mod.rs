@@ -150,7 +150,8 @@ impl Drawable for Surface {
             Surface::Door => b'+',
             Surface::Trap => b'^',
             Surface::None => b' ',
-        }.into()
+        }
+        .into()
     }
 }
 
@@ -246,6 +247,7 @@ impl Dungeon {
         let (width, height) = (self.config_global.width, self.config_global.height);
         let mut floor = Floor::gen_floor(level, &self.config, width, height, &mut self.rng)
             .chain_err(|| ERR_STR)?;
+        debug!("[Dungeon::new_level] field: {}", floor.field);
         // setup gold
         let set_gold = !game_info.is_cleared || level >= self.max_level;
         debug!("[Dungeon::new_level] set_gold: {}", set_gold);

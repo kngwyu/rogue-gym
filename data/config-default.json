@@ -3,7 +3,7 @@
     "height": 24,
     "seed": null,
     "dungeon": {
-        "dungeon-style": "rogue",
+        "style": "rogue",
         "room_num_x": 3,
         "room_num_y": 3,
         "min_room_size": {
@@ -35,67 +35,9 @@
                 "Move": "Left"
             }
         },
-        "s": {
-            "Act": "Search"
-        },
-        "Right": {
-            "Act": {
-                "Move": "Right"
-            }
-        },
         "k": {
             "Act": {
                 "Move": "Up"
-            }
-        },
-        "h": {
-            "Act": {
-                "Move": "Left"
-            }
-        },
-        "S": {
-            "Sys": "Save"
-        },
-        "Esc": {
-            "Sys": "Cancel"
-        },
-        "Down": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
-        "Q": {
-            "Sys": "Quit"
-        },
-        ">": {
-            "Act": "DownStair"
-        },
-        "b": {
-            "Act": {
-                "Move": "LeftDown"
-            }
-        },
-        "Up": {
-            "Act": {
-                "Move": "Up"
-            }
-        },
-        "l": {
-            "Act": {
-                "Move": "Right"
-            }
-        },
-        "n": {
-            "Both": {
-                "act": {
-                    "Move": "RightDown"
-                },
-                "sys": "No"
-            }
-        },
-        "u": {
-            "Act": {
-                "Move": "RightUp"
             }
         },
         "y": {
@@ -106,10 +48,68 @@
                 "sys": "Yes"
             }
         },
+        "Q": {
+            "Sys": "Quit"
+        },
+        "h": {
+            "Act": {
+                "Move": "Left"
+            }
+        },
+        "Right": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
         "j": {
             "Act": {
                 "Move": "Down"
             }
+        },
+        "b": {
+            "Act": {
+                "Move": "LeftDown"
+            }
+        },
+        ">": {
+            "Act": "DownStair"
+        },
+        "s": {
+            "Act": "Search"
+        },
+        "Up": {
+            "Act": {
+                "Move": "Up"
+            }
+        },
+        "Esc": {
+            "Sys": "Cancel"
+        },
+        "n": {
+            "Both": {
+                "act": {
+                    "Move": "RightDown"
+                },
+                "sys": "No"
+            }
+        },
+        "Down": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "u": {
+            "Act": {
+                "Move": "RightUp"
+            }
+        },
+        "l": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "S": {
+            "Sys": "Save"
         }
     },
     "player": {

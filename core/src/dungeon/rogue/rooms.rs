@@ -68,7 +68,8 @@ impl Room {
                         Surface::Floor
                     };
                     register(Positioned(cd.into(), surface))
-                }).chain_err(|| "Room::draw"),
+                })
+                .chain_err(|| "Room::draw"),
             RoomKind::Maze(ref maze) => maze
                 .passage_iter()
                 .try_for_each(|cd| register(Positioned(cd, Surface::Passage)))
@@ -199,7 +200,8 @@ crate fn gen_rooms(
             }
             let is_empty = empty_rooms.contains(i);
             make_room(is_empty, room_size, upper_left, i, &config, level, rng)
-        }).collect()
+        })
+        .collect()
 }
 
 /// generata a room
@@ -279,7 +281,8 @@ crate mod test {
             room.draw(|Positioned(cd, s)| {
                 *buffer.get_mut_p(cd) = s;
                 Ok(())
-            }).unwrap();
+            })
+            .unwrap();
         }
         buffer
     }
