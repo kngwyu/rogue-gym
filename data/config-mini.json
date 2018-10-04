@@ -3,7 +3,7 @@
     "height": 24,
     "dungeon": {
         "style": "rogue",
-        "room_num_x": 2,
-        "room_num_y": 2
+        "room_num_x": 3,
+        "room_num_y": 3
     }
 }
