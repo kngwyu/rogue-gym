@@ -99,9 +99,8 @@ class RogueEnv(gym.Env):
             self.game.react(ord(act))
 
     def state_to_symbol_image(self, state: PlayerState) -> ndarray:
-        t = type(state)
-        if t is not PlayerState:
-            raise ValueError("RogueEnv.state_to_symbol_image is called for " + t)
+        if not isinstance(state, PlayerState):
+            raise ValueError("Needs PlayerState, but {} was given".format(type(state)))
         return self.game.get_symbol_image(state)
 
     def step(self, action: Union[int, str]) -> Tuple[PlayerState, float, bool, None]:
