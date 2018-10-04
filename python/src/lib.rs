@@ -5,14 +5,14 @@ extern crate pyo3;
 extern crate rect_iter;
 extern crate rogue_gym_core;
 
-use ndarray::{Array2, Array3};
+use ndarray::Array3;
 use numpy::PyArray;
 use pyo3::{
     basic::{PyObjectReprProtocol, PyObjectStrProtocol},
     exc,
     prelude::*,
 };
-use rect_iter::{GetMut2D, RectRange};
+use rect_iter::GetMut2D;
 use rogue_gym_core::character::player::Status;
 use rogue_gym_core::dungeon::{Positioned, X, Y};
 use rogue_gym_core::error::*;
@@ -58,6 +58,13 @@ impl PlayerState {
     }
     fn dungeon_str(&self) -> impl Iterator<Item = &str> {
         self.map.iter().map(|v| unsafe { from_utf8_unchecked(v) })
+    }
+    fn symbol_image<'py>(&self, py: Python<'py>) -> PyResult<&'py PyArray<f32>> {
+        let (h, w) = (self.map.len(), self.map[0].len());
+        let mut array = Array3::zeros([usize::from(self.channels), h, w]);
+        symbol::construct_channeled_symbol_map(&self.map, h, w, self.channels - 1, &mut array)
+            .map_err(|e| PyErr::new::<exc::RuntimeError, _>(format!("{}", e)))?;
+        Ok(PyArray::from_ndarray(py, array))
     }
 }
 
@@ -115,7 +122,6 @@ impl PlayerState {
     fn gold(&self) -> PyResult<u32> {
         Ok(self.status.gold)
     }
-    // fn to_symbol_image(&self) -> PyArray<f32> {}
 }
 
 #[pyclass]
@@ -206,6 +212,10 @@ impl GameState {
         });
         self.prev_actions = res;
         Ok(self.state.clone())
+    }
+    fn get_symbol_image(&self, state: &PlayerState) -> PyResult<PyArray<f32>> {
+        let py = self.token.py();
+        state.symbol_image(py).map(|arr| arr.to_owned(py))
     }
 }
 

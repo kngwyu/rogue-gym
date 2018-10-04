@@ -50,13 +50,13 @@ pub struct InvalidTileError(Tile, u8);
 
 pub fn construct_symbol_map(
     map: &impl Get2D<Item = u8>,
-    max_y: usize,
-    max_x: usize,
+    w: usize,
+    h: usize,
     symbol_max: u8,
     res: &mut Array2<u8>,
 ) -> Result<(), InvalidTileError> {
-    for y in 0..max_y {
-        for x in 0..max_x {
+    for y in 0..h {
+        for x in 0..w {
             let t = *map.get_xy(x, y);
             let sym = tile_to_sym(t).ok_or_else(|| InvalidTileError(t.into(), symbol_max))?;
             if sym > symbol_max {
@@ -70,17 +70,17 @@ pub fn construct_symbol_map(
 
 pub fn construct_channeled_symbol_map(
     map: &impl Get2D<Item = u8>,
-    max_y: usize,
-    max_x: usize,
+    h: usize,
+    w: usize,
     symbol_max: u8,
     res: &mut Array3<f32>,
 ) -> Result<(), InvalidTileError> {
     for i in 0..usize::from(symbol_max) {
-        for y in 0..max_y {
-            for x in 0..max_x {
+        for y in 0..h {
+            for x in 0..w {
                 let t = *map.get_xy(x, y);
                 let sym = tile_to_sym(t).ok_or_else(|| InvalidTileError(t.into(), symbol_max))?;
-                if sym > symbol_max {
+                if sym >= symbol_max {
                     return Err(InvalidTileError(t.into(), symbol_max));
                 }
                 res[[i, y, x]] = if usize::from(sym) == i { 1.0 } else { 0.0 };

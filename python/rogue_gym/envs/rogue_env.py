@@ -73,15 +73,6 @@ class RogueEnv(gym.Env):
     def __cache(self) -> None:
         self.result = self.game.prev()
 
-    def reset(self) -> None:
-        """reset game state"""
-        self.game.reset()
-        self.__cache()
-
-    def __step_str(self, actions: str) -> None:
-        for act in actions:
-            self.game.react(ord(act))
-
     def screen_size(self) -> Tuple[int, int]:
         """
         returns (height, width)
@@ -96,6 +87,22 @@ class RogueEnv(gym.Env):
 
     def feature_dims(self) -> Tuple[int, int, int]:
         return self.game.feature_dims()
+
+    def get_key_to_action(self) -> Dict[str, str]:
+        return self.ACION_MEANINGS
+
+    def get_dungeon(self, is_ascii: bool = True) -> List[str]:
+        return self.result.dungeon
+
+    def __step_str(self, actions: str) -> None:
+        for act in actions:
+            self.game.react(ord(act))
+
+    def state_to_symbol_image(self, state: PlayerState) -> ndarray:
+        t = type(state)
+        if t is not PlayerState:
+            raise ValueError("RogueEnv.state_to_symbol_image is called for " + t)
+        return self.game.get_symbol_image(state)
 
     def step(self, action: Union[int, str]) -> Tuple[PlayerState, float, bool, None]:
         """
@@ -123,25 +130,18 @@ class RogueEnv(gym.Env):
         """
         self.game.set_seed(seed)
 
-    def get_dungeon(self, is_ascii: bool = True) -> List[str]:
-        """
-        @param is_ascii(bool): STUB
-        """
-        return self.result.dungeon
-
-    def show_screen(self, is_ascii: bool = True) -> None:
-        """
-        @param is_ascii(bool): STUB
-        """
-        print(self.result)
-
     def render(self, mode='human', close: bool = False) -> None:
         """
         STUB
         """
         print(self.result)
 
-    def get_key_to_action(self) -> Dict[str, str]:
-        return self.ACION_MEANINGS
+    def reset(self) -> None:
+        """reset game state"""
+        self.game.reset()
+        self.__cache()
+
+    def __repr__(self):
+        return self.result.__repr__()
 
 

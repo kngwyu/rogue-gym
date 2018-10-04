@@ -25,7 +25,8 @@ class TestSeed1(unittest.TestCase):
         self.assertTrue(done)
         self.assertEqual(rewards, 102)
         self.assertEqual(env.channels(), 17)
-        # self.assertEqual(state.shape, (17, 24, 80))
+        symbol_img = env.state_to_symbol_image(state)
+        self.assertEqual(symbol_img.shape, (17, 24, 80))
 
 
 if __name__ == "__main__":
