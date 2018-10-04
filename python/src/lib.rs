@@ -7,7 +7,11 @@ extern crate rogue_gym_core;
 
 use ndarray::{Array2, Array3};
 use numpy::PyArray;
-use pyo3::{exc, prelude::*};
+use pyo3::{
+    basic::{PyObjectReprProtocol, PyObjectStrProtocol},
+    exc,
+    prelude::*,
+};
 use rect_iter::{GetMut2D, RectRange};
 use rogue_gym_core::character::player::Status;
 use rogue_gym_core::dungeon::{Positioned, X, Y};
@@ -17,64 +21,23 @@ use rogue_gym_core::{
     input::{Key, KeyMap},
     GameConfig, Reaction, RunTime,
 };
-
-/// result of the action
-/// (map as list of byte array, status as dict, status to display, feature map)
-type ActionResult<'p> = (&'p PyList, &'p PyDict, Py<PyString>, PlayerState);
+use std::collections::HashMap;
+use std::str::from_utf8_unchecked;
 
 /// Memory efficient representation of State.
 #[pyclass]
 #[derive(Clone, Debug)]
 struct PlayerState {
-    symbol_map: Array2<u8>,
-    channels: u8,
-    status: Box<[u32]>,
-}
-
-impl PlayerState {
-    fn new(
-        map: &Vec<Vec<u8>>,
-        stats: &Status,
-        channels: u8,
-    ) -> Result<Self, symbol::InvalidTileError> {
-        let mut syms = Array2::zeros([map.len(), map[0].len()]);
-        symbol::construct_symbol_map(map, map.len(), map[0].len(), channels, &mut syms)?;
-        let status = stats.to_vec().into_boxed_slice();
-        Ok(PlayerState {
-            symbol_map: syms,
-            status,
-            channels,
-        })
-    }
-}
-
-impl ::pyo3::IntoPyObject for PlayerState {
-    fn into_object(self, py: ::pyo3::Python) -> ::pyo3::PyObject {
-        ::pyo3::Py::new(py, |_| self).unwrap().into_object(py)
-    }
-}
-
-#[pymethods]
-impl PlayerState {
-    fn to_symbol_image(&self) -> PyArray<f32> {}
-}
-
-#[derive(Debug)]
-struct PlayerStateInner {
     map: Vec<Vec<u8>>,
-    range: RectRange<usize>,
-    feature_buf: Array3<f32>,
     channels: u8,
     status: Status,
 }
 
-impl PlayerStateInner {
+impl PlayerState {
     fn new(w: X, h: Y, channels: u8) -> Self {
         let (w, h) = (w.0 as usize, h.0 as usize);
-        PlayerStateInner {
+        PlayerState {
             map: vec![vec![b' '; w]; h],
-            range: RectRange::zero_start(w, h).unwrap(),
-            feature_buf: Array3::zeros([usize::from(channels), h, w]),
             channels,
             status: Status::default(),
         }
@@ -93,26 +56,72 @@ impl PlayerStateInner {
             Ok(())
         })
     }
-    fn res<'p>(&self, py: Python<'p>) -> PyResult<ActionResult<'p>> {
-        let map: Vec<_> = self.map.iter().map(|v| PyBytes::new(py, &v)).collect();
-        let map = PyList::new(py, &map);
-        let status = PyDict::new(py);
-        for (k, v) in self.status.to_dict_vec() {
-            status.set_item(k, v)?;
-        }
-        let status_str = PyString::new(py, &format!("{}", self.status));
-        let player_status =
-            PlayerState::new(&self.map, &self.status, self.channels).map_err(|e| {
-                PyErr::new::<exc::RuntimeError, _>(format!("error in rogue_gym_core: {}", e))
-            })?;
-        Ok((map, status, status_str, player_status))
+    fn dungeon_str(&self) -> impl Iterator<Item = &str> {
+        self.map.iter().map(|v| unsafe { from_utf8_unchecked(v) })
     }
+}
+
+impl ::pyo3::IntoPyObject for PlayerState {
+    fn into_object(self, py: ::pyo3::Python) -> ::pyo3::PyObject {
+        ::pyo3::Py::new(py, |_| self).unwrap().into_object(py)
+    }
+}
+
+impl<'p> PyObjectReprProtocol<'p> for PlayerState {
+    type Success = String;
+    type Result = PyResult<String>;
+}
+
+impl<'p> PyObjectStrProtocol<'p> for PlayerState {
+    type Success = String;
+    type Result = PyResult<String>;
+}
+
+impl<'p> PyObjectProtocol<'p> for PlayerState {
+    fn __repr__(&'p self) -> <Self as PyObjectReprProtocol>::Result {
+        let mut dungeon = self.dungeon_str().fold(String::new(), |mut res, s| {
+            res.push_str(s);
+            res.push('\n');
+            res
+        });
+        dungeon.push_str(&format!("{}", self.status));
+        Ok(dungeon)
+    }
+    fn __str__(&'p self) -> <Self as PyObjectStrProtocol>::Result {
+        self.__repr__()
+    }
+}
+
+#[pymethods]
+impl PlayerState {
+    #[getter]
+    fn status(&self) -> PyResult<HashMap<String, u32>> {
+        Ok(self
+            .status
+            .to_dict_vec()
+            .into_iter()
+            .map(|(s, v)| (s.to_owned(), v))
+            .collect())
+    }
+    #[getter]
+    fn dungeon(&self) -> PyResult<Vec<String>> {
+        Ok(self.dungeon_str().map(|s| s.to_string()).collect())
+    }
+    #[getter]
+    fn dungeon_level(&self) -> PyResult<u32> {
+        Ok(self.status.dungeon_level)
+    }
+    #[getter]
+    fn gold(&self) -> PyResult<u32> {
+        Ok(self.status.gold)
+    }
+    // fn to_symbol_image(&self) -> PyArray<f32> {}
 }
 
 #[pyclass]
 struct GameState {
     runtime: RunTime,
-    state: PlayerStateInner,
+    state: PlayerState,
     config: GameConfig,
     prev_actions: Vec<Reaction>,
     token: PyToken,
@@ -140,7 +149,7 @@ impl GameState {
             .expect("Failed to get symbol max")
             .to_byte()
             + 1;
-        let mut state = PlayerStateInner::new(w, h, channels);
+        let mut state = PlayerState::new(w, h, channels);
         state.update(&mut runtime).unwrap();
         obj.init(|token| GameState {
             runtime,
@@ -174,10 +183,10 @@ impl GameState {
         self.runtime = runtime;
         Ok(())
     }
-    fn prev(&self) -> PyResult<ActionResult> {
-        self.state.res(self.token.py())
+    fn prev(&self) -> PlayerState {
+        self.state.clone()
     }
-    fn react(&mut self, input: u8) -> PyResult<ActionResult> {
+    fn react(&mut self, input: u8) -> PyResult<PlayerState> {
         let res = self
             .runtime
             .react_to_key(Key::Char(input as char))
@@ -196,7 +205,7 @@ impl GameState {
             Reaction::Notify(_) => {}
         });
         self.prev_actions = res;
-        self.state.res(self.token.py())
+        Ok(self.state.clone())
     }
 }
 

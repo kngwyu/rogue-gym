@@ -3,23 +3,8 @@ import gym
 import json
 import numpy as np
 from numpy import ndarray
-from typing import ByteString, Dict, List, Tuple, Union
-from rogue_gym_python._rogue_gym import GameState
-
-
-class RogueResult():
-    def update(self, res: Tuple[List[ByteString], Dict, str, np.array]):
-        self.dungeon, self.status, self.__status_str, self.feature_map = res
-
-    def gold(self) -> int:
-        return self.status['gold']
-
-    def __repr__(self):
-        res = ''
-        for b in self.dungeon:
-            res += b.decode() + '\n'
-        res += self.__status_str
-        return res
+from typing import Dict, List, Tuple, Union
+from rogue_gym_python._rogue_gym import GameState, PlayerState
 
 
 class RogueEnv(gym.Env):
@@ -82,11 +67,11 @@ class RogueEnv(gym.Env):
             f = open(config_path, 'r')
             config = f.read()
         self.game = GameState(seed, config)
-        self.result = RogueResult()
+        self.result = None
         self.__cache()
 
     def __cache(self) -> None:
-        self.result.update(self.game.prev())
+        self.result = self.game.prev()
 
     def reset(self) -> None:
         """reset game state"""
@@ -112,17 +97,13 @@ class RogueEnv(gym.Env):
     def feature_dims(self) -> Tuple[int, int, int]:
         return self.game.feature_dims()
 
-    def compress_feature_map(self, fmap: ndarray) -> ndarray:
-        assert fmap.ndim == 3
-        return 
-
-    def step(self, action: Union[int, str]) -> Tuple[ndarray, float, bool, RogueResult]:
+    def step(self, action: Union[int, str]) -> Tuple[PlayerState, float, bool, None]:
         """
         Do action.
         @param actions(string):
              key board inputs to rogue(e.g. "hjk" or "hh>")
         """
-        gold_before = self.result.gold()
+        gold_before = self.result.gold
         if type(action) is int:
             s = self.ACTION_MAPPINGS[action]
             self.__step_str(s)
@@ -131,9 +112,8 @@ class RogueEnv(gym.Env):
         else:
             raise ValueError("Invalid action: {}".format(action))
         self.__cache()
-        gold_after = self.result.gold()
-        reward = gold_after - gold_before
-        return self.result.feature_map, reward, False, self.result
+        reward = self.result.gold - gold_before
+        return self.result, reward, False, None
 
     def seed(self, seed: int) -> None:
         """
@@ -143,7 +123,7 @@ class RogueEnv(gym.Env):
         """
         self.game.set_seed(seed)
 
-    def get_screen(self, is_ascii: bool = True) -> List[ByteString]:
+    def get_dungeon(self, is_ascii: bool = True) -> List[str]:
         """
         @param is_ascii(bool): STUB
         """
@@ -156,8 +136,12 @@ class RogueEnv(gym.Env):
         print(self.result)
 
     def render(self, mode='human', close: bool = False) -> None:
+        """
+        STUB
+        """
         print(self.result)
 
     def get_key_to_action(self) -> Dict[str, str]:
         return self.ACION_MEANINGS
+
 

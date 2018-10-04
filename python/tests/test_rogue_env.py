@@ -9,14 +9,14 @@ class TestSeed1(unittest.TestCase):
     """
     def test_screen(self):
         env = RogueEnv(seed=1)
-        self.assertEqual(env.get_screen(), SEED1_DUNGEON)
+        self.assertEqual(env.get_dungeon(), SEED1_DUNGEON)
         h, w = env.screen_size()
         self.assertEqual(h, 24)
         self.assertEqual(w, 80)
 
     def test_action(self):
         env = RogueEnv(seed=1)
-        _, _, _, res = env.step(CMD_STR)
+        res, _, _, _ = env.step(CMD_STR)
         self.assertEqual(res.dungeon, SEED1_DUNGEON2)
 
 

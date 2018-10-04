@@ -1,5 +1,4 @@
-from numpy import ndarray
-from .rogue_env import RogueEnv, RogueResult
+from .rogue_env import PlayerState, RogueEnv
 from typing import Tuple, Union
 
 
@@ -14,10 +13,9 @@ class FirstFloorEnv(RogueEnv):
         super().__init__(seed=seed, config_path=config_path, config_dict=config_dict)
         self.stair_reward = stair_reward
 
-    def step(self, action: Union[int, str]) -> Tuple[ndarray, float, bool, RogueResult]:
-        features, reward, _, res = super().step(action)
-        end = False
+    def step(self, action: Union[int, str]) -> Tuple[PlayerState, float, bool, None]:
+        state, reward, end, _ = super().step(action)
         if self.result.status["dungeon_level"] == 2:
             end = True
             reward += self.stair_reward
-        return self.result.feature_map, reward, end, res
+        return state, reward, end, None
