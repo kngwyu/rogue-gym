@@ -83,7 +83,8 @@ impl<T: Write> Screen<T> {
             )
         } else {
             Ok(())
-        }.into_chained(|| "in Screen::clean_notification")
+        }
+        .into_chained(|| "in Screen::clean_notification")
     }
 
     pub fn cursor<P: Into<(u16, u16)>>(&mut self, cd: P) -> GameResult<()> {
@@ -107,7 +108,8 @@ impl<T: Write> Screen<T> {
             clear::All,
             cursor::Goto(1, 1),
             cursor::Goto(1, 2)
-        ).into_chained(|| "in Screen::welcome")?;
+        )
+        .into_chained(|| "in Screen::welcome")?;
         self.flush().chain_err(|| "in Screen::welcome")
     }
 
@@ -116,7 +118,8 @@ impl<T: Write> Screen<T> {
             self.term,
             "{} No config file is specified, use default settings",
             cursor::Goto(1, 3),
-        ).into_chained(|| "in Screen::default_config")?;
+        )
+        .into_chained(|| "in Screen::default_config")?;
         self.flush().chain_err(|| "in Screen::default_config")
     }
 
@@ -127,7 +130,8 @@ impl<T: Write> Screen<T> {
             cursor::Goto(1, self.height),
             clear::CurrentLine,
             status,
-        ).into_chained(|| "in Screen::status")?;
+        )
+        .into_chained(|| "in Screen::status")?;
         self.flush().chain_err(|| "in Screen::status")
     }
 }

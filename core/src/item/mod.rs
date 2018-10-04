@@ -58,7 +58,8 @@ impl Drawable for ItemKind {
             ItemKind::Scroll => b'?',
             ItemKind::Wand => b'/',
             ItemKind::Weapon => b')',
-        }.into()
+        }
+        .into()
     }
 }
 
@@ -240,6 +241,7 @@ impl ItemHandler {
                     Err(ErrorId::InvalidSetting
                         .into_with(|| format!("You can't add {} items", items.len())))
                 }
-            }).chain_err(|| "in ItemHandler::init_player_items")
+            })
+            .chain_err(|| "in ItemHandler::init_player_items")
     }
 }

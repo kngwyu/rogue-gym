@@ -88,7 +88,8 @@ pub fn process_reaction<W: Write>(
                     notify!(screen, "Thank you for playing!")?;
                     return Ok(Some(Transition::Exit));
                 }
-            }.chain_err(|| "in devui::process_reaction")?;
+            }
+            .chain_err(|| "in devui::process_reaction")?;
             Ok(None)
         }
         Reaction::Redraw => {

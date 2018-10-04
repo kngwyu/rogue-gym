@@ -64,21 +64,24 @@ fn parse_args<'a>() -> ArgMatches<'a> {
                 .value_name("FILE")
                 .help("Sets your config json file")
                 .takes_value(true),
-        ).arg(
+        )
+        .arg(
             clap::Arg::with_name("log")
                 .short("l")
                 .long("log")
                 .value_name("LOG")
                 .help("Enable logging to log file")
                 .takes_value(true),
-        ).arg(
+        )
+        .arg(
             clap::Arg::with_name("filter")
                 .short("f")
                 .long("filter")
                 .value_name("FILTER")
                 .help("Sets up log level")
                 .takes_value(true),
-        ).get_matches()
+        )
+        .get_matches()
 }
 
 fn setup_logger(args: &ArgMatches) -> GameResult<()> {
@@ -94,7 +97,8 @@ fn setup_logger(args: &ArgMatches) -> GameResult<()> {
                     record.level(),
                     message
                 ))
-            }).level(level)
+            })
+            .level(level)
             .chain(
                 OpenOptions::new()
                     .write(true)
@@ -102,7 +106,8 @@ fn setup_logger(args: &ArgMatches) -> GameResult<()> {
                     .truncate(true)
                     .open(file)
                     .into_chained(|| "error in getting log file")?,
-            ).apply()
+            )
+            .apply()
             .into_chained(|| "error in setup_log")?;
     }
     Ok(())
