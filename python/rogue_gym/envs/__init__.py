@@ -1,2 +1,2 @@
-from .rogue_env import RogueEnv
+from .rogue_env import PlayerState, RogueEnv
 from .wrappers import FirstFloorEnv
