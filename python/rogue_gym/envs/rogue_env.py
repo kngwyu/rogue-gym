@@ -135,12 +135,11 @@ class RogueEnv(gym.Env):
         """
         print(self.result)
 
-    def reset(self) -> None:
+    def reset(self) -> PlayerState:
         """reset game state"""
         self.game.reset()
         self.__cache()
+        return self.result
 
     def __repr__(self):
         return self.result.__repr__()
-
-
