@@ -68,7 +68,8 @@ where
             .filter(|dir| {
                 let nxt = current_cd + dir.to_cd().scale(2, 2);
                 range.contains(nxt) && !used.contains(&nxt)
-            }).enumerate()
+            })
+            .enumerate()
             .filter(|(i, _)| rng.does_happen(*i as u32 + 1))
             .last()
             .map(|t| t.1);
@@ -105,7 +106,8 @@ mod test {
                 *buffer.get_mut_p(cd) = true;
                 Ok(())
             }
-        }).unwrap();
+        })
+        .unwrap();
         for v in buffer {
             for f in v {
                 if f {

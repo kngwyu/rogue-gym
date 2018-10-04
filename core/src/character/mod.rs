@@ -171,7 +171,7 @@ pub trait Damage {
 impl Damage for Dice {
     fn random(self, rng: &mut RngHandle) -> HitPoint {
         (0..self.times).fold(HitPoint::default(), |acc, _| {
-            acc + HitPoint::from(rng.range(1..self.max + 1))
+            acc + HitPoint::from(rng.range(1..=self.max))
         })
     }
     fn min(self) -> HitPoint {

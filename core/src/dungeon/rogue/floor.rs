@@ -356,14 +356,14 @@ fn gen_attr(
     let mut attr = CellAttr::default();
     match surface {
         Surface::Passage => {
-            if rng.range(0..config.dark_level) < level
+            if rng.range(..config.dark_level) < level
                 && rng.does_happen(config.hidden_passage_rate_inv)
             {
                 attr |= CellAttr::IS_HIDDEN;
             }
         }
         Surface::Door => {
-            if rng.range(0..config.dark_level) < level
+            if rng.range(..config.dark_level) < level
                 && rng.does_happen(config.locked_door_rate_inv)
             {
                 attr |= CellAttr::IS_LOCKED;

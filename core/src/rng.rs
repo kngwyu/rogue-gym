@@ -7,7 +7,22 @@ use rand::{
 };
 use std::fmt::Debug;
 use std::mem;
-use std::ops::Range;
+use std::ops::{Bound, Range, RangeBounds};
+
+fn bounds_to_range<T: PrimInt>(r: impl RangeBounds<T>) -> Range<T> {
+    let s = match r.start_bound() {
+        Bound::Excluded(t) => *t + T::one(),
+        Bound::Included(t) => *t,
+        Bound::Unbounded => T::min_value(),
+    };
+    let g = match r.end_bound() {
+        Bound::Excluded(t) => *t,
+        Bound::Included(t) => *t + T::one(),
+        Bound::Unbounded => T::max_value(),
+    };
+    s..g
+}
+
 /// wrapper of XorShiftRng
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RngHandle(XorShiftRng);
@@ -38,7 +53,8 @@ impl RngHandle {
         RngHandle(XorShiftRng::from_seed(seed))
     }
     /// select some values randomly from given range
-    pub fn select<T: PrimInt>(&mut self, range: Range<T>) -> RandomSelecter<T> {
+    pub fn select<T: PrimInt>(&mut self, range: impl RangeBounds<T>) -> RandomSelecter<T> {
+        let range = bounds_to_range(range);
         let width = range.end - range.start;
         let width = width.to_usize().expect("[RngHandle::select] NumCast error");
         if width > 10_000_000 {
@@ -59,11 +75,9 @@ impl RngHandle {
         }
     }
     /// wrapper of gen_range which takes Range
-    pub fn range<T>(&mut self, range: Range<T>) -> T
-    where
-        T: Clone + PartialOrd + SampleUniform + Debug,
-    {
-        let (s, e) = (range.start.clone(), range.end.clone());
+    pub fn range<T: PrimInt + SampleUniform + Debug>(&mut self, range: impl RangeBounds<T>) -> T {
+        let range = bounds_to_range(range);
+        let (s, e) = (range.start, range.end);
         assert!(s < e, "invalid range {:?}..{:?}", s, e);
         self.0.gen_range(s, e)
     }
@@ -155,7 +169,7 @@ mod selecter_bench {
         let mut bs = FixedBitSet::from_capacity(MAX);
         b.iter(|| {
             let mut rng = RngHandle::new();
-            let u = rng.select(0..MAX).nth(MAX / 2).unwrap();
+            let u = rng.select(..MAX).nth(MAX / 2).unwrap();
             bs.insert(u);
         });
     }

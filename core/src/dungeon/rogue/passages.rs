@@ -255,7 +255,8 @@ impl Node {
                     return None;
                 }
                 Some(((next.0 + next.1 * xrooms.0) as usize, d))
-            }).collect();
+            })
+            .collect();
         let num_rooms = (xrooms.0 * yrooms.0) as usize;
         Node {
             connections: FixedBitSet::with_capacity(num_rooms),
@@ -314,9 +315,11 @@ mod test {
                     .and_then(|buf| {
                         *buf = surface;
                         Ok(())
-                    }).into_chained(|| "passages::test::to_buffer")
+                    })
+                    .into_chained(|| "passages::test::to_buffer")
             },
-        ).unwrap();
+        )
+        .unwrap();
         buffer
     }
     #[test]
