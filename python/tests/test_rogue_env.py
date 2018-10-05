@@ -22,7 +22,6 @@ class TestSeed1(unittest.TestCase):
     def test_max_steps(self):
         env = RogueEnv(seed=1, max_steps=5)
         _, _, done, _ = env.step(CMD_STR)
-        self.assertEqual(env.steps, 15)
         self.assertTrue(done)
 
 
