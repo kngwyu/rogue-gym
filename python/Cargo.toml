@@ -12,8 +12,8 @@ ndarray = "0.12.0"
 rect-iter = "0.2.0"
 
 [dependencies.numpy]
-git = "https://github.com/rust-numpy/rust-numpy.git"
-rev = "39573bfababbb161f1e3bf779567d1cc63f45a0b"
+git = "https://github.com/kngwyu/rust-numpy.git"
+branch = "return_owned"
 
 [dependencies.pyo3]
 version = "0.4.1"

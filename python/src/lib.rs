@@ -59,7 +59,7 @@ impl PlayerState {
     fn dungeon_str(&self) -> impl Iterator<Item = &str> {
         self.map.iter().map(|v| unsafe { from_utf8_unchecked(v) })
     }
-    fn symbol_image<'py>(&self, py: Python<'py>) -> PyResult<&'py PyArray<f32>> {
+    fn symbol_image(&self, py: Python) -> PyResult<PyArray<f32>> {
         let (h, w) = (self.map.len(), self.map[0].len());
         let mut array = Array3::zeros([usize::from(self.channels), h, w]);
         symbol::construct_channeled_symbol_map(&self.map, h, w, self.channels - 1, &mut array)
@@ -215,9 +215,7 @@ impl GameState {
     }
     fn get_symbol_image(&self, state: &PlayerState) -> PyResult<PyArray<f32>> {
         let py = self.token.py();
-        state
-            .symbol_image(py)
-            .map(|arr| unsafe { arr.to_owned(py) })
+        state.symbol_image(py)
     }
 }
 
