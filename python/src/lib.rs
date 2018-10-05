@@ -213,9 +213,9 @@ impl GameState {
         self.prev_actions = res;
         Ok(self.state.clone())
     }
-    fn get_symbol_image(&self, state: &PlayerState) -> PyResult<PyArray<f32>> {
+    fn get_symbol_image(&self, state: &PlayerState) -> PyResult<&PyArray<f32>> {
         let py = self.token.py();
-        state.symbol_image(py).map(|arr| arr.to_owned(py))
+        state.symbol_image(py)
     }
 }
 
