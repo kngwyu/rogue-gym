@@ -25,7 +25,7 @@ use std::collections::HashMap;
 use std::str::from_utf8_unchecked;
 
 /// Memory efficient representation of State.
-#[pyclass(gc)]
+#[pyclass]
 #[derive(Clone, Debug)]
 struct PlayerState {
     map: Vec<Vec<u8>>,
