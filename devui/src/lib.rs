@@ -58,7 +58,6 @@ pub fn play_game(config: GameConfig, is_default: bool) -> GameResult<()> {
             }
         }
     }
-
     Ok(())
 }
 

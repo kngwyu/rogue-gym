@@ -1,7 +1,6 @@
 """module for wrapper of rogue_gym_core::Runtime as gym environment"""
 import gym
 import json
-import numpy as np
 from numpy import ndarray
 from typing import Dict, List, Tuple, Union
 from rogue_gym_python._rogue_gym import GameState, PlayerState
@@ -37,24 +36,19 @@ class RogueEnv(gym.Env):
         ">": "DOWNSTAIR",
     }
 
-    ACTION_MAPPINGS = {
-        0: "h",
-        1: "j",
-        2: "k",
-        3: "l",
-        4: "n",
-        5: "b",
-        6: "u",
-        7: "y",
-        8: ">",
-        9: "s",
-    }
+    ACTIONS = [
+        "h", "j", "k", "l", "n",
+        "b", "u", "y", ">", "s",
+    ]
+
+    ACTION_LEN = len(ACTIONS)
 
     def __init__(
             self,
             seed: int = None,
             config_path: str = None,
-            config_dict: dict = None
+            config_dict: dict = None,
+            max_steps: int = 1000,
     ) -> None:
         """
         @param config_path(string): path to config file
@@ -68,6 +62,8 @@ class RogueEnv(gym.Env):
             config = f.read()
         self.game = GameState(seed, config)
         self.result = None
+        self.max_steps = max_steps
+        self.steps = 0
         self.__cache()
 
     def __cache(self) -> None:
@@ -94,14 +90,15 @@ class RogueEnv(gym.Env):
     def get_dungeon(self, is_ascii: bool = True) -> List[str]:
         return self.result.dungeon
 
-    def __step_str(self, actions: str) -> None:
-        for act in actions:
-            self.game.react(ord(act))
-
     def state_to_symbol_image(self, state: PlayerState) -> ndarray:
         if not isinstance(state, PlayerState):
             raise ValueError("Needs PlayerState, but {} was given".format(type(state)))
         return self.game.get_symbol_image(state)
+
+    def __step_str(self, actions: str) -> int:
+        for act in actions:
+            self.game.react(ord(act))
+        return len(actions)
 
     def step(self, action: Union[int, str]) -> Tuple[PlayerState, float, bool, None]:
         """
@@ -109,17 +106,20 @@ class RogueEnv(gym.Env):
         @param actions(string):
              key board inputs to rogue(e.g. "hjk" or "hh>")
         """
+        if self.steps >= self.max_steps:
+            return self.result, 0., True, None
         gold_before = self.result.gold
-        if type(action) is int:
+        if isinstance(action, int) and action < self.ACTION_LEN:
             s = self.ACTION_MAPPINGS[action]
-            self.__step_str(s)
-        elif type(action) is str:
-            self.__step_str(action)
+            self.steps += self.__step_str(s)
+        elif isinstance(action, str):
+            self.steps += self.__step_str(action)
         else:
             raise ValueError("Invalid action: {}".format(action))
         self.__cache()
         reward = self.result.gold - gold_before
-        return self.result, reward, False, None
+        done = self.steps >= self.max_steps
+        return self.result, reward, done, None
 
     def seed(self, seed: int) -> None:
         """
@@ -138,6 +138,7 @@ class RogueEnv(gym.Env):
     def reset(self) -> PlayerState:
         """reset game state"""
         self.game.reset()
+        self.steps = 0
         self.__cache()
         return self.result
 

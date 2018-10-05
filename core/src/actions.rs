@@ -1,5 +1,4 @@
 //! module for handling actions and do some operations related to multiple modules
-
 use character::{Action, Player};
 use dungeon::{Direction, Dungeon};
 use error::*;
@@ -27,7 +26,24 @@ crate fn process_action(
         Action::UpStair => {
             Err(ErrorId::Unimplemented.into_with(|| "UpStair Command is unimplemented"))
         }
-        Action::Move(d) => move_player(d, dungeon, player),
+        Action::Move(d) => Ok(move_player(d, dungeon, player)?.0),
+        Action::MoveUntil(d) => {
+            let mut out = Vec::new();
+            loop {
+                let res = move_player(d, dungeon, player)?;
+                let tile = dungeon
+                    .tile(&player.pos)
+                    .map(|t| t.to_char())
+                    .unwrap_or(' ');
+                if res.1 || (tile != '.' && tile != '#') {
+                    out.extend(res.0);
+                    break;
+                } else if out.is_empty() {
+                    out.extend(res.0);
+                }
+            }
+            Ok(out)
+        }
         Action::Search => search(dungeon, player),
     }
 }
@@ -54,21 +70,23 @@ fn move_player(
     direction: Direction,
     dungeon: &mut Dungeon,
     player: &mut Player,
-) -> GameResult<Vec<Reaction>> {
+) -> GameResult<(Vec<Reaction>, bool /*done*/)> {
     if !dungeon.can_move_player(&player.pos, direction) {
-        return Ok(vec![Reaction::Notify(GameMsg::CantMove(direction))]);
+        return Ok((vec![Reaction::Notify(GameMsg::CantMove(direction))], true));
     }
     let new_pos = dungeon
         .move_player(&player.pos, direction)
         .chain_err(|| "actions::move_player")?;
     player.pos = new_pos;
     player.running(true);
+    let mut done = false;
     let mut res = vec![Reaction::Redraw];
     if let Some(msg) = get_item(dungeon, player).chain_err(|| "in actions::move_player")? {
         res.push(Reaction::Notify(msg));
         res.push(Reaction::StatusUpdated);
+        done = true;
     }
-    Ok(res)
+    Ok((res, done))
 }
 
 fn search(dungeon: &mut Dungeon, player: &mut Player) -> GameResult<Vec<Reaction>> {

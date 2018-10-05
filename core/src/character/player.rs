@@ -139,6 +139,7 @@ impl StatusInner {
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq, Hash)]
 pub enum Action {
     Move(Direction),
+    MoveUntil(Direction),
     UpStair,
     DownStair,
     Search,

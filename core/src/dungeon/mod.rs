@@ -181,6 +181,15 @@ impl Dungeon {
             _ => unimplemented!(),
         }
     }
+    crate fn tile(&mut self, path: &DungeonPath) -> Option<Tile> {
+        match self {
+            Dungeon::Rogue(dungeon) => {
+                let address = rogue::Address::from_path(path);
+                dungeon.tile(address)
+            }
+            _ => unimplemented!(),
+        }
+    }
 }
 
 pub type PathVec = SmallVec<[i32; 4]>;

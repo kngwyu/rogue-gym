@@ -72,7 +72,7 @@ const fn default_trap() -> bool {
 }
 
 const fn default_max_empty_rooms() -> u32 {
-    4
+    3
 }
 
 const fn default_amulet_level() -> u32 {
@@ -362,6 +362,13 @@ impl Dungeon {
             return None;
         }
         self.current_floor.items.remove(&addr.cd)
+    }
+    crate fn tile(&mut self, addr: Address) -> Option<Tile> {
+        self.current_floor
+            .field
+            .try_get_mut_p(addr.cd)
+            .ok()
+            .map(|s| s.tile())
     }
 }
 

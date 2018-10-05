@@ -1,17 +1,28 @@
 {
-    "b": {
-        "Act": {
-            "Move": "LeftDown"
+    "n": {
+        "Both": {
+            "act": {
+                "Move": "RightDown"
+            },
+            "sys": "No"
         }
     },
-    "Up": {
+    "h": {
         "Act": {
-            "Move": "Up"
+            "Move": "Left"
         }
     },
-    "j": {
+    "u": {
         "Act": {
-            "Move": "Down"
+            "Move": "RightUp"
+        }
+    },
+    "Esc": {
+        "Sys": "Cancel"
+    },
+    "l": {
+        "Act": {
+            "Move": "Right"
         }
     },
     "y": {
@@ -22,12 +33,58 @@
             "sys": "Yes"
         }
     },
+    "K": {
+        "Act": {
+            "MoveUntil": "Up"
+        }
+    },
+    "S": {
+        "Sys": "Save"
+    },
+    "Down": {
+        "Act": {
+            "Move": "Down"
+        }
+    },
+    "U": {
+        "Act": {
+            "MoveUntil": "RightUp"
+        }
+    },
+    "Y": {
+        "Act": {
+            "MoveUntil": "LeftUp"
+        }
+    },
     "Q": {
         "Sys": "Quit"
     },
-    "u": {
+    "N": {
         "Act": {
-            "Move": "RightUp"
+            "MoveUntil": "RightDown"
+        }
+    },
+    ">": {
+        "Act": "DownStair"
+    },
+    "k": {
+        "Act": {
+            "Move": "Up"
+        }
+    },
+    "j": {
+        "Act": {
+            "Move": "Down"
+        }
+    },
+    "b": {
+        "Act": {
+            "Move": "LeftDown"
+        }
+    },
+    "B": {
+        "Act": {
+            "MoveUntil": "LeftDown"
         }
     },
     "Right": {
@@ -38,46 +95,29 @@
     "s": {
         "Act": "Search"
     },
-    ">": {
-        "Act": "DownStair"
-    },
-    "k": {
+    "Up": {
         "Act": {
             "Move": "Up"
-        }
-    },
-    "n": {
-        "Both": {
-            "act": {
-                "Move": "RightDown"
-            },
-            "sys": "No"
-        }
-    },
-    "l": {
-        "Act": {
-            "Move": "Right"
-        }
-    },
-    "S": {
-        "Sys": "Save"
-    },
-    "Esc": {
-        "Sys": "Cancel"
-    },
-    "h": {
-        "Act": {
-            "Move": "Left"
-        }
-    },
-    "Down": {
-        "Act": {
-            "Move": "Down"
         }
     },
     "Left": {
         "Act": {
             "Move": "Left"
+        }
+    },
+    "H": {
+        "Act": {
+            "MoveUntil": "Left"
+        }
+    },
+    "L": {
+        "Act": {
+            "MoveUntil": "Right"
+        }
+    },
+    "J": {
+        "Act": {
+            "MoveUntil": "Down"
         }
     }
 }

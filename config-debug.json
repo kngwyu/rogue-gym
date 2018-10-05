@@ -1,17 +1,17 @@
 {
-    "width": 48,
+    "width": 80,
     "height": 24,
-    "seed": 84223656248319248276528188548546499197,
+    "seed": 1,
     "dungeon": {
         "style": "rogue",
-        "room_num_x": 2,
-        "room_num_y": 2,
+        "room_num_x": 3,
+        "room_num_y": 3,
         "min_room_size": {
             "x": 4,
             "y": 4
         },
         "enable_trap": true,
-        "max_empty_rooms": 4,
+        "max_empty_rooms": 3,
         "amulet_level": 25,
         "maze_rate_inv": 15,
         "dark_level": 10,
@@ -30,22 +30,29 @@
         }
     },
     "keymap": {
-        "Left": {
+        "Up": {
             "Act": {
-                "Move": "Left"
+                "Move": "Up"
             }
-        },
-        "s": {
-            "Act": "Search"
         },
         "Right": {
             "Act": {
                 "Move": "Right"
             }
         },
-        "k": {
+        "Left": {
             "Act": {
-                "Move": "Up"
+                "Move": "Left"
+            }
+        },
+        "b": {
+            "Act": {
+                "Move": "LeftDown"
+            }
+        },
+        "U": {
+            "Act": {
+                "MoveUntil": "RightUp"
             }
         },
         "h": {
@@ -53,49 +60,30 @@
                 "Move": "Left"
             }
         },
-        "S": {
-            "Sys": "Save"
-        },
         "Esc": {
             "Sys": "Cancel"
-        },
-        "Down": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
-        "Q": {
-            "Sys": "Quit"
         },
         ">": {
             "Act": "DownStair"
         },
-        "b": {
+        "B": {
             "Act": {
-                "Move": "LeftDown"
+                "MoveUntil": "LeftDown"
             }
         },
-        "Up": {
+        "Y": {
             "Act": {
-                "Move": "Up"
+                "MoveUntil": "LeftUp"
             }
         },
-        "l": {
+        "N": {
             "Act": {
-                "Move": "Right"
+                "MoveUntil": "RightDown"
             }
         },
-        "n": {
-            "Both": {
-                "act": {
-                    "Move": "RightDown"
-                },
-                "sys": "No"
-            }
-        },
-        "u": {
+        "J": {
             "Act": {
-                "Move": "RightUp"
+                "MoveUntil": "Down"
             }
         },
         "y": {
@@ -106,9 +94,61 @@
                 "sys": "Yes"
             }
         },
+        "Q": {
+            "Sys": "Quit"
+        },
+        "n": {
+            "Both": {
+                "act": {
+                    "Move": "RightDown"
+                },
+                "sys": "No"
+            }
+        },
+        "l": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "Down": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "S": {
+            "Sys": "Save"
+        },
+        "k": {
+            "Act": {
+                "Move": "Up"
+            }
+        },
         "j": {
             "Act": {
                 "Move": "Down"
+            }
+        },
+        "H": {
+            "Act": {
+                "MoveUntil": "Left"
+            }
+        },
+        "s": {
+            "Act": "Search"
+        },
+        "K": {
+            "Act": {
+                "MoveUntil": "Up"
+            }
+        },
+        "u": {
+            "Act": {
+                "Move": "RightUp"
+            }
+        },
+        "L": {
+            "Act": {
+                "MoveUntil": "Right"
             }
         }
     },

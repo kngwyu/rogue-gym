@@ -179,7 +179,7 @@ crate fn gen_rooms(
     let room_size = Coord::new(width / rn_x.0, height / rn_y.0);
     // set empty rooms
     let empty_rooms: FixedBitSet = {
-        let empty_num = match rng.range(1..=config.max_empty_rooms) {
+        let empty_num = match rng.range(0..=config.max_empty_rooms) {
             n if n >= room_num as u32 => {
                 warn!(
                     "Specified max_empty_rooms is {}, but room num is {}",

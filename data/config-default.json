@@ -11,7 +11,7 @@
             "y": 4
         },
         "enable_trap": true,
-        "max_empty_rooms": 4,
+        "max_empty_rooms": 3,
         "amulet_level": 25,
         "maze_rate_inv": 15,
         "dark_level": 10,
@@ -30,14 +30,107 @@
         }
     },
     "keymap": {
-        "Left": {
+        "Q": {
+            "Sys": "Quit"
+        },
+        "H": {
             "Act": {
-                "Move": "Left"
+                "MoveUntil": "Left"
+            }
+        },
+        ">": {
+            "Act": "DownStair"
+        },
+        "n": {
+            "Both": {
+                "act": {
+                    "Move": "RightDown"
+                },
+                "sys": "No"
+            }
+        },
+        "b": {
+            "Act": {
+                "Move": "LeftDown"
+            }
+        },
+        "Y": {
+            "Act": {
+                "MoveUntil": "LeftUp"
+            }
+        },
+        "J": {
+            "Act": {
+                "MoveUntil": "Down"
+            }
+        },
+        "Up": {
+            "Act": {
+                "Move": "Up"
+            }
+        },
+        "u": {
+            "Act": {
+                "Move": "RightUp"
+            }
+        },
+        "L": {
+            "Act": {
+                "MoveUntil": "Right"
+            }
+        },
+        "U": {
+            "Act": {
+                "MoveUntil": "RightUp"
             }
         },
         "k": {
             "Act": {
                 "Move": "Up"
+            }
+        },
+        "s": {
+            "Act": "Search"
+        },
+        "l": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "N": {
+            "Act": {
+                "MoveUntil": "RightDown"
+            }
+        },
+        "B": {
+            "Act": {
+                "MoveUntil": "LeftDown"
+            }
+        },
+        "Left": {
+            "Act": {
+                "Move": "Left"
+            }
+        },
+        "j": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "Right": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "Esc": {
+            "Sys": "Cancel"
+        },
+        "S": {
+            "Sys": "Save"
+        },
+        "Down": {
+            "Act": {
+                "Move": "Down"
             }
         },
         "y": {
@@ -48,68 +141,15 @@
                 "sys": "Yes"
             }
         },
-        "Q": {
-            "Sys": "Quit"
-        },
         "h": {
             "Act": {
                 "Move": "Left"
             }
         },
-        "Right": {
+        "K": {
             "Act": {
-                "Move": "Right"
+                "MoveUntil": "Up"
             }
-        },
-        "j": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
-        "b": {
-            "Act": {
-                "Move": "LeftDown"
-            }
-        },
-        ">": {
-            "Act": "DownStair"
-        },
-        "s": {
-            "Act": "Search"
-        },
-        "Up": {
-            "Act": {
-                "Move": "Up"
-            }
-        },
-        "Esc": {
-            "Sys": "Cancel"
-        },
-        "n": {
-            "Both": {
-                "act": {
-                    "Move": "RightDown"
-                },
-                "sys": "No"
-            }
-        },
-        "Down": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
-        "u": {
-            "Act": {
-                "Move": "RightUp"
-            }
-        },
-        "l": {
-            "Act": {
-                "Move": "Right"
-            }
-        },
-        "S": {
-            "Sys": "Save"
         }
     },
     "player": {
