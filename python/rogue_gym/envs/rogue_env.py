@@ -110,7 +110,7 @@ class RogueEnv(gym.Env):
             return self.result, 0., True, None
         gold_before = self.result.gold
         if isinstance(action, int) and action < self.ACTION_LEN:
-            s = self.ACTION_MAPPINGS[action]
+            s = self.ACTIONS[action]
             self.steps += self.__step_str(s)
         elif isinstance(action, str):
             self.steps += self.__step_str(action)
