@@ -142,7 +142,9 @@ impl<S: Clone> Field<S> {
 impl<S> Get2D for Field<S> {
     type Item = Cell<S>;
     fn try_get_xy<T: ToPrimitive>(&self, x: T, y: T) -> Result<&Self::Item, IndexError> {
-        let (x, y) = (x, y).map(|n| n.to_usize().unwrap());
+        let (x, y) = (x, y).map(|n| n.to_i64().unwrap());
+        let x = x.to_usize().ok_or(IndexError::X(x))?;
+        let y = y.to_usize().ok_or(IndexError::Y(y))?;
         if x > self.width.0 as usize {
             return Err(IndexError::X(x as i64));
         }
@@ -160,7 +162,9 @@ impl<S> GetMut2D for Field<S> {
         x: T,
         y: T,
     ) -> Result<&mut Self::Item, IndexError> {
-        let (x, y) = (x, y).map(|n| n.to_usize().unwrap());
+        let (x, y) = (x, y).map(|n| n.to_i64().unwrap());
+        let x = x.to_usize().ok_or(IndexError::X(x))?;
+        let y = y.to_usize().ok_or(IndexError::Y(y))?;
         if x > self.width.0 as usize {
             return Err(IndexError::X(x as i64));
         }

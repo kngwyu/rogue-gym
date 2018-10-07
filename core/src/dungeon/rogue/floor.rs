@@ -261,6 +261,7 @@ impl Floor {
             .visit();
         Direction::into_enum_iter().take(9).for_each(|d| {
             let cd = cd + d.to_cd();
+            debug!("player_in: cd {:?}", cd);
             if let Ok(cell) = self.field.try_get_mut_p(cd) {
                 if !d.is_diag() || cell.surface != Surface::Passage {
                     cell.approached();
