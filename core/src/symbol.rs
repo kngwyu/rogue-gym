@@ -1,5 +1,4 @@
 //! Symbol representation of tiles for neural network
-use ndarray::{Array2, Array3};
 use rect_iter::Get2D;
 use tile::Tile;
 

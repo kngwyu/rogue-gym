@@ -2,7 +2,6 @@
 
 #[macro_use]
 extern crate bitflags;
-extern crate ndarray;
 #[macro_use]
 extern crate derive_more;
 #[macro_use]
