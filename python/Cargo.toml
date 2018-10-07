@@ -8,12 +8,11 @@ name = "rogue_gym_python"
 crate-type = ["cdylib"]
 
 [dependencies]
-ndarray = "0.12.0"
 rect-iter = "0.2.0"
 
 [dependencies.numpy]
 git = "https://github.com/kngwyu/rust-numpy.git"
-branch = "return_owned"
+branch = "to-pyarray"
 
 [dependencies.pyo3]
 version = "0.4.1"
