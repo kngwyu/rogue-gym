@@ -32,8 +32,8 @@ class RogueEnv(gym.Env):
         "b": "MOVE_LEFTDOWN",
         "u": "MOVE_RIGHTUP",
         "y": "MOVE_LEFTDOWN",
-        "s": "SEARCH",
         ">": "DOWNSTAIR",
+        "s": "SEARCH",
     }
 
     ACTIONS = [
