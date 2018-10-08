@@ -30,43 +30,17 @@
         }
     },
     "keymap": {
-        "Q": {
-            "Sys": "Quit"
-        },
-        "H": {
+        "L": {
             "Act": {
-                "MoveUntil": "Left"
+                "MoveUntil": "Right"
             }
         },
-        ">": {
-            "Act": "DownStair"
-        },
-        "n": {
-            "Both": {
-                "act": {
-                    "Move": "RightDown"
-                },
-                "sys": "No"
-            }
-        },
-        "b": {
-            "Act": {
-                "Move": "LeftDown"
-            }
+        "S": {
+            "Sys": "Save"
         },
         "Y": {
             "Act": {
                 "MoveUntil": "LeftUp"
-            }
-        },
-        "J": {
-            "Act": {
-                "MoveUntil": "Down"
-            }
-        },
-        "Up": {
-            "Act": {
-                "Move": "Up"
             }
         },
         "u": {
@@ -74,9 +48,19 @@
                 "Move": "RightUp"
             }
         },
-        "L": {
+        "j": {
             "Act": {
-                "MoveUntil": "Right"
+                "Move": "Down"
+            }
+        },
+        "K": {
+            "Act": {
+                "MoveUntil": "Up"
+            }
+        },
+        "B": {
+            "Act": {
+                "MoveUntil": "LeftDown"
             }
         },
         "U": {
@@ -84,9 +68,33 @@
                 "MoveUntil": "RightUp"
             }
         },
-        "k": {
+        "Left": {
             "Act": {
-                "Move": "Up"
+                "Move": "Left"
+            }
+        },
+        "Down": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "J": {
+            "Act": {
+                "MoveUntil": "Down"
+            }
+        },
+        "Esc": {
+            "Sys": "Cancel"
+        },
+        "Q": {
+            "Sys": "Quit"
+        },
+        "y": {
+            "Both": {
+                "act": {
+                    "Move": "LeftUp"
+                },
+                "sys": "Yes"
             }
         },
         "s": {
@@ -97,48 +105,9 @@
                 "Move": "Right"
             }
         },
-        "N": {
-            "Act": {
-                "MoveUntil": "RightDown"
-            }
-        },
-        "B": {
-            "Act": {
-                "MoveUntil": "LeftDown"
-            }
-        },
-        "Left": {
-            "Act": {
-                "Move": "Left"
-            }
-        },
-        "j": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
         "Right": {
             "Act": {
                 "Move": "Right"
-            }
-        },
-        "Esc": {
-            "Sys": "Cancel"
-        },
-        "S": {
-            "Sys": "Save"
-        },
-        "Down": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
-        "y": {
-            "Both": {
-                "act": {
-                    "Move": "LeftUp"
-                },
-                "sys": "Yes"
             }
         },
         "h": {
@@ -146,9 +115,40 @@
                 "Move": "Left"
             }
         },
-        "K": {
+        ">": {
+            "Act": "DownStair"
+        },
+        "Up": {
             "Act": {
-                "MoveUntil": "Up"
+                "Move": "Up"
+            }
+        },
+        "n": {
+            "Both": {
+                "act": {
+                    "Move": "RightDown"
+                },
+                "sys": "No"
+            }
+        },
+        "k": {
+            "Act": {
+                "Move": "Up"
+            }
+        },
+        "H": {
+            "Act": {
+                "MoveUntil": "Left"
+            }
+        },
+        "b": {
+            "Act": {
+                "Move": "LeftDown"
+            }
+        },
+        "N": {
+            "Act": {
+                "MoveUntil": "RightDown"
             }
         }
     },
@@ -232,5 +232,6 @@
             ]
         }
     },
+    "save_inputs": false,
     "hide_dungeon": true
 }

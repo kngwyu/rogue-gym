@@ -1,35 +1,10 @@
 {
-    "b": {
-        "Act": {
-            "Move": "LeftDown"
-        }
+    "s": {
+        "Act": "Search"
     },
-    "L": {
+    "Y": {
         "Act": {
-            "MoveUntil": "Right"
-        }
-    },
-    "K": {
-        "Act": {
-            "MoveUntil": "Up"
-        }
-    },
-    "u": {
-        "Act": {
-            "Move": "RightUp"
-        }
-    },
-    ">": {
-        "Act": "DownStair"
-    },
-    "l": {
-        "Act": {
-            "Move": "Right"
-        }
-    },
-    "U": {
-        "Act": {
-            "MoveUntil": "RightUp"
+            "MoveUntil": "LeftUp"
         }
     },
     "N": {
@@ -37,17 +12,19 @@
             "MoveUntil": "RightDown"
         }
     },
-    "s": {
-        "Act": "Search"
+    "H": {
+        "Act": {
+            "MoveUntil": "Left"
+        }
     },
     "n": {
         "Act": {
             "Move": "RightDown"
         }
     },
-    "k": {
+    "b": {
         "Act": {
-            "Move": "Up"
+            "Move": "LeftDown"
         }
     },
     "y": {
@@ -55,19 +32,29 @@
             "Move": "LeftUp"
         }
     },
-    "Y": {
+    "U": {
         "Act": {
-            "MoveUntil": "LeftUp"
+            "MoveUntil": "RightUp"
+        }
+    },
+    "k": {
+        "Act": {
+            "Move": "Up"
+        }
+    },
+    "l": {
+        "Act": {
+            "Move": "Right"
+        }
+    },
+    "L": {
+        "Act": {
+            "MoveUntil": "Right"
         }
     },
     "B": {
         "Act": {
             "MoveUntil": "LeftDown"
-        }
-    },
-    "J": {
-        "Act": {
-            "MoveUntil": "Down"
         }
     },
     "j": {
@@ -80,9 +67,22 @@
             "Move": "Left"
         }
     },
-    "H": {
+    "u": {
         "Act": {
-            "MoveUntil": "Left"
+            "Move": "RightUp"
         }
+    },
+    "K": {
+        "Act": {
+            "MoveUntil": "Up"
+        }
+    },
+    "J": {
+        "Act": {
+            "MoveUntil": "Down"
+        }
+    },
+    ">": {
+        "Act": "DownStair"
     }
 }
