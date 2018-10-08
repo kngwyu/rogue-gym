@@ -136,7 +136,12 @@ struct GameState {
 #[pymethods]
 impl GameState {
     #[new]
-    fn __new__(obj: &PyRawObject, seed: Option<u64>, config_str: Option<String>) -> PyResult<()> {
+    fn __new__(
+        obj: &PyRawObject,
+        save_actions: bool,
+        seed: Option<u64>,
+        config_str: Option<String>,
+    ) -> PyResult<()> {
         let mut config = if let Some(cfg) = config_str {
             GameConfig::from_json(&cfg).map_err(|e| {
                 PyErr::new::<exc::RuntimeError, _>(format!("failed to parse config, {}", e))
@@ -146,6 +151,9 @@ impl GameState {
         };
         if let Some(seed) = seed {
             config.seed = Some(u128::from(seed));
+        }
+        if save_actions {
+            config.save_inputs = true;
         }
         let mut runtime = config.clone().build().unwrap();
         let (w, h) = runtime.screen_size();
@@ -216,6 +224,11 @@ impl GameState {
     fn get_symbol_image(&self, state: &PlayerState) -> PyResult<&PyArray<f32>> {
         let py = self.token.py();
         state.symbol_image(py)
+    }
+    fn get_history(&self) -> PyResult<String> {
+        self.runtime.saved_inputs_json().map_err(|e| {
+            PyErr::new::<exc::RuntimeError, _>(format!("error when getting history: {}", e))
+        })
     }
 }
 

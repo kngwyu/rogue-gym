@@ -14,18 +14,19 @@ pub mod error;
 pub mod screen;
 use error::*;
 use rogue_gym_core::dungeon::Positioned;
+use rogue_gym_core::input::InputCode;
 use rogue_gym_core::ui::{MordalKind, UiState};
 use rogue_gym_core::{GameConfig, GameMsg, Reaction, RunTime};
-use screen::Screen;
+use screen::{RawTerm, Screen};
 use std::io::{self, Write};
+use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
+use termion::event::Key;
 use termion::input::TermRead;
 
-pub fn play_game(config: GameConfig, is_default: bool) -> GameResult<()> {
-    debug!("{:?}", config);
-    let (w, h) = (config.width, config.height);
-    let mut screen = Screen::from_raw(w, h)?;
+fn setup_screen(config: GameConfig, is_default: bool) -> GameResult<(Screen<RawTerm>, RunTime)> {
+    let mut screen = Screen::from_raw(config.width, config.height)?;
     screen.welcome()?;
     if is_default {
         screen.default_config()?;
@@ -34,6 +35,12 @@ pub fn play_game(config: GameConfig, is_default: bool) -> GameResult<()> {
     thread::sleep(Duration::from_secs(1));
     draw_dungeon(&mut screen, &mut runtime)?;
     screen.status(runtime.player_status())?;
+    Ok((screen, runtime))
+}
+
+pub fn play_game(config: GameConfig, is_default: bool) -> GameResult<()> {
+    debug!("devui::play_game config: {:?}", config);
+    let (mut screen, mut runtime) = setup_screen(config, is_default)?;
     let stdin = io::stdin();
     // let's receive keyboard inputs(our main loop)
     for keys in stdin.keys() {
@@ -51,6 +58,91 @@ pub fn play_game(config: GameConfig, is_default: bool) -> GameResult<()> {
         for reaction in res {
             let result = process_reaction(&mut screen, &mut runtime, reaction)
                 .chain_err(|| "in play_game")?;
+            if let Some(transition) = result {
+                match transition {
+                    Transition::Exit => return Ok(()),
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+pub fn show_replay(config: GameConfig, replay: Vec<InputCode>, interval_ms: u64) -> GameResult<()> {
+    debug!("devui::show_replay config: {:?}", config);
+    let (tx, rx) = mpsc::channel();
+    let replay_thread = thread::spawn(move || {
+        let res = show_replay_(config, replay, interval_ms, rx);
+        if let Err(e) = res {
+            println!("Error in viewer: {}", e);
+        }
+    });
+    let stdin = io::stdin();
+    for key in stdin.keys() {
+        let key = key.into_chained(|| "in show_replay")?;
+        let mut end = false;
+        let res = match key {
+            Key::Char('e') | Key::Esc => {
+                end = true;
+                tx.send(ReplayInst::End)
+            }
+            Key::Char('p') => tx.send(ReplayInst::Pause),
+            Key::Char('s') => tx.send(ReplayInst::Start),
+            _ => continue,
+        };
+        if let Err(e) = res {
+            println!("Error in viewer: {}", e);
+        }
+        if end {
+            break;
+        }
+    }
+    replay_thread.join().unwrap();
+    Ok(())
+}
+
+#[derive(Clone, Copy, Debug)]
+enum ReplayInst {
+    Pause,
+    Start,
+    End,
+}
+
+fn show_replay_(
+    config: GameConfig,
+    mut replay: Vec<InputCode>,
+    interval_ms: u64,
+    rx: mpsc::Receiver<ReplayInst>,
+) -> GameResult<()> {
+    let (mut screen, mut runtime) = setup_screen(config, false)?;
+    let mut sleeping = false;
+    loop {
+        match rx.try_recv() {
+            Ok(ReplayInst::Start) => sleeping = false,
+            Ok(ReplayInst::Pause) => sleeping = true,
+            Ok(ReplayInst::End) => return Ok(()),
+            Err(mpsc::TryRecvError::Disconnected) => bail!("devui::show_replay disconnected!"),
+            Err(mpsc::TryRecvError::Empty) => {}
+        }
+        thread::sleep(Duration::from_millis(interval_ms));
+        if sleeping {
+            continue;
+        }
+        let input = match replay.pop() {
+            Some(x) => x,
+            None => break,
+        };
+        let res = runtime.react_to_input(input);
+        let res = match res {
+            Ok(r) => r,
+            Err(e) => {
+                notify!(screen, "{}", e)?;
+                continue;
+            }
+        };
+        for reaction in res {
+            let result = process_reaction(&mut screen, &mut runtime, reaction)
+                .chain_err(|| "in show_replay")?;
             if let Some(transition) = result {
                 match transition {
                     Transition::Exit => return Ok(()),

@@ -74,6 +74,8 @@ pub struct GameConfig {
     /// enemy configuration
     #[serde(default)]
     pub enemies: enemies::Config,
+    #[serde(default)]
+    pub save_inputs: bool,
     /// hide dungeon or not
     /// this setting is only for debugging and don't use it when you play game
     #[serde(default = "default_hide_dungeon")]
@@ -97,13 +99,14 @@ impl Default for GameConfig {
         GameConfig {
             width: DEFAULT_WIDTH,
             height: DEFAULT_HEIGHT,
-            seed: None,
+            seed: Default::default(),
             dungeon: DungeonStyle::default(),
             item: item::Config::default(),
             keymap: KeyMap::default(),
             player: player::Config::default(),
             enemies: enemies::Config::default(),
-            hide_dungeon: true,
+            save_inputs: Default::default(),
+            hide_dungeon: default_hide_dungeon(),
         }
     }
 }
@@ -146,6 +149,7 @@ impl GameConfig {
             width: w.into(),
             height: h.into(),
             seed,
+            save_inputs: self.save_inputs,
             hide_dungeon: self.hide_dungeon,
         })
     }
@@ -172,9 +176,10 @@ impl GameConfig {
             config,
             dungeon,
             item,
-            ui: UiState::Dungeon,
-            keymap: self.keymap,
             player,
+            ui: UiState::Dungeon,
+            saved_inputs: Vec::new(),
+            keymap: self.keymap,
         })
     }
 }
@@ -187,6 +192,7 @@ pub struct RunTime {
     item: ItemHandler,
     player: Player,
     ui: UiState,
+    saved_inputs: Vec<InputCode>,
     pub keymap: KeyMap,
 }
 
@@ -226,6 +232,9 @@ impl RunTime {
     }
     pub fn react_to_input(&mut self, input: InputCode) -> GameResult<Vec<Reaction>> {
         trace!("[react_to_input] input: {:?} ui: {:?}", input, self.ui);
+        if self.config.save_inputs {
+            self.saved_inputs.push(input);
+        }
         let (next_ui, res) = match self.ui {
             UiState::Dungeon => (
                 None,
@@ -286,6 +295,17 @@ impl RunTime {
         status.dungeon_level = self.dungeon.level();
         status
     }
+    pub fn saved_inputs(&self) -> &[InputCode] {
+        &self.saved_inputs
+    }
+    pub fn saved_inputs_json(&self) -> GameResult<String> {
+        serde_json::to_string(&self.saved_inputs)
+            .into_chained(|| "Runtime::saved_inputs_json: Failed to serialize")
+    }
+}
+
+pub fn json_to_inputs(json: &str) -> GameResult<Vec<InputCode>> {
+    serde_json::from_str(json).into_chained(|| "json_to_inputs: Failed to deserialize")
 }
 
 /// Reaction to user input
@@ -304,7 +324,6 @@ pub enum Reaction {
 #[derive(Clone, Debug)]
 pub enum GameMsg {
     CantMove(Direction),
-    // TODO: show not only kind,
     CantGetItem(ItemKind),
     GotItem { kind: ItemKind, num: u32 },
     NoDownStair,
@@ -318,19 +337,8 @@ pub struct GlobalConfig {
     pub width: X,
     pub height: Y,
     pub seed: u128,
+    pub save_inputs: bool,
     pub hide_dungeon: bool,
-}
-
-// only for testing
-impl Default for GlobalConfig {
-    fn default() -> Self {
-        GlobalConfig {
-            width: X(80),
-            height: Y(24),
-            seed: 1,
-            hide_dungeon: true,
-        }
-    }
 }
 
 /// game information shared and able to be modified by each modules

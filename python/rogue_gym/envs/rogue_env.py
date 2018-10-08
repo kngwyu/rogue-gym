@@ -45,6 +45,7 @@ class RogueEnv(gym.Env):
 
     def __init__(
             self,
+            save_actions: bool = False,
             seed: int = None,
             config_path: str = None,
             config_dict: dict = None,
@@ -58,9 +59,9 @@ class RogueEnv(gym.Env):
         if config_dict:
             config = json.dumps(config_dict)
         elif config_path:
-            f = open(config_path, 'r')
-            config = f.read()
-        self.game = GameState(seed, config)
+            with open(config_path, 'r') as f:
+                config = f.read()
+        self.game = GameState(save_actions, seed, config)
         self.result = None
         self.max_steps = max_steps
         self.steps = 0
@@ -89,6 +90,10 @@ class RogueEnv(gym.Env):
 
     def get_dungeon(self, is_ascii: bool = True) -> List[str]:
         return self.result.dungeon
+
+    def save_actions(self, fname: str) -> None:
+        with open(fname, 'w') as f:
+            f.write(self.game.get_history())
 
     def state_to_symbol_image(self, state: PlayerState) -> ndarray:
         if not isinstance(state, PlayerState):

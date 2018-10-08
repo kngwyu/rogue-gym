@@ -5,6 +5,7 @@ use termion::raw::{IntoRawMode, RawTerminal};
 use termion::{clear, cursor, terminal_size};
 use tuple_map::TupleMap2;
 
+pub type RawTerm = RawTerminal<Stdout>;
 /// wrapper of stdout as rogue screen
 pub struct Screen<T> {
     /// stdout
