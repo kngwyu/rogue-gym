@@ -3,21 +3,12 @@ from typing import Tuple, Union
 
 
 class FirstFloorEnv(RogueEnv):
-    def __init__(
-            self,
-            seed: int = None,
-            config_path: str = None,
-            config_dict: dict = None,
-            max_steps: int = 1000,
-            stair_reward: float = 100.0,
-    ) -> None:
-        super().__init__(
-            seed=seed,
-            config_path=config_path,
-            config_dict=config_dict,
-            max_steps=max_steps
-        )
-        self.stair_reward = stair_reward
+    def __init__(self, *args, **kwargs) -> None:
+        self.stair_reward = 100.0  # default reward
+        if 'stair_reward' in kwargs:
+            self.stair_reward = kwargs['stair_reward']
+            del kwargs['stair_reward']
+        super().__init__(*args, **kwargs)
 
     def step(self, action: Union[int, str]) -> Tuple[PlayerState, float, bool, None]:
         state, reward, end, _ = super().step(action)
