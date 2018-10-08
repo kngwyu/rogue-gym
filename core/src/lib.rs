@@ -1,5 +1,4 @@
 #![feature(const_fn, crate_visibility_modifier, test)]
-
 #[macro_use]
 extern crate bitflags;
 #[macro_use]

@@ -8,12 +8,12 @@ extern crate termion;
 extern crate tuple_map;
 
 use std::fs::{File, OpenOptions};
-use std::io::Read;
+use std::io::{self, Read};
 
 use clap::ArgMatches;
-use rogue_gym_core::GameConfig;
+use rogue_gym_core::{json_to_inputs, GameConfig};
 use rogue_gym_devui::error::*;
-use rogue_gym_devui::play_game;
+use rogue_gym_devui::{play_game, show_replay};
 
 fn main() {
     if let Err(err) = main_() {
@@ -30,7 +30,26 @@ fn main_() -> GameResult<()> {
     let args = parse_args();
     let (config, is_default) = get_config(&args)?;
     setup_logger(&args)?;
-    play_game(config, is_default)
+    if let Some(fname) = args.value_of("replay") {
+        let replay = read_file(fname).into_chained(|| "Failed to read replay file!")?;
+        let replay = json_to_inputs(&replay)?;
+        let mut interval = 500;
+        if let Some(inter) = args.value_of("interval") {
+            interval = inter
+                .parse::<u64>()
+                .into_chained(|| "Failed to parse 'interval' arg!")?;
+        }
+        show_replay(config, replay, interval)
+    } else {
+        play_game(config, is_default)
+    }
+}
+
+fn read_file(name: &str) -> io::Result<String> {
+    let mut file = File::open(name)?;
+    let mut buf = String::new();
+    file.read_to_string(&mut buf)?;
+    Ok(buf)
 }
 
 fn get_config(args: &ArgMatches) -> GameResult<(GameConfig, bool)> {
@@ -45,11 +64,8 @@ fn get_config(args: &ArgMatches) -> GameResult<(GameConfig, bool)> {
             ErrorID::InvalidArg.into_with(|| "Only .json file is allowed as configuration file")
         );
     }
-    let mut file = File::open(file_name).into_chained(|| "get_config")?;
-    let mut buf = String::new();
-    file.read_to_string(&mut buf)
-        .into_chained(|| "get_config")?;
-    Ok((GameConfig::from_json(&buf)?, false))
+    let f = read_file(file_name).into_chained(|| "in get_config")?;
+    Ok((GameConfig::from_json(&f)?, false))
 }
 
 fn parse_args<'a>() -> ArgMatches<'a> {
@@ -79,6 +95,22 @@ fn parse_args<'a>() -> ArgMatches<'a> {
                 .long("filter")
                 .value_name("FILTER")
                 .help("Sets up log level")
+                .takes_value(true),
+        )
+        .arg(
+            clap::Arg::with_name("replay")
+                .short("r")
+                .long("replay")
+                .value_name("RFILE")
+                .help("Open client as replay mode")
+                .takes_value(true),
+        )
+        .arg(
+            clap::Arg::with_name("interval")
+                .short("i")
+                .long("interval")
+                .value_name("INTERVAL")
+                .help("Interval in replay mode")
                 .takes_value(true),
         )
         .get_matches()
