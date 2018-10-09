@@ -73,6 +73,12 @@ impl<T: Write> Screen<T> {
             .into_chained(|| "in Screen::clear")
     }
 
+    pub fn clear_screen(&mut self) -> GameResult<()> {
+        (1..self.height)
+            .try_for_each(|row| write!(self.term, "{}{}", cursor::Goto(1, row), clear::CurrentLine))
+            .into_chained(|| "in Screen::clear")
+    }
+
     pub fn clear_notification(&mut self) -> GameResult<()> {
         if self.has_notification {
             self.has_notification = false;

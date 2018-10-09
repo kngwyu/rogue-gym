@@ -65,7 +65,7 @@ pub fn play_game(config: GameConfig, is_default: bool) -> GameResult<()> {
             }
         }
     }
-    Ok(())
+    screen.clear_screen()
 }
 
 pub fn show_replay(config: GameConfig, replay: Vec<InputCode>, interval_ms: u64) -> GameResult<()> {
@@ -121,7 +121,7 @@ fn show_replay_(
         match rx.try_recv() {
             Ok(ReplayInst::Start) => sleeping = false,
             Ok(ReplayInst::Pause) => sleeping = true,
-            Ok(ReplayInst::End) => return Ok(()),
+            Ok(ReplayInst::End) => break,
             Err(mpsc::TryRecvError::Disconnected) => bail!("devui::show_replay disconnected!"),
             Err(mpsc::TryRecvError::Empty) => {}
         }
@@ -152,6 +152,7 @@ fn show_replay_(
             }
         }
     }
+    screen.clear_screen()
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
