@@ -74,7 +74,7 @@ pub fn show_replay(config: GameConfig, replay: Vec<InputCode>, interval_ms: u64)
     let replay_thread = thread::spawn(move || {
         let res = show_replay_(config, replay, interval_ms, rx);
         if let Err(e) = res {
-            println!("Error in viewer: {}", e);
+            eprintln!("Error in viewer: {}", e);
         }
     });
     let stdin = io::stdin();
@@ -82,7 +82,7 @@ pub fn show_replay(config: GameConfig, replay: Vec<InputCode>, interval_ms: u64)
         let key = key.into_chained(|| "in show_replay")?;
         let mut end = false;
         let res = match key {
-            Key::Char('e') | Key::Esc => {
+            Key::Char('e') | Key::Char('q') | Key::Esc => {
                 end = true;
                 tx.send(ReplayInst::End)
             }
@@ -91,7 +91,7 @@ pub fn show_replay(config: GameConfig, replay: Vec<InputCode>, interval_ms: u64)
             _ => continue,
         };
         if let Err(e) = res {
-            println!("Error in viewer: {}", e);
+            eprintln!("Error in viewer: {}", e);
         }
         if end {
             break;
@@ -110,12 +110,13 @@ enum ReplayInst {
 
 fn show_replay_(
     config: GameConfig,
-    mut replay: Vec<InputCode>,
+    replay: Vec<InputCode>,
     interval_ms: u64,
     rx: mpsc::Receiver<ReplayInst>,
 ) -> GameResult<()> {
     let (mut screen, mut runtime) = setup_screen(config, false)?;
     let mut sleeping = false;
+    let mut replay_idx = 0;
     loop {
         match rx.try_recv() {
             Ok(ReplayInst::Start) => sleeping = false,
@@ -128,10 +129,11 @@ fn show_replay_(
         if sleeping {
             continue;
         }
-        let input = match replay.pop() {
-            Some(x) => x,
-            None => break,
+        let input = match replay.get(replay_idx) {
+            Some(x) => *x,
+            None => continue,
         };
+        replay_idx += 1;
         let res = runtime.react_to_input(input);
         let res = match res {
             Ok(r) => r,
@@ -150,7 +152,6 @@ fn show_replay_(
             }
         }
     }
-    Ok(())
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
