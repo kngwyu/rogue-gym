@@ -186,10 +186,7 @@ impl GameState {
             self.config.width,
         )
     }
-    fn set_seed(&mut self, seed: u64) -> PyResult<()> {
-        self.config.seed = Some(seed as u128);
-        Ok(())
-    }
+    /// Reset the game state
     fn reset(&mut self) -> PyResult<()> {
         let mut runtime = self.config.clone().build().unwrap();
         runtime.keymap = KeyMap::ai();
@@ -197,6 +194,7 @@ impl GameState {
         self.runtime = runtime;
         Ok(())
     }
+    /// Returns the latest game state
     fn prev(&self) -> PlayerState {
         self.state.clone()
     }
@@ -221,13 +219,21 @@ impl GameState {
         self.prev_actions = res;
         Ok(self.state.clone())
     }
+    /// Convert PlayerState to 3D symbol image(like AlphaGo's inputs)
     fn get_symbol_image(&self, state: &PlayerState) -> PyResult<&PyArray<f32>> {
         let py = self.token.py();
         state.symbol_image(py)
     }
-    fn get_history(&self) -> PyResult<String> {
+    /// Returns action history as Json
+    fn dump_history(&self) -> PyResult<String> {
         self.runtime.saved_inputs_json().map_err(|e| {
             PyErr::new::<exc::RuntimeError, _>(format!("error when getting history: {}", e))
+        })
+    }
+    /// Returns config as Json
+    fn dump_config(&self) -> PyResult<String> {
+        self.config.to_json().map_err(|e| {
+            PyErr::new::<exc::RuntimeError, _>(format!("error when getting config: {}", e))
         })
     }
 }

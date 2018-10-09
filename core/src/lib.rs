@@ -50,43 +50,68 @@ use ui::{MordalKind, MordalMsg, UiState};
 pub struct GameConfig {
     /// screen width
     #[serde(default = "default_screen_width")]
+    #[serde(skip_serializing_if = "is_default_width")]
     pub width: i32,
     /// screen height
     #[serde(default = "default_screen_height")]
+    #[serde(skip_serializing_if = "is_default_height")]
     pub height: i32,
     /// seed of random number generator
     /// if None, we use random value chosen by `thread_rng().gen()`
     #[serde(default)]
+    #[serde(skip_serializing_if = "is_default")]
     pub seed: Option<u128>,
     /// dungeon configuration
     #[serde(default)]
+    #[serde(skip_serializing_if = "is_default")]
     pub dungeon: DungeonStyle,
     /// item configuration
     #[serde(default)]
+    #[serde(skip_serializing_if = "is_default")]
     pub item: item::Config,
     /// keymap configuration
     #[serde(default)]
+    #[serde(skip_serializing_if = "is_default")]
     pub keymap: KeyMap,
     /// player configuration
     #[serde(default)]
+    #[serde(skip_serializing_if = "is_default")]
     pub player: player::Config,
     /// enemy configuration
     #[serde(default)]
+    #[serde(skip_serializing_if = "is_default")]
     pub enemies: enemies::Config,
     #[serde(default)]
+    #[serde(skip_serializing_if = "is_default")]
     pub save_inputs: bool,
     /// hide dungeon or not
     /// this setting is only for debugging and don't use it when you play game
     #[serde(default = "default_hide_dungeon")]
+    #[serde(skip_serializing_if = "Clone::clone")]
     pub hide_dungeon: bool,
+}
+
+fn is_default<T>(s: &T) -> bool
+where
+    T: Default + PartialEq,
+{
+    *s == T::default()
 }
 
 const fn default_screen_width() -> i32 {
     DEFAULT_WIDTH
 }
 
+fn is_default_width(w: &i32) -> bool {
+    *w == DEFAULT_WIDTH
+}
+
 const fn default_screen_height() -> i32 {
     DEFAULT_HEIGHT
+}
+
+fn is_default_height(h: &i32) -> bool {
+    *h == DEFAULT_HEIGHT
 }
 
 const fn default_hide_dungeon() -> bool {
@@ -122,6 +147,9 @@ impl GameConfig {
     /// construct Game configuration from json string
     pub fn from_json(json: &str) -> GameResult<Self> {
         serde_json::from_str(json).into_chained(|| "GameConfig::from_json")
+    }
+    pub fn to_json(&self) -> GameResult<String> {
+        serde_json::to_string_pretty(self).into_chained(|| "GameConfig::to_json")
     }
     pub fn symbol_max(&self) -> Option<symbol::Symbol> {
         match self.enemies.tile_max() {
@@ -298,7 +326,7 @@ impl RunTime {
         &self.saved_inputs
     }
     pub fn saved_inputs_json(&self) -> GameResult<String> {
-        serde_json::to_string(&self.saved_inputs)
+        serde_json::to_string_pretty(&self.saved_inputs)
             .into_chained(|| "Runtime::saved_inputs_json: Failed to serialize")
     }
 }
@@ -369,6 +397,7 @@ mod config_test {
     fn default() {
         let game_config = GameConfig::default();
         let json = serde_json::to_string(&game_config).unwrap();
+        assert_eq!(json, "{}");
         let config: GameConfig = serde_json::from_str(&json).unwrap();
         assert_eq!(config, game_config);
     }

@@ -91,9 +91,17 @@ class RogueEnv(gym.Env):
     def get_dungeon(self, is_ascii: bool = True) -> List[str]:
         return self.result.dungeon
 
+    def get_config(self) -> dict:
+        config = self.game.dump_config()
+        return json.loads(config)
+
+    def save_config(self, fname: str) -> None:
+        with open(fname, 'w') as f:
+            f.write(self.game.dump_config())
+
     def save_actions(self, fname: str) -> None:
         with open(fname, 'w') as f:
-            f.write(self.game.get_history())
+            f.write(self.game.dump_history())
 
     def state_to_symbol_image(self, state: PlayerState) -> ndarray:
         if not isinstance(state, PlayerState):

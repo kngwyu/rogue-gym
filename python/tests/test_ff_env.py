@@ -18,7 +18,7 @@ CONFIG = {
 class TestSeed1(unittest.TestCase):
     """ test class for fixed seed
     """
-    def test_screen(self):
+    def test_configs(self):
         env = FirstFloorEnv(config_dict=CONFIG, stair_reward=100.0)
         self.assertEqual(env.get_dungeon().__len__(), SEED1_DUNGEON_CLEAR.__len__())
         state, rewards, done, _ = env.step(CMD_STR2)
@@ -27,6 +27,7 @@ class TestSeed1(unittest.TestCase):
         self.assertEqual(env.channels(), 17)
         symbol_img = env.state_to_symbol_image(state)
         self.assertEqual(symbol_img.shape, (17, 24, 80))
+        self.assertEqual(env.get_config(), CONFIG)
 
 
 if __name__ == "__main__":
