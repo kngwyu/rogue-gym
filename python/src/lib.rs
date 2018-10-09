@@ -186,6 +186,10 @@ impl GameState {
             self.config.width,
         )
     }
+    fn set_seed(&mut self, seed: u64) -> PyResult<()> {
+        self.config.seed = Some(seed as u128);
+        Ok(())
+    }
     /// Reset the game state
     fn reset(&mut self) -> PyResult<()> {
         let mut runtime = self.config.clone().build().unwrap();
