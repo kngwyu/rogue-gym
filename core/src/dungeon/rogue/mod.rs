@@ -190,6 +190,8 @@ pub struct Dungeon {
     pub config: Config,
     /// global configuration(constant)
     pub config_global: GlobalConfig,
+    /// past floors
+    pub past_floors: Vec<Floor>,
     /// random number generator
     pub rng: RngHandle,
 }
@@ -210,6 +212,7 @@ impl Dungeon {
             current_floor: Floor::default(),
             config,
             config_global: config_global.clone(),
+            past_floors: vec![],
             rng,
         };
         dungeon
@@ -236,6 +239,15 @@ impl Dungeon {
         game_info: &GameInfo,
         item_handle: &mut ItemHandler,
     ) -> GameResult<()> {
+        self.new_level_(game_info, item_handle, false)
+    }
+
+    fn new_level_(
+        &mut self,
+        game_info: &GameInfo,
+        item_handle: &mut ItemHandler,
+        is_initial: bool,
+    ) -> GameResult<()> {
         const ERR_STR: &str = "in rogue::Dungeon::new_level";
         let level = {
             self.level += 1;
@@ -252,7 +264,8 @@ impl Dungeon {
         let set_gold = !game_info.is_cleared || level >= self.max_level;
         debug!("[Dungeon::new_level] set_gold: {}", set_gold);
         floor.setup_items(level, item_handle, set_gold, &mut self.rng);
-        // place traps (STUB)        // place stair
+        // place traps (STUB)
+        // place stair
         floor.setup_stair(&mut self.rng).chain_err(|| ERR_STR)?;
         if !self.config_global.hide_dungeon {
             let xmax = self.config_global.width.0;
@@ -265,7 +278,8 @@ impl Dungeon {
                     cell.visible(true);
                 });
         }
-        self.current_floor = floor;
+        ::std::mem::swap(&mut self.current_floor, &mut floor);
+        self.past_floors.push(floor);
         Ok(())
     }
 

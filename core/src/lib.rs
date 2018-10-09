@@ -140,8 +140,8 @@ pub const DEFAULT_HEIGHT: i32 = 24;
 pub const MAX_WIDTH: i32 = DEFAULT_WIDTH * 2;
 pub const MAX_HEIGHT: i32 = DEFAULT_HEIGHT * 2;
 
-pub const MIN_WIDTH: i32 = 48;
-pub const MIN_HEIGHT: i32 = DEFAULT_HEIGHT;
+pub const MIN_WIDTH: i32 = 32;
+pub const MIN_HEIGHT: i32 = 16;
 
 impl GameConfig {
     /// construct Game configuration from json string
