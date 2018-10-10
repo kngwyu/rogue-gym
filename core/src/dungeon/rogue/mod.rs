@@ -8,6 +8,7 @@ pub use self::rooms::{Room, RoomKind};
 use super::{Coord, Direction, DungeonPath, Positioned, X, Y};
 use error::*;
 use item::{ItemHandler, ItemToken};
+use ndarray::Array2;
 use rect_iter::{Get2D, GetMut2D, RectRange};
 use rng::RngHandle;
 use tile::{Drawable, Tile};
@@ -383,6 +384,15 @@ impl Dungeon {
             .try_get_mut_p(addr.cd)
             .ok()
             .map(|s| s.tile())
+    }
+    crate fn gen_history_map(&self, level: u32) -> Option<Array2<bool>> {
+        if level == self.level {
+            Some(self.current_floor.history_map())
+        } else if let Some(floor) = self.past_floors.get(level as usize - 1) {
+            Some(floor.history_map())
+        } else {
+            None
+        }
     }
 }
 

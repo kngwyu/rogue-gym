@@ -8,6 +8,7 @@ extern crate enum_iterator;
 #[macro_use]
 extern crate failure;
 extern crate fixedbitset;
+extern crate ndarray;
 extern crate num_traits;
 #[macro_use]
 extern crate log;
@@ -41,6 +42,7 @@ use dungeon::{Direction, Dungeon, DungeonStyle, Positioned, X, Y};
 use error::*;
 use input::{InputCode, Key, KeyMap};
 use item::{ItemHandler, ItemKind};
+use ndarray::Array2;
 use tile::{Drawable, Tile};
 use ui::{MordalKind, MordalMsg, UiState};
 
@@ -81,9 +83,6 @@ pub struct GameConfig {
     #[serde(default)]
     #[serde(skip_serializing_if = "is_default")]
     pub enemies: enemies::Config,
-    #[serde(default)]
-    #[serde(skip_serializing_if = "is_default")]
-    pub save_inputs: bool,
     /// hide dungeon or not
     /// this setting is only for debugging and don't use it when you play game
     #[serde(default = "default_hide_dungeon")]
@@ -129,7 +128,6 @@ impl Default for GameConfig {
             keymap: KeyMap::default(),
             player: player::Config::default(),
             enemies: enemies::Config::default(),
-            save_inputs: Default::default(),
             hide_dungeon: default_hide_dungeon(),
         }
     }
@@ -176,7 +174,6 @@ impl GameConfig {
             width: w.into(),
             height: h.into(),
             seed,
-            save_inputs: self.save_inputs,
             hide_dungeon: self.hide_dungeon,
         })
     }
@@ -205,7 +202,7 @@ impl GameConfig {
             item,
             player,
             ui: UiState::Dungeon,
-            saved_inputs: Vec::new(),
+            saved_inputs: vec![],
             keymap: self.keymap,
         })
     }
@@ -259,9 +256,6 @@ impl RunTime {
     }
     pub fn react_to_input(&mut self, input: InputCode) -> GameResult<Vec<Reaction>> {
         trace!("[react_to_input] input: {:?} ui: {:?}", input, self.ui);
-        if self.config.save_inputs {
-            self.saved_inputs.push(input);
-        }
         let (next_ui, res) = match self.ui {
             UiState::Dungeon => (
                 None,
@@ -325,9 +319,12 @@ impl RunTime {
     pub fn saved_inputs(&self) -> &[InputCode] {
         &self.saved_inputs
     }
-    pub fn saved_inputs_json(&self) -> GameResult<String> {
+    pub fn saved_inputs_as_json(&self) -> GameResult<String> {
         serde_json::to_string_pretty(&self.saved_inputs)
             .into_chained(|| "Runtime::saved_inputs_json: Failed to serialize")
+    }
+    pub fn history(&self, player_stat: &player::Status) -> Option<Array2<bool>> {
+        self.dungeon.get_history(&player_stat)
     }
 }
 
@@ -364,7 +361,6 @@ pub struct GlobalConfig {
     pub width: X,
     pub height: Y,
     pub seed: u128,
-    pub save_inputs: bool,
     pub hide_dungeon: bool,
 }
 

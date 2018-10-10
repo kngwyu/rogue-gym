@@ -59,6 +59,11 @@ impl<S> Cell<S> {
         self.attr |= CellAttr::IS_VISITED;
     }
 
+    #[inline]
+    pub fn is_visited(&self) -> bool {
+        self.attr.contains(CellAttr::IS_VISITED)
+    }
+
     /// construct a cell with default attribute
     #[inline]
     pub fn with_default_attr(surface: S) -> Cell<S> {

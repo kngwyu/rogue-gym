@@ -5,6 +5,7 @@ use enum_iterator::IntoEnumIterator;
 use error::*;
 use fenwick::FenwickSet;
 use item::{ItemHandler, ItemToken};
+use ndarray::Array2;
 use rect_iter::{Get2D, GetMut2D};
 use rng::RngHandle;
 use std::collections::{HashMap, HashSet};
@@ -343,6 +344,15 @@ impl Floor {
             }
             None
         })
+    }
+
+    crate fn history_map(&self) -> Array2<bool> {
+        let size = self.field.size().unwrap();
+        let mut array = Array2::from_elem([size.ylen() as usize, size.xlen() as usize], false);
+        size.into_iter().for_each(|cd| {
+            *array.get_mut_p(cd) = self.field.get_p(cd).is_visited();
+        });
+        array
     }
 }
 

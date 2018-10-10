@@ -1,10 +1,12 @@
 #![feature(specialization)]
+extern crate ndarray;
 extern crate numpy;
 extern crate pyo3;
 extern crate rect_iter;
 extern crate rogue_gym_core;
 
-use numpy::PyArray;
+use ndarray::{Axis, Zip};
+use numpy::PyArray3;
 use pyo3::{
     basic::{PyObjectReprProtocol, PyObjectStrProtocol},
     exc,
@@ -57,14 +59,29 @@ impl PlayerState {
     fn dungeon_str(&self) -> impl Iterator<Item = &str> {
         self.map.iter().map(|v| unsafe { from_utf8_unchecked(v) })
     }
-    fn symbol_image<'py>(&self, py: Python<'py>) -> PyResult<&'py PyArray<f32>> {
-        let (h, w) = (self.map.len(), self.map[0].len());
-        let array = PyArray::zeros(py, [usize::from(self.channels), h, w], false);
+    fn symbol_image_<'py>(&self, array: &'py PyArray3<f32>, h: usize, w: usize) -> PyResult<()> {
         symbol::construct_symbol_map(&self.map, h, w, self.channels - 1, |idx| unsafe {
             array.uget_mut(idx)
         })
         .map_err(|e| PyErr::new::<exc::RuntimeError, _>(format!("{}", e)))?;
+        Ok(())
+    }
+    fn symbol_image<'py>(&self, py: Python<'py>) -> PyResult<&'py PyArray3<f32>> {
+        let (h, w) = (self.map.len(), self.map[0].len());
+        let array = PyArray3::zeros(py, [usize::from(self.channels), h, w], false);
+        self.symbol_image_(array, h, w)?;
         Ok(array)
+    }
+    fn symbol_image_with_offset<'py>(
+        &self,
+        py: Python<'py>,
+        offset: usize,
+    ) -> PyResult<&'py PyArray3<f32>> {
+        let (h, w) = (self.map.len(), self.map[0].len());
+        let channels = usize::from(self.channels);
+        let py_array = PyArray3::zeros(py, [channels + offset, h, w], false);
+        self.symbol_image_(py_array, h, w)?;
+        Ok(py_array)
     }
 }
 
@@ -136,12 +153,7 @@ struct GameState {
 #[pymethods]
 impl GameState {
     #[new]
-    fn __new__(
-        obj: &PyRawObject,
-        save_actions: bool,
-        seed: Option<u64>,
-        config_str: Option<String>,
-    ) -> PyResult<()> {
+    fn __new__(obj: &PyRawObject, seed: Option<u64>, config_str: Option<String>) -> PyResult<()> {
         let mut config = if let Some(cfg) = config_str {
             GameConfig::from_json(&cfg).map_err(|e| {
                 PyErr::new::<exc::RuntimeError, _>(format!("failed to parse config, {}", e))
@@ -151,9 +163,6 @@ impl GameState {
         };
         if let Some(seed) = seed {
             config.seed = Some(u128::from(seed));
-        }
-        if save_actions {
-            config.save_inputs = true;
         }
         let mut runtime = config.clone().build().unwrap();
         let (w, h) = runtime.screen_size();
@@ -224,13 +233,28 @@ impl GameState {
         Ok(self.state.clone())
     }
     /// Convert PlayerState to 3D symbol image(like AlphaGo's inputs)
-    fn get_symbol_image(&self, state: &PlayerState) -> PyResult<&PyArray<f32>> {
+    fn get_symbol_image(&self, state: &PlayerState) -> PyResult<&PyArray3<f32>> {
         let py = self.token.py();
         state.symbol_image(py)
     }
+    /// Convert PlayerState to 3D symbol image, with player history
+    fn get_symbol_image_with_hist(&self, state: &PlayerState) -> PyResult<&PyArray3<f32>> {
+        let py = self.token.py();
+        let py_array = state.symbol_image_with_offset(py, 1)?;
+        let history = self
+            .runtime
+            .history(&state.status)
+            .ok_or_else(|| PyErr::new::<exc::RuntimeError, _>("Failed to get history"))?;
+        let mut array = py_array.as_array_mut()?;
+        let mut hist_array = array.subview_mut(Axis(0), usize::from(state.channels));
+        Zip::from(&mut hist_array).and(&history).apply(|p, &r| {
+            *p = if r { 1.0 } else { 0.0 };
+        });
+        Ok(py_array)
+    }
     /// Returns action history as Json
     fn dump_history(&self) -> PyResult<String> {
-        self.runtime.saved_inputs_json().map_err(|e| {
+        self.runtime.saved_inputs_as_json().map_err(|e| {
             PyErr::new::<exc::RuntimeError, _>(format!("error when getting history: {}", e))
         })
     }

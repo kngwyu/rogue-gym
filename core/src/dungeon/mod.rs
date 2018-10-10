@@ -4,8 +4,10 @@ mod field;
 mod rogue;
 pub use self::coord::{Coord, Direction, Positioned, X, Y};
 pub use self::field::{Cell, CellAttr, Field};
+use character::player::Status as PlayerStatus;
 use error::*;
 use item::{ItemHandler, ItemToken};
+use ndarray::Array2;
 use smallvec::SmallVec;
 use tile::Tile;
 use {GameInfo, GameMsg, GlobalConfig};
@@ -190,9 +192,15 @@ impl Dungeon {
             _ => unimplemented!(),
         }
     }
+    crate fn get_history(&self, state: &PlayerStatus) -> Option<Array2<bool>> {
+        match self {
+            Dungeon::Rogue(dungeon) => dungeon.gen_history_map(state.dungeon_level),
+            _ => unimplemented!(),
+        }
+    }
 }
 
-pub type PathVec = SmallVec<[i32; 4]>;
+type PathVec = SmallVec<[i32; 4]>;
 
 #[derive(
     Clone, Debug, Default, Serialize, Deserialize, Hash, Eq, PartialEq, Ord, PartialOrd, Index,
