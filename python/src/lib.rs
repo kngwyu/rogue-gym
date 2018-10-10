@@ -5,7 +5,7 @@ extern crate pyo3;
 extern crate rect_iter;
 extern crate rogue_gym_core;
 
-use ndarray::{Axis, Zip};
+use ndarray::{Array2, Axis, Zip};
 use numpy::PyArray3;
 use pyo3::{
     basic::{PyObjectReprProtocol, PyObjectStrProtocol},
@@ -29,6 +29,7 @@ use std::str::from_utf8_unchecked;
 #[derive(Clone, Debug)]
 struct PlayerState {
     map: Vec<Vec<u8>>,
+    history: Array2<bool>,
     channels: u8,
     status: Status,
 }
@@ -38,6 +39,7 @@ impl PlayerState {
         let (w, h) = (w.0 as usize, h.0 as usize);
         PlayerState {
             map: vec![vec![b' '; w]; h],
+            history: Array2::from_elem([h, w], false),
             channels,
             status: Status::default(),
         }
@@ -45,6 +47,7 @@ impl PlayerState {
     fn update(&mut self, runtime: &RunTime) -> GameResult<()> {
         self.status = runtime.player_status();
         self.draw_map(runtime)?;
+        self.history = runtime.history(&self.status).unwrap();
         Ok(())
     }
     fn draw_map(&mut self, runtime: &RunTime) -> GameResult<()> {
@@ -81,6 +84,17 @@ impl PlayerState {
         let channels = usize::from(self.channels);
         let py_array = PyArray3::zeros(py, [channels + offset, h, w], false);
         self.symbol_image_(py_array, h, w)?;
+        Ok(py_array)
+    }
+    fn symbol_image_with_hist<'py>(&self, py: Python<'py>) -> PyResult<&'py PyArray3<f32>> {
+        let py_array = self.symbol_image_with_offset(py, 1)?;
+        let mut array = py_array.as_array_mut()?;
+        let mut hist_array = array.subview_mut(Axis(0), usize::from(self.channels));
+        Zip::from(&mut hist_array)
+            .and(&self.history)
+            .apply(|p, &r| {
+                *p = if r { 1.0 } else { 0.0 };
+            });
         Ok(py_array)
     }
 }
@@ -240,17 +254,7 @@ impl GameState {
     /// Convert PlayerState to 3D symbol image, with player history
     fn get_symbol_image_with_hist(&self, state: &PlayerState) -> PyResult<&PyArray3<f32>> {
         let py = self.token.py();
-        let py_array = state.symbol_image_with_offset(py, 1)?;
-        let history = self
-            .runtime
-            .history(&state.status)
-            .ok_or_else(|| PyErr::new::<exc::RuntimeError, _>("Failed to get history"))?;
-        let mut array = py_array.as_array_mut()?;
-        let mut hist_array = array.subview_mut(Axis(0), usize::from(state.channels));
-        Zip::from(&mut hist_array).and(&history).apply(|p, &r| {
-            *p = if r { 1.0 } else { 0.0 };
-        });
-        Ok(py_array)
+        state.symbol_image_with_hist(py)
     }
     /// Returns action history as Json
     fn dump_history(&self) -> PyResult<String> {

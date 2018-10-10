@@ -1,7 +1,7 @@
 {
     "width": 32,
     "height": 16,
-    "seed": null,
+    "seed": 0,
     "dungeon": {
         "style": "rogue",
         "room_num_x": 2,
