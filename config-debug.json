@@ -1,7 +1,7 @@
 {
     "width": 32,
     "height": 16,
-    "seed": 0,
+    "seed": 5,
     "dungeon": {
         "style": "rogue",
         "room_num_x": 2,
@@ -11,7 +11,7 @@
             "y": 4
         },
         "enable_trap": true,
-        "max_empty_rooms": 3,
+        "max_empty_rooms": 2,
         "amulet_level": 25,
         "maze_rate_inv": 15,
         "dark_level": 10,

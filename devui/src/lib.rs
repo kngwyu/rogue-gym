@@ -18,6 +18,7 @@ use rogue_gym_core::input::InputCode;
 use rogue_gym_core::ui::{MordalKind, UiState};
 use rogue_gym_core::{GameConfig, GameMsg, Reaction, RunTime};
 use screen::{RawTerm, Screen};
+use std::collections::VecDeque;
 use std::io::{self, Write};
 use std::sync::mpsc;
 use std::thread;
@@ -68,9 +69,14 @@ pub fn play_game(config: GameConfig, is_default: bool) -> GameResult<()> {
     screen.clear_screen()
 }
 
-pub fn show_replay(config: GameConfig, replay: Vec<InputCode>, interval_ms: u64) -> GameResult<()> {
+pub fn show_replay(
+    config: GameConfig,
+    replay: VecDeque<InputCode>,
+    interval_ms: u64,
+) -> GameResult<()> {
     debug!("devui::show_replay config: {:?}", config);
     let (tx, rx) = mpsc::channel();
+    let replay: VecDeque<_> = replay.iter().map(|&x| x).collect();
     let replay_thread = thread::spawn(move || {
         let res = show_replay_(config, replay, interval_ms, rx);
         if let Err(e) = res {
@@ -110,13 +116,12 @@ enum ReplayInst {
 
 fn show_replay_(
     config: GameConfig,
-    replay: Vec<InputCode>,
+    mut replay: VecDeque<InputCode>,
     interval_ms: u64,
     rx: mpsc::Receiver<ReplayInst>,
 ) -> GameResult<()> {
     let (mut screen, mut runtime) = setup_screen(config, false)?;
     let mut sleeping = false;
-    let mut replay_idx = 0;
     loop {
         match rx.try_recv() {
             Ok(ReplayInst::Start) => sleeping = false,
@@ -129,11 +134,10 @@ fn show_replay_(
         if sleeping {
             continue;
         }
-        let input = match replay.get(replay_idx) {
-            Some(x) => *x,
+        let input = match replay.pop_front() {
+            Some(x) => x,
             None => continue,
         };
-        replay_idx += 1;
         let res = runtime.react_to_input(input);
         let res = match res {
             Ok(r) => r,
@@ -142,6 +146,7 @@ fn show_replay_(
                 continue;
             }
         };
+        notify!(screen, "{} turns left", replay.len());
         for reaction in res {
             let result = process_reaction(&mut screen, &mut runtime, reaction)
                 .chain_err(|| "in show_replay")?;

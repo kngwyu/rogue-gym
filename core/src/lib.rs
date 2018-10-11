@@ -43,6 +43,7 @@ use error::*;
 use input::{InputCode, Key, KeyMap};
 use item::{ItemHandler, ItemKind};
 use ndarray::Array2;
+use std::collections::VecDeque;
 use tile::{Drawable, Tile};
 use ui::{MordalKind, MordalMsg, UiState};
 
@@ -256,6 +257,7 @@ impl RunTime {
     }
     pub fn react_to_input(&mut self, input: InputCode) -> GameResult<Vec<Reaction>> {
         trace!("[react_to_input] input: {:?} ui: {:?}", input, self.ui);
+        self.saved_inputs.push(input);
         let (next_ui, res) = match self.ui {
             UiState::Dungeon => (
                 None,
@@ -328,7 +330,7 @@ impl RunTime {
     }
 }
 
-pub fn json_to_inputs(json: &str) -> GameResult<Vec<InputCode>> {
+pub fn json_to_inputs(json: &str) -> GameResult<VecDeque<InputCode>> {
     serde_json::from_str(json).into_chained(|| "json_to_inputs: Failed to deserialize")
 }
 
