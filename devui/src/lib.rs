@@ -146,7 +146,7 @@ fn show_replay_(
                 continue;
             }
         };
-        notify!(screen, "{} turns left", replay.len());
+        notify!(screen, "{} turns left", replay.len())?;
         for reaction in res {
             let result = process_reaction(&mut screen, &mut runtime, reaction)
                 .chain_err(|| "in show_replay")?;
