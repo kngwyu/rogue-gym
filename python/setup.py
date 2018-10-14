@@ -11,7 +11,6 @@ from setuptools.command.test import test as TestCommand
 try:
     from setuptools_rust import RustExtension
 except ImportError:
-    import subprocess
     errno = subprocess.call([sys.executable, '-m', 'pip', 'install', 'setuptools-rust'])
     if errno:
         print("Please install setuptools-rust package")
@@ -28,7 +27,7 @@ class CmdTest(TestCommand):
         for f in test_files:
             _, ext = os.path.splitext(f)
             if ext == '.py':
-                res = subprocess.call([sys.executable, f], cwd = './tests')
+                res = subprocess.call([sys.executable, f], cwd='./tests')
                 ok = ok | res
         sys.exit(res)
 

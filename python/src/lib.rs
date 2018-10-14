@@ -5,14 +5,14 @@ extern crate pyo3;
 extern crate rect_iter;
 extern crate rogue_gym_core;
 
-use ndarray::{Array2, Axis, Zip};
+use ndarray::{Array2, ArrayViewMut, Axis, Ix2, Zip};
 use numpy::PyArray3;
 use pyo3::{
     basic::{PyObjectReprProtocol, PyObjectStrProtocol},
     exc,
     prelude::*,
 };
-use rect_iter::GetMut2D;
+use rect_iter::{Get2D, GetMut2D, RectRange};
 use rogue_gym_core::character::player::Status;
 use rogue_gym_core::dungeon::{Positioned, X, Y};
 use rogue_gym_core::error::*;
@@ -69,11 +69,21 @@ impl PlayerState {
         .map_err(|e| PyErr::new::<exc::RuntimeError, _>(format!("{}", e)))?;
         Ok(())
     }
-    fn symbol_image<'py>(&self, py: Python<'py>) -> PyResult<&'py PyArray3<f32>> {
+    fn gray_image_with_offset<'py>(
+        &self,
+        py: Python<'py>,
+        offset: usize,
+    ) -> PyResult<&'py PyArray3<f32>> {
         let (h, w) = (self.map.len(), self.map[0].len());
-        let array = PyArray3::zeros(py, [usize::from(self.channels), h, w], false);
-        self.symbol_image_(array, h, w)?;
-        Ok(array)
+        let py_array = PyArray3::zeros(py, [1 + offset, h, w], false);
+        RectRange::zero_start(w, h)
+            .unwrap()
+            .into_iter()
+            .for_each(|(x, y)| unsafe {
+                let symbol = symbol::tile_to_sym(*self.map.get_xy(x, y)).unwrap();
+                *py_array.uget_mut([0, y, x]) = symbol as f32 / self.channels as f32;
+            });
+        Ok(py_array)
     }
     fn symbol_image_with_offset<'py>(
         &self,
@@ -86,15 +96,16 @@ impl PlayerState {
         self.symbol_image_(py_array, h, w)?;
         Ok(py_array)
     }
+    fn copy_hist<'py>(&self, pyarray: &mut ArrayViewMut<f32, Ix2>) {
+        Zip::from(pyarray).and(&self.history).apply(|p, &r| {
+            *p = if r { 1.0 } else { 0.0 };
+        });
+    }
     fn symbol_image_with_hist<'py>(&self, py: Python<'py>) -> PyResult<&'py PyArray3<f32>> {
         let py_array = self.symbol_image_with_offset(py, 1)?;
         let mut array = py_array.as_array_mut()?;
         let mut hist_array = array.subview_mut(Axis(0), usize::from(self.channels));
-        Zip::from(&mut hist_array)
-            .and(&self.history)
-            .apply(|p, &r| {
-                *p = if r { 1.0 } else { 0.0 };
-            });
+        self.copy_hist(&mut hist_array);
         Ok(py_array)
     }
 }
@@ -246,10 +257,20 @@ impl GameState {
         self.prev_actions = res;
         Ok(self.state.clone())
     }
+    fn get_gray_image(&self, state: &PlayerState) -> PyResult<&PyArray3<f32>> {
+        state.gray_image_with_offset(self.token.py(), 0)
+    }
+    fn get_gray_image_with_hist(&self, state: &PlayerState) -> PyResult<&PyArray3<f32>> {
+        let py_array = state.gray_image_with_offset(self.token.py(), 1)?;
+        let mut array = py_array.as_array_mut()?;
+        let mut hist_array = array.subview_mut(Axis(0), 1);
+        state.copy_hist(&mut hist_array);
+        Ok(py_array)
+    }
     /// Convert PlayerState to 3D symbol image(like AlphaGo's inputs)
     fn get_symbol_image(&self, state: &PlayerState) -> PyResult<&PyArray3<f32>> {
         let py = self.token.py();
-        state.symbol_image(py)
+        state.symbol_image_with_offset(py, 0)
     }
     /// Convert PlayerState to 3D symbol image, with player history
     fn get_symbol_image_with_hist(&self, state: &PlayerState) -> PyResult<&PyArray3<f32>> {

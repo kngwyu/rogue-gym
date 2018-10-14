@@ -31,7 +31,13 @@ class TestSeed1(unittest.TestCase):
         symbol_img_hist = env.symbol_image_with_hist(state)
         self.assertEqual(symbol_img_hist.shape, (18, 24, 80))
         hist = symbol_img_hist[17]
+        print(env.get_dungeon())
+        print(hist[20])
         self.assertEqual(hist[20][10], 1.)
+        gray_img = env.gray_image(state)
+        self.assertEqual(gray_img.shape(), (1, 24, 80))
+        gray_img_hist = env.gray_image_with_hist(state)
+        self.assertEqual(gray_img_hist.shape(), (2, 24, 80))
 
 
 if __name__ == "__main__":

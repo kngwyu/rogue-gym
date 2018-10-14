@@ -104,13 +104,23 @@ class RogueEnv(gym.Env):
 
     def symbol_image(self, state: PlayerState) -> ndarray:
         if not isinstance(state, PlayerState):
-            raise ValueError("Needs PlayerState, but {} was given".format(type(state)))
+            raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
         return self.game.get_symbol_image(state)
 
     def symbol_image_with_hist(self, state: PlayerState) -> ndarray:
         if not isinstance(state, PlayerState):
-            raise ValueError("Needs PlayerState, but {} was given".format(type(state)))
+            raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
         return self.game.get_symbol_image_with_hist(state)
+
+    def gray_image(self, state: PlayerState) -> ndarray:
+        if not isinstance(state, PlayerState):
+            raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
+        return self.game.get_gray_image(state)
+
+    def gray_image_with_hist(self, state: PlayerState) -> ndarray:
+        if not isinstance(state, PlayerState):
+            raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
+        return self.game.get_gray_image_with_hist(state)
 
     def __step_str(self, actions: str) -> int:
         for act in actions:
