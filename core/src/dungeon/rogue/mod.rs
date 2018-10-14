@@ -217,7 +217,7 @@ impl Dungeon {
             rng,
         };
         dungeon
-            .new_level(game_info, item_handle)
+            .new_level_(game_info, item_handle, true)
             .chain_err(|| "rogue::Dungeon::new")?;
         Ok(dungeon)
     }
@@ -280,7 +280,9 @@ impl Dungeon {
                 });
         }
         ::std::mem::swap(&mut self.current_floor, &mut floor);
-        self.past_floors.push(floor);
+        if !is_initial {
+            self.past_floors.push(floor);
+        }
         Ok(())
     }
 

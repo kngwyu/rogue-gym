@@ -47,10 +47,10 @@ impl PlayerState {
     fn update(&mut self, runtime: &RunTime) -> GameResult<()> {
         self.status = runtime.player_status();
         self.draw_map(runtime)?;
-        self.history = runtime.history(&self.status).unwrap();
         Ok(())
     }
     fn draw_map(&mut self, runtime: &RunTime) -> GameResult<()> {
+        self.history = runtime.history(&self.status).unwrap();
         runtime.draw_screen(|Positioned(cd, tile)| -> GameResult<()> {
             *self
                 .map

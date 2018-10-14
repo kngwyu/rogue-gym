@@ -347,7 +347,7 @@ impl Floor {
     }
 
     crate fn history_map(&self) -> Array2<bool> {
-        let size = self.field.size().unwrap();
+        let size = self.field.size();
         let mut array = Array2::from_elem([size.ylen() as usize, size.xlen() as usize], false);
         size.into_iter().for_each(|cd| {
             *array.get_mut_p(cd) = self.field.get_p(cd).is_visited();

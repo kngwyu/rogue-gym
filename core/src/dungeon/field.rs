@@ -48,15 +48,15 @@ impl<S> Cell<S> {
     #[inline]
     pub fn visible(&mut self, on: bool) {
         if on {
-            self.attr |= CellAttr::IS_VISIBLE;
+            self.attr.insert(CellAttr::IS_VISIBLE);
         } else {
-            self.attr &= !CellAttr::IS_VISIBLE;
+            self.attr.remove(CellAttr::IS_VISIBLE);
         }
     }
 
     #[inline]
     pub fn visit(&mut self) {
-        self.attr |= CellAttr::IS_VISITED;
+        self.attr.insert(CellAttr::IS_VISITED);
     }
 
     #[inline]
@@ -82,7 +82,7 @@ impl<S> Cell<S> {
     }
     #[inline]
     pub fn unlock(&mut self) {
-        self.attr &= !(CellAttr::IS_LOCKED | CellAttr::IS_HIDDEN);
+        self.attr.remove(CellAttr::IS_LOCKED | CellAttr::IS_HIDDEN);
         self.visible(true)
     }
 }
@@ -125,8 +125,9 @@ pub struct Field<S> {
 }
 
 impl<S> Field<S> {
-    pub fn size(&self) -> Option<RectRange<i32>> {
+    pub fn size(&self) -> RectRange<i32> {
         RectRange::zero_start(self.width.0, self.height.0)
+            .expect("[Field::size] Invalid dungeon size")
     }
     pub fn size_ytrimed(&self) -> Option<RectRange<i32>> {
         RectRange::from_corners((0, 1), (self.width.0, self.height.0 - 1))
