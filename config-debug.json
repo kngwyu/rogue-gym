@@ -1,17 +1,16 @@
 {
-    "width": 80,
-    "height": 24,
-    "seed": 1,
+    "width": 32,
+    "height": 16,
+    "seed": 5,
     "dungeon": {
         "style": "rogue",
-        "room_num_x": 3,
-        "room_num_y": 3,
+        "room_num_x": 2,
+        "room_num_y": 2,
         "min_room_size": {
             "x": 4,
             "y": 4
         },
         "enable_trap": true,
-        "max_empty_rooms": 2,
         "amulet_level": 25,
         "maze_rate_inv": 15,
         "dark_level": 10,
@@ -30,24 +29,37 @@
         }
     },
     "keymap": {
-        "Up": {
+        "L": {
             "Act": {
-                "Move": "Up"
+                "MoveUntil": "Right"
             }
         },
-        "Right": {
+        "S": {
+            "Sys": "Save"
+        },
+        "Y": {
             "Act": {
-                "Move": "Right"
+                "MoveUntil": "LeftUp"
             }
         },
-        "Left": {
+        "u": {
             "Act": {
-                "Move": "Left"
+                "Move": "RightUp"
             }
         },
-        "b": {
+        "j": {
             "Act": {
-                "Move": "LeftDown"
+                "Move": "Down"
+            }
+        },
+        "K": {
+            "Act": {
+                "MoveUntil": "Up"
+            }
+        },
+        "B": {
+            "Act": {
+                "MoveUntil": "LeftDown"
             }
         },
         "U": {
@@ -55,36 +67,26 @@
                 "MoveUntil": "RightUp"
             }
         },
-        "h": {
+        "Left": {
             "Act": {
                 "Move": "Left"
             }
         },
-        "Esc": {
-            "Sys": "Cancel"
-        },
-        ">": {
-            "Act": "DownStair"
-        },
-        "B": {
+        "Down": {
             "Act": {
-                "MoveUntil": "LeftDown"
-            }
-        },
-        "Y": {
-            "Act": {
-                "MoveUntil": "LeftUp"
-            }
-        },
-        "N": {
-            "Act": {
-                "MoveUntil": "RightDown"
+                "Move": "Down"
             }
         },
         "J": {
             "Act": {
                 "MoveUntil": "Down"
             }
+        },
+        "Esc": {
+            "Sys": "Cancel"
+        },
+        "Q": {
+            "Sys": "Quit"
         },
         "y": {
             "Both": {
@@ -94,8 +96,31 @@
                 "sys": "Yes"
             }
         },
-        "Q": {
-            "Sys": "Quit"
+        "s": {
+            "Act": "Search"
+        },
+        "l": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "Right": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "h": {
+            "Act": {
+                "Move": "Left"
+            }
+        },
+        ">": {
+            "Act": "DownStair"
+        },
+        "Up": {
+            "Act": {
+                "Move": "Up"
+            }
         },
         "n": {
             "Both": {
@@ -105,27 +130,9 @@
                 "sys": "No"
             }
         },
-        "l": {
-            "Act": {
-                "Move": "Right"
-            }
-        },
-        "Down": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
-        "S": {
-            "Sys": "Save"
-        },
         "k": {
             "Act": {
                 "Move": "Up"
-            }
-        },
-        "j": {
-            "Act": {
-                "Move": "Down"
             }
         },
         "H": {
@@ -133,22 +140,14 @@
                 "MoveUntil": "Left"
             }
         },
-        "s": {
-            "Act": "Search"
-        },
-        "K": {
+        "b": {
             "Act": {
-                "MoveUntil": "Up"
+                "Move": "LeftDown"
             }
         },
-        "u": {
+        "N": {
             "Act": {
-                "Move": "RightUp"
-            }
-        },
-        "L": {
-            "Act": {
-                "MoveUntil": "Right"
+                "MoveUntil": "RightDown"
             }
         }
     },
@@ -232,5 +231,6 @@
             ]
         }
     },
-    "hide_dungeon": true
+    "save_inputs": false,
+    "hide_dungeon": false
 }
