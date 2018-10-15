@@ -31,6 +31,8 @@ class TestSeed1(unittest.TestCase):
         self.assertEqual(rewards, 104.0)
         state, rewards, _, _ = env.step(CMD_STR4)
         self.assertEqual(rewards, 100.0)
+        img = env.symbol_image_with_hist_and_level(state)
+        self.assertEqual(img.shape, (19, 16, 32))
 
 
 if __name__ == "__main__":

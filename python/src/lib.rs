@@ -101,6 +101,12 @@ impl PlayerState {
             *p = if r { 1.0 } else { 0.0 };
         });
     }
+    fn copy_dungeon_level<'py>(&self, pyarray: &mut ArrayViewMut<f32, Ix2>) {
+        let val = self.status.dungeon_level as f32;
+        pyarray.iter_mut().for_each(|elem| {
+            *elem = val;
+        })
+    }
     fn symbol_image_with_hist<'py>(&self, py: Python<'py>) -> PyResult<&'py PyArray3<f32>> {
         let py_array = self.symbol_image_with_offset(py, 1)?;
         let mut array = py_array.as_array_mut()?;
@@ -276,6 +282,23 @@ impl GameState {
     fn get_symbol_image_with_hist(&self, state: &PlayerState) -> PyResult<&PyArray3<f32>> {
         let py = self.token.py();
         state.symbol_image_with_hist(py)
+    }
+    // TODO: remove this function
+    fn get_symbol_image_with_hist_and_level(
+        &self,
+        state: &PlayerState,
+    ) -> PyResult<&PyArray3<f32>> {
+        let py_array = state.symbol_image_with_offset(self.token.py(), 2)?;
+        let mut array = py_array.as_array_mut()?;
+        {
+            let mut hist_array = array.subview_mut(Axis(0), 1);
+            state.copy_hist(&mut hist_array);
+        }
+        {
+            let mut level_array = array.subview_mut(Axis(0), 2);
+            state.copy_dungeon_level(&mut level_array);
+        }
+        Ok(py_array)
     }
     /// Returns action history as Json
     fn dump_history(&self) -> PyResult<String> {

@@ -112,6 +112,12 @@ class RogueEnv(gym.Env):
             raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
         return self.game.get_symbol_image_with_hist(state)
 
+    # TODO: remove this function
+    def symbol_image_with_hist_and_level(self, state: PlayerState) -> ndarray:
+        if not isinstance(state, PlayerState):
+            raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
+        return self.game.get_symbol_image_with_hist_and_level(state)
+
     def gray_image(self, state: PlayerState) -> ndarray:
         if not isinstance(state, PlayerState):
             raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
