@@ -1,5 +1,4 @@
 """ setup.py for rogue_gym """
-
 import os
 import subprocess
 import sys
@@ -26,10 +25,8 @@ class CmdTest(TestCommand):
         ok = 0
         for f in test_files:
             _, ext = os.path.splitext(f)
-            if ext == '.py':
-                res = subprocess.call([sys.executable, f], cwd='./tests')
-                ok = ok | res
-        sys.exit(res)
+            if ext is '.py':
+                subprocess.check_call([sys.executable, f], cwd='./tests')
 
 
 setup_requires = ['setuptools-rust>=0.6.0']
