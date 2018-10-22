@@ -151,13 +151,13 @@ impl<T> Maxed<T> {
 }
 
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
-pub struct Dice {
-    times: i32,
-    max: i32,
+pub struct Dice<T> {
+    times: usize,
+    max: T,
 }
 
-impl Dice {
-    pub const fn new(n: i32, m: i32) -> Dice {
+impl<T> Dice<T> {
+    pub const fn new(n: usize, m: T) -> Dice<T> {
         Dice { times: n, max: m }
     }
 }
@@ -168,24 +168,24 @@ pub trait Damage {
     fn max(self) -> HitPoint;
 }
 
-impl Damage for Dice {
+impl Damage for Dice<HitPoint> {
     fn random(self, rng: &mut RngHandle) -> HitPoint {
         (0..self.times).fold(HitPoint::default(), |acc, _| {
-            acc + HitPoint::from(rng.range(1..=self.max))
+            acc + HitPoint::from(rng.range(1..=self.max.0))
         })
     }
     fn min(self) -> HitPoint {
-        HitPoint::from(self.times)
+        HitPoint::from(self.times as i64)
     }
     fn max(self) -> HitPoint {
-        HitPoint::from(i64::from(self.times) * i64::from(self.max))
+        HitPoint::from(self.times as i64 * self.max.0)
     }
 }
 
 impl<I, D> Damage for I
 where
     I: IntoIterator<Item = D>,
-    D: ::std::ops::Deref<Target = Dice>,
+    D: ::std::ops::Deref<Target = Dice<HitPoint>>,
 {
     fn random(self, rng: &mut RngHandle) -> HitPoint {
         self.into_iter()

@@ -78,7 +78,7 @@ impl RngHandle {
     pub fn range<T: PrimInt + SampleUniform + Debug>(&mut self, range: impl RangeBounds<T>) -> T {
         let range = bounds_to_range(range);
         let (s, e) = (range.start, range.end);
-        assert!(s < e, "invalid range {:?}..{:?}", s, e);
+        assert!(s < e, "invalid range!!");
         self.0.gen_range(s, e)
     }
     /// judge an event with happenig probability 1 / p_inv happens or not

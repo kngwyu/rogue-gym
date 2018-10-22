@@ -3,9 +3,10 @@ use item::ItemNum;
 use rng::RngHandle;
 use smallvec::SmallVec;
 use std::collections::HashSet;
+use std::ops::Range;
 use tile::Tile;
 
-pub type DiceVec = SmallVec<[Dice; 4]>;
+pub type DiceVec<T> = SmallVec<[Dice<T>; 4]>;
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
@@ -71,7 +72,7 @@ impl BuiltinKind {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Status {
-    attack: DiceVec,
+    attack: DiceVec<HitPoint>,
     attr: EnemyAttr,
     defense: Defense,
     exp: Exp,
@@ -79,6 +80,7 @@ pub struct Status {
     level: HitPoint,
     name: String,
     tile: Tile,
+    rarelity: u8,
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize, BitOr)]
@@ -101,17 +103,49 @@ impl EnemyAttr {
     }
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+pub struct Enemy {
+    defense: Defense,
+    exp: Exp,
+    hp: HitPoint,
+    id: usize,
+    level: HitPoint,
+    tile: Tile,
+}
+
 pub struct EnemyHandler {
     enemy_stats: Vec<Status>,
     rng: RngHandle,
 }
 
 impl EnemyHandler {
-    fn new(stats: Vec<Status>, rng: RngHandle) -> Self {
+    fn new(mut stats: Vec<Status>, rng: RngHandle) -> Self {
+        stats.sort_by_key(|stat| stat.rarelity);
         EnemyHandler {
             enemy_stats: stats,
             rng,
         }
+    }
+    fn trancate_idx(&mut self, idx: u32) -> usize {
+        let id = idx as usize;
+        if id > self.enemy_stats.len() {
+            let len = self.enemy_stats.len();
+            let range = ::std::cmp::min(len, 5);
+            self.rng.range(len - range..len)
+        } else {
+            id
+        }
+    }
+    fn exp_add(&self, offset: i32, maxhp: HitPoint) {}
+    pub fn gen_enemy(&mut self, range: Range<u32>, offset: i32) {
+        let idx = self.rng.range(range);
+        let idx = self.trancate_idx(idx);
+        let stat = &self.enemy_stats[idx];
+        let hp = stat.level;
+        // let enem = Enemy {
+        //     defense: stat.defense - offset.into(),
+        //     exp: stat.exp + Exp::from((offset * 10) as u32),
+        // };
     }
 }
 
@@ -123,12 +157,13 @@ macro_rules! enem_attr {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct StaticStatus {
-    attack: &'static [Dice],
+    attack: &'static [Dice<HitPoint>],
     attr: EnemyAttr,
     defense: Defense,
     exp: Exp,
     gold: ItemNum,
     level: HitPoint,
+    rarelity: u8,
     name: &'static str,
 }
 
@@ -138,80 +173,77 @@ impl StaticStatus {
             .iter()
             .enumerate()
             .filter(|(i, _)| include.contains(i))
-            .map(
-                |(
-                    i,
-                    &StaticStatus {
-                        attack,
-                        attr,
-                        defense,
-                        exp,
-                        gold,
-                        level,
-                        name,
-                    },
-                )| {
-                    Status {
-                        attack: attack.iter().map(|&x| x).collect(),
-                        attr,
-                        defense,
-                        exp,
-                        gold,
-                        level,
-                        name: name.to_owned(),
-                        tile: Tile::from(b'A' + i as u8),
-                    }
-                },
-            )
+            .map(|(i, stat)| Status {
+                attack: stat.attack.iter().map(|&x| x).collect(),
+                attr: stat.attr,
+                defense: stat.defense,
+                exp: stat.exp,
+                gold: stat.gold,
+                level: stat.level,
+                name: stat.name.to_owned(),
+                tile: Tile::from(b'A' + i as u8),
+                rarelity: stat.rarelity,
+            })
             .collect()
     }
 }
 
+macro_rules! hp_dice {
+    ($n: expr, $m: expr) => {
+        Dice::new($n, HitPoint($m))
+    };
+}
+
 pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
     StaticStatus {
-        attack: &[Dice::new(0, 0)],
+        attack: &[hp_dice!(0, 0)],
         attr: enem_attr!(MEAN, RUSTS_ARMOR,),
         defense: Defense(2 | 8),
         exp: Exp(20),
         gold: ItemNum(0),
         level: HitPoint(5),
         name: "aquator",
+        rarelity: 12,
     },
     StaticStatus {
-        attack: &[Dice::new(1, 2)],
+        attack: &[hp_dice!(1, 2)],
         attr: enem_attr!(FLYING, RANDOM,),
         defense: Defense(3),
         exp: Exp(1),
         gold: ItemNum(0),
         level: HitPoint(1),
         name: "bat",
+        rarelity: 2,
     },
     StaticStatus {
-        attack: &[Dice::new(1, 2), Dice::new(1, 5), Dice::new(1, 5)],
+        attack: &[hp_dice!(1, 2), hp_dice!(1, 5), hp_dice!(1, 5)],
         attr: enem_attr!(),
         defense: Defense(4),
         exp: Exp(17),
         gold: ItemNum(15),
         level: HitPoint(4),
         name: "centaur",
+        rarelity: 10,
     },
     StaticStatus {
-        attack: &[Dice::new(1, 8), Dice::new(1, 8), Dice::new(3, 10)],
+        attack: &[hp_dice!(1, 8), hp_dice!(1, 8), hp_dice!(3, 10)],
         attr: enem_attr!(MEAN,),
         defense: Defense(3),
         exp: Exp(5000),
         gold: ItemNum(100),
         level: HitPoint(10),
         name: "dragon",
+        rarelity: 25,
     },
     StaticStatus {
-        attack: &[Dice::new(1, 2)],
+        attack: &[hp_dice!(1, 2)],
         attr: enem_attr!(MEAN,),
         defense: Defense(7),
         exp: Exp(2),
         gold: ItemNum(0),
         level: HitPoint(1),
         name: "emu",
+        rarelity: 1,
     },
     StaticStatus {
         attack: &[],
@@ -221,185 +253,206 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         exp: Exp(80),
         level: HitPoint(8),
         name: "venus flytrap",
+        rarelity: 15,
     },
     StaticStatus {
-        attack: &[Dice::new(4, 3), Dice::new(3, 5)],
+        attack: &[hp_dice!(4, 3), hp_dice!(3, 5)],
         attr: enem_attr!(FLYING, MEAN, REGENERATE,),
         defense: Defense(2),
         exp: Exp(2000),
         gold: ItemNum(20),
         level: HitPoint(13),
         name: "griffin",
+        rarelity: 23,
     },
     StaticStatus {
-        attack: &[Dice::new(1, 8)],
+        attack: &[hp_dice!(1, 8)],
         attr: enem_attr!(MEAN,),
         defense: Defense(5),
         exp: Exp(3),
         gold: ItemNum(0),
         level: HitPoint(1),
         name: "hobgoblin",
+        rarelity: 4,
     },
     StaticStatus {
-        attack: &[Dice::new(0, 0)],
+        attack: &[hp_dice!(0, 0)],
         attr: enem_attr!(FREEZES,),
         defense: Defense(9),
         exp: Exp(5),
         gold: ItemNum(0),
         level: HitPoint(1),
         name: "icemonster",
+        rarelity: 5,
     },
     StaticStatus {
-        attack: &[Dice::new(2, 12), Dice::new(2, 4)],
+        attack: &[hp_dice!(2, 12), hp_dice!(2, 4)],
         attr: enem_attr!(),
         exp: Exp(3000),
         defense: Defense(6),
         gold: ItemNum(70),
         level: HitPoint(15),
         name: "jabberwock",
+        rarelity: 24,
     },
     StaticStatus {
-        attack: &[Dice::new(1, 4)],
+        attack: &[hp_dice!(1, 4)],
         attr: enem_attr!(),
         defense: Defense(7),
         exp: Exp(1),
         gold: ItemNum(0),
         level: HitPoint(1),
         name: "kestrel",
+        rarelity: 0,
     },
     StaticStatus {
-        attack: &[Dice::new(1, 1)],
+        attack: &[hp_dice!(1, 1)],
         attr: enem_attr!(STEAL_GOLD,),
         defense: Defense(8),
         exp: Exp(10),
         gold: ItemNum(0),
         level: HitPoint(3),
         name: "leperachaun",
+        rarelity: 9,
     },
     StaticStatus {
-        attack: &[Dice::new(3, 4), Dice::new(3, 4), Dice::new(2, 5)],
+        attack: &[hp_dice!(3, 4), hp_dice!(3, 4), hp_dice!(2, 5)],
         attr: enem_attr!(MEAN,),
         defense: Defense(2),
         gold: ItemNum(40),
         exp: Exp(200),
         level: HitPoint(8),
         name: "medusa",
+        rarelity: 21,
     },
     StaticStatus {
-        attack: &[Dice::new(0, 0)],
+        attack: &[hp_dice!(0, 0)],
         attr: enem_attr!(),
         defense: Defense(9),
         exp: Exp(37),
         gold: ItemNum(100),
         level: HitPoint(3),
         name: "nymph",
+        rarelity: 13,
     },
     StaticStatus {
-        attack: &[Dice::new(1, 8)],
+        attack: &[hp_dice!(1, 8)],
         attr: enem_attr!(GREEDY,),
         defense: Defense(6),
         exp: Exp(5),
         gold: ItemNum(15),
         level: HitPoint(1),
         name: "orc",
+        rarelity: 7,
     },
     StaticStatus {
-        attack: &[Dice::new(4, 4)],
+        attack: &[hp_dice!(4, 4)],
         attr: enem_attr!(INVISIBLE,),
         defense: Defense(3),
         exp: Exp(120),
         gold: ItemNum(0),
         level: HitPoint(8),
         name: "phantom",
+        rarelity: 18,
     },
     StaticStatus {
-        attack: &[Dice::new(1, 5), Dice::new(1, 5)],
+        attack: &[hp_dice!(1, 5), hp_dice!(1, 5)],
         attr: enem_attr!(MEAN,),
         defense: Defense(3),
         exp: Exp(15),
         gold: ItemNum(0),
         level: HitPoint(3),
         name: "quagga",
+        rarelity: 11,
     },
     StaticStatus {
-        attack: &[Dice::new(1, 6)],
+        attack: &[hp_dice!(1, 6)],
         attr: enem_attr!(REDUCE_STR, MEAN,),
         defense: Defense(3),
         exp: Exp(9),
         gold: ItemNum(0),
         level: HitPoint(2),
         name: "rattlesnake",
+        rarelity: 6,
     },
     StaticStatus {
-        attack: &[Dice::new(1, 3)],
+        attack: &[hp_dice!(1, 3)],
         attr: enem_attr!(MEAN,),
         defense: Defense(5),
         exp: Exp(2),
         gold: ItemNum(0),
         level: HitPoint(1),
         name: "snake",
+        rarelity: 3,
     },
     StaticStatus {
-        attack: &[Dice::new(1, 8), Dice::new(1, 8), Dice::new(2, 6)],
+        attack: &[hp_dice!(1, 8), hp_dice!(1, 8), hp_dice!(2, 6)],
         attr: enem_attr!(MEAN, REGENERATE,),
         defense: Defense(4),
         exp: Exp(120),
         gold: ItemNum(50),
         level: HitPoint(6),
         name: "troll",
+        rarelity: 16,
     },
     StaticStatus {
-        attack: &[Dice::new(1, 9), Dice::new(1, 9), Dice::new(2, 9)],
+        attack: &[hp_dice!(1, 9), hp_dice!(1, 9), hp_dice!(2, 9)],
         attr: enem_attr!(MEAN,),
         defense: Defense(-2),
         exp: Exp(190),
         gold: ItemNum(0),
         level: HitPoint(7),
         name: "urvile",
+        rarelity: 20,
     },
     StaticStatus {
-        attack: &[Dice::new(1, 19)],
+        attack: &[hp_dice!(1, 19)],
         attr: enem_attr!(MEAN, REGENERATE,),
         defense: Defense(1),
         exp: Exp(350),
         gold: ItemNum(20),
         level: HitPoint(8),
         name: "vampire",
+        rarelity: 22,
     },
     StaticStatus {
-        attack: &[Dice::new(1, 6)],
+        attack: &[hp_dice!(1, 6)],
         attr: enem_attr!(),
         defense: Defense(4),
         exp: Exp(55),
         gold: ItemNum(0),
         level: HitPoint(5),
         name: "wraith",
+        rarelity: 17,
     },
     StaticStatus {
-        attack: &[Dice::new(4, 4)],
+        attack: &[hp_dice!(4, 4)],
         attr: enem_attr!(),
         defense: Defense(7),
         exp: Exp(100),
         gold: ItemNum(30),
         level: HitPoint(7),
         name: "xeroc",
+        rarelity: 19,
     },
     StaticStatus {
-        attack: &[Dice::new(1, 6), Dice::new(1, 6)],
+        attack: &[hp_dice!(1, 6), hp_dice!(1, 6)],
         attr: enem_attr!(),
         defense: Defense(6),
         exp: Exp(50),
         gold: ItemNum(30),
         level: HitPoint(4),
         name: "yeti",
+        rarelity: 14,
     },
     StaticStatus {
-        attack: &[Dice::new(1, 8)],
+        attack: &[hp_dice!(1, 8)],
         attr: enem_attr!(MEAN,),
         defense: Defense(8),
         exp: Exp(6),
         gold: ItemNum(0),
         level: HitPoint(2),
         name: "zombie",
+        rarelity: 8,
     },
 ];
