@@ -62,7 +62,12 @@ impl PlayerState {
     fn dungeon_str(&self) -> impl Iterator<Item = &str> {
         self.map.iter().map(|v| unsafe { from_utf8_unchecked(v) })
     }
-    fn symbol_image_<'py>(&self, array: &'py PyArray3<f32>, h: usize, w: usize) -> PyResult<()> {
+    fn symbol_image_common<'py>(
+        &self,
+        array: &'py PyArray3<f32>,
+        h: usize,
+        w: usize,
+    ) -> PyResult<()> {
         symbol::construct_symbol_map(&self.map, h, w, self.channels - 1, |idx| unsafe {
             array.uget_mut(idx)
         })
@@ -93,7 +98,7 @@ impl PlayerState {
         let (h, w) = (self.map.len(), self.map[0].len());
         let channels = usize::from(self.channels);
         let py_array = PyArray3::zeros(py, [channels + offset, h, w], false);
-        self.symbol_image_(py_array, h, w)?;
+        self.symbol_image_common(py_array, h, w)?;
         Ok(py_array)
     }
     fn copy_hist<'py>(&self, pyarray: &mut ArrayViewMut<f32, Ix2>) {
@@ -218,13 +223,6 @@ impl GameState {
     }
     fn screen_size(&self) -> (i32, i32) {
         (self.config.height, self.config.width)
-    }
-    fn feature_dims(&self) -> (i32, i32, i32) {
-        (
-            i32::from(self.state.channels),
-            self.config.height,
-            self.config.width,
-        )
     }
     fn set_seed(&mut self, seed: u64) -> PyResult<()> {
         self.config.seed = Some(seed as u128);

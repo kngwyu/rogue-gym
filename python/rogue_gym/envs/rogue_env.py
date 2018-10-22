@@ -1,6 +1,7 @@
 """module for wrapper of rogue_gym_core::Runtime as gym environment"""
 import gym
 import json
+import numpy as np
 from numpy import ndarray
 from typing import Dict, List, Tuple, Union
 from rogue_gym_python._rogue_gym import GameState, PlayerState
@@ -49,6 +50,7 @@ class RogueEnv(gym.Env):
             config_path: str = None,
             config_dict: dict = None,
             max_steps: int = 1000,
+            input_channels: int = None,
     ) -> None:
         """
         @param config_path(string): path to config file
@@ -64,6 +66,24 @@ class RogueEnv(gym.Env):
         self.result = None
         self.max_steps = max_steps
         self.steps = 0
+        self.action_space = gym.spaces.discrete.Discrete(self.ACTION_LEN)
+        h, w = self.game.screen_size()
+        if input_channels:
+            self.observation_space = gym.spaces.box.Box(
+                low=0,
+                high=1,
+                shape=(input_channels, h, w),
+                dtype=np.float32,
+            )
+        else:
+            # By default, symbol image channels is used
+            ipc = self.game.channels()
+            self.observation_space = gym.spaces.box.Box(
+                low=0,
+                high=1,
+                shape=(ipc, h, w),
+                dtype=np.float32,
+            )
         self.__cache()
 
     def __cache(self) -> None:
@@ -80,9 +100,6 @@ class RogueEnv(gym.Env):
         returns the dimension of feature map
         """
         return self.game.channels()
-
-    def feature_dims(self) -> Tuple[int, int, int]:
-        return self.game.feature_dims()
 
     def get_key_to_action(self) -> Dict[str, str]:
         return self.ACION_MEANINGS

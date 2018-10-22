@@ -1,6 +1,8 @@
 """test for RogueEnv """
-from rogue_gym.envs import RogueEnv
 from data import CMD_STR, SEED1_DUNGEON, SEED1_DUNGEON2
+import gym
+import numpy as np
+from rogue_gym.envs import RogueEnv
 import unittest
 
 CONFIG_NOENEM = {
@@ -46,6 +48,14 @@ class TestSeed1(unittest.TestCase):
         self.assertEqual(gray_img.shape, (1, 24, 80))
         gray_img_hist = env.gray_image_with_hist(state)
         self.assertEqual(gray_img_hist.shape, (2, 24, 80))
+
+    def test_space(self):
+        env = RogueEnv(config_dict=CONFIG_NOENEM)
+        self.assertEqual(env.action_space, gym.spaces.discrete.Discrete(env.ACTION_LEN))
+        self.assertEqual(
+            env.observation_space.shape,
+            gym.spaces.box.Box(low=0, high=1, shape=(17, 24, 80), dtype=np.float32).shape,
+        )
 
 
 if __name__ == "__main__":
