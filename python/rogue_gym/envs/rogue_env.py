@@ -1,5 +1,6 @@
 """module for wrapper of rogue_gym_core::Runtime as gym environment"""
 import gym
+from gym import spaces
 import json
 import numpy as np
 from numpy import ndarray
@@ -66,10 +67,10 @@ class RogueEnv(gym.Env):
         self.result = None
         self.max_steps = max_steps
         self.steps = 0
-        self.action_space = gym.spaces.discrete.Discrete(self.ACTION_LEN)
+        self.action_space = spaces.discrete.Discrete(self.ACTION_LEN)
         h, w = self.game.screen_size()
         if input_channels:
-            self.observation_space = gym.spaces.box.Box(
+            self.observation_space = spaces.box.Box(
                 low=0,
                 high=1,
                 shape=(input_channels, h, w),
@@ -78,7 +79,7 @@ class RogueEnv(gym.Env):
         else:
             # By default, symbol image channels is used
             ipc = self.game.channels()
-            self.observation_space = gym.spaces.box.Box(
+            self.observation_space = spaces.box.Box(
                 low=0,
                 high=1,
                 shape=(ipc, h, w),

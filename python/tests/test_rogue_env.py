@@ -1,6 +1,7 @@
 """test for RogueEnv """
 from data import CMD_STR, SEED1_DUNGEON, SEED1_DUNGEON2
 import gym
+from gym import spaces
 import numpy as np
 from rogue_gym.envs import RogueEnv
 import unittest
@@ -54,7 +55,7 @@ class TestSeed1(unittest.TestCase):
         self.assertEqual(env.action_space, gym.spaces.discrete.Discrete(env.ACTION_LEN))
         self.assertEqual(
             env.observation_space.shape,
-            gym.spaces.box.Box(low=0, high=1, shape=(17, 24, 80), dtype=np.float32).shape,
+            spaces.box.Box(low=0, high=1, shape=(17, 24, 80), dtype=np.float32).shape,
         )
 
 
