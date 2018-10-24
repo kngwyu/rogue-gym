@@ -1,6 +1,8 @@
 pub mod enemies;
 pub mod player;
 pub use self::player::{Action, Hunger, Leveling, Player};
+use num_traits::PrimInt;
+use rand::distributions::uniform::SampleUniform;
 use rng::RngHandle;
 
 /// values compatible with Hit Point
@@ -159,6 +161,18 @@ pub struct Dice<T> {
 impl<T> Dice<T> {
     pub const fn new(n: usize, m: T) -> Dice<T> {
         Dice { times: n, max: m }
+    }
+}
+impl<T: Clone> Dice<T> {
+    pub fn exec<I>(&self, rng: &mut RngHandle) -> T
+    where
+        T: Into<I>,
+        I: PrimInt + SampleUniform + Into<T>,
+    {
+        let max: I = self.max.clone().into();
+        (0..self.times)
+            .fold(I::zero(), |acc, _| acc + rng.range(I::one()..=max))
+            .into()
     }
 }
 

@@ -2,8 +2,10 @@ use super::{Damage, Defense, Dice, Exp, HitPoint};
 use item::ItemNum;
 use rng::RngHandle;
 use smallvec::SmallVec;
+use std::cell::Cell;
 use std::collections::HashSet;
 use std::ops::Range;
+use std::rc::{Rc, Weak};
 use tile::Tile;
 
 pub type DiceVec<T> = SmallVec<[Dice<T>; 4]>;
@@ -103,19 +105,34 @@ impl EnemyAttr {
     }
 }
 
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
+pub struct EnemyId(u32);
+
+impl EnemyId {
+    fn increment(&mut self) -> Self {
+        let res = *self;
+        self.0 += 1;
+        res
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Enemy {
+    attack: DiceVec<HitPoint>,
     defense: Defense,
     exp: Exp,
-    hp: HitPoint,
-    id: usize,
+    hp: Cell<HitPoint>,
+    id: EnemyId,
     level: HitPoint,
+    max_hp: HitPoint,
     tile: Tile,
 }
 
 pub struct EnemyHandler {
     enemy_stats: Vec<Status>,
+    enemies: Vec<Weak<Enemy>>,
     rng: RngHandle,
+    next_id: EnemyId,
 }
 
 impl EnemyHandler {
@@ -123,7 +140,9 @@ impl EnemyHandler {
         stats.sort_by_key(|stat| stat.rarelity);
         EnemyHandler {
             enemy_stats: stats,
+            enemies: Vec::new(),
             rng,
+            next_id: EnemyId(0),
         }
     }
     fn trancate_idx(&mut self, idx: u32) -> usize {
@@ -136,16 +155,36 @@ impl EnemyHandler {
             id
         }
     }
-    fn exp_add(&self, offset: i32, maxhp: HitPoint) {}
-    pub fn gen_enemy(&mut self, range: Range<u32>, offset: i32) {
+    fn exp_add(&self, level: HitPoint, maxhp: HitPoint) -> Exp {
+        let base = match level.0 {
+            1 => maxhp.0 / 8,
+            _ => maxhp.0 / 6,
+        };
+        if 10 <= level.0 {
+            Exp(base as u32 * 20)
+        } else {
+            Exp(base as u32 * 4)
+        }
+    }
+    pub fn gen_enemy(&mut self, range: Range<u32>, lev_add: i32) -> Rc<Enemy> {
         let idx = self.rng.range(range);
         let idx = self.trancate_idx(idx);
         let stat = &self.enemy_stats[idx];
-        let hp = stat.level;
-        // let enem = Enemy {
-        //     defense: stat.defense - offset.into(),
-        //     exp: stat.exp + Exp::from((offset * 10) as u32),
-        // };
+        let level = stat.level + lev_add.into();
+        let hp = Dice::new(8, level).exec::<i64>(&mut self.rng);
+        let enem = Enemy {
+            attack: stat.attack.clone(),
+            defense: stat.defense - lev_add.into(),
+            exp: stat.exp + Exp::from((lev_add * 10) as u32) + self.exp_add(level, hp),
+            hp: Cell::new(hp),
+            id: self.next_id.increment(),
+            level,
+            max_hp: hp,
+            tile: stat.tile,
+        };
+        let enem = Rc::new(enem);
+        self.enemies.push(Rc::downgrade(&enem));
+        enem
     }
 }
 

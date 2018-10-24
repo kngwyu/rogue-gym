@@ -5,7 +5,6 @@ use rand::{
     distributions::uniform::SampleUniform, thread_rng, Error as RndError, RngCore, SeedableRng,
     XorShiftRng,
 };
-use std::fmt::Debug;
 use std::mem;
 use std::ops::{Bound, Range, RangeBounds};
 
@@ -75,7 +74,7 @@ impl RngHandle {
         }
     }
     /// wrapper of gen_range which takes Range
-    pub fn range<T: PrimInt + SampleUniform + Debug>(&mut self, range: impl RangeBounds<T>) -> T {
+    pub fn range<T: PrimInt + SampleUniform>(&mut self, range: impl RangeBounds<T>) -> T {
         let range = bounds_to_range(range);
         let (s, e) = (range.start, range.end);
         assert!(s < e, "invalid range!!");
