@@ -1,6 +1,7 @@
 //! rogue floor
-use super::{passages, rooms, Config, Room, Surface};
+use super::{passages, rooms, Address, Config, Room, Surface};
 use dungeon::{Cell, CellAttr, Coord, Direction, Field, Positioned, X, Y};
+use enemies::EnemyHandler;
 use enum_iterator::IntoEnumIterator;
 use error::*;
 use fenwick::FenwickSet;
@@ -103,6 +104,28 @@ impl Floor {
             })?;
         Ok(Floor::new(rooms, doors, field))
     }
+    /// place enemies
+    pub fn place_enemies(
+        &mut self,
+        level: u32,
+        lev_add: u32,
+        enemy_handle: &mut EnemyHandler,
+        rng: &mut RngHandle,
+    ) {
+        let min = level.checked_sub(4).unwrap_or(0);
+        let max = level + 6;
+        for (cd, room) in self
+            .rooms
+            .iter_mut()
+            .filter_map(|room| Some((room.select_cell(rng, true)?, room)))
+        {
+            if let Some(enemy) = enemy_handle.gen_enemy(min..max, lev_add as i32, room.has_gold) {
+                let place = Address::new(level, cd).into();
+                enemy_handle.place(place, enemy);
+                room.fill_cell(cd, true);
+            }
+        }
+    }
     /// setup items for a floor
     pub fn setup_items(
         &mut self,
@@ -112,7 +135,6 @@ impl Floor {
         rng: &mut RngHandle,
     ) {
         // setup gold
-        let mut res = HashMap::new();
         if set_gold {
             for (cd, room) in self
                 .rooms
@@ -121,11 +143,11 @@ impl Floor {
             {
                 if let Some(gold) = item_handle.setup_gold(level) {
                     room.fill_cell(cd, false);
-                    res.insert(cd, gold);
+                    room.has_gold = true;
+                    self.items.insert(cd, gold);
                 }
             }
         }
-        self.items = res;
     }
 
     /// set stair

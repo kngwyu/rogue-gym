@@ -32,6 +32,8 @@ pub struct Room {
     pub assigned_area: RectRange<i32>,
     /// if the player has visited the room or notify
     pub is_visited: bool,
+    /// if this room has gold or not
+    pub has_gold: bool,
     /// cells which has no object
     empty_cells: FenwickSet,
     /// cells which has no enemy
@@ -48,6 +50,7 @@ impl Room {
             assigned_area: assigned,
             nocharacter_cells: empty_cells.clone(),
             empty_cells,
+            has_gold: false,
             is_visited: false,
         }
     }

@@ -1,9 +1,10 @@
 use super::{Damage, Defense, Dice, Exp, HitPoint};
+use dungeon::DungeonPath;
 use item::ItemNum;
 use rng::RngHandle;
 use smallvec::SmallVec;
 use std::cell::Cell;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::ops::Range;
 use std::rc::{Rc, Weak};
 use tile::Tile;
@@ -11,26 +12,32 @@ use tile::Tile;
 pub type DiceVec<T> = SmallVec<[Dice<T>; 4]>;
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
-#[serde(rename_all = "lowercase")]
-pub enum Config {
-    Builtin {
-        typ: BuiltinKind,
-        include: Vec<usize>,
-    },
-    Custom(Vec<Status>),
+pub struct Config {
+    #[serde(default)]
+    #[serde(flatten)]
+    pub enemies: Enemies,
+    #[serde(default = "default_appear_rate_gold")]
+    #[serde(skip_serializing_if = "is_default_appear_rate_gold")]
+    pub appear_rate_gold: u32,
+    #[serde(default = "default_appear_rate_nogold")]
+    #[serde(skip_serializing_if = "is_default_appear_rate_nogold")]
+    pub appear_rate_nogold: u32,
 }
 
 impl Config {
     pub fn tile_max(&self) -> Option<u8> {
-        match self {
-            Config::Builtin { typ: _, include } => {
+        match self.enemies {
+            Enemies::Builtin {
+                typ: _,
+                ref include,
+            } => {
                 let len = include.len() as u8;
                 if len == 0 {
                     return None;
                 }
                 Some(len + b'A' - 1)
             }
-            Config::Custom(stats) => {
+            Enemies::Custom(ref stats) => {
                 let max = stats.iter().map(|s| s.tile.to_byte()).max()?;
                 assert!(max >= b'A');
                 Some(max)
@@ -39,16 +46,67 @@ impl Config {
     }
     pub fn build(self, seed: u128) -> EnemyHandler {
         let rng = RngHandle::from_seed(seed);
-        match self {
-            Config::Builtin { typ, include } => typ.build(rng, include),
-            Config::Custom(stats) => EnemyHandler::new(stats, rng),
+        let Config {
+            appear_rate_gold,
+            appear_rate_nogold,
+            enemies,
+        } = self;
+        let config_inner = ConfigInner {
+            appear_rate_gold,
+            appear_rate_nogold,
+        };
+        match enemies {
+            Enemies::Builtin { typ, include } => typ.build(rng, include, config_inner),
+            Enemies::Custom(stats) => EnemyHandler::new(stats, rng, config_inner),
         }
     }
 }
 
+#[derive(Clone, Debug)]
+struct ConfigInner {
+    appear_rate_gold: u32,
+    appear_rate_nogold: u32,
+}
+
+const fn default_appear_rate_gold() -> u32 {
+    80
+}
+
+const fn default_appear_rate_nogold() -> u32 {
+    25
+}
+
+const fn is_default_appear_rate_gold(u: &u32) -> bool {
+    *u == 80
+}
+
+const fn is_default_appear_rate_nogold(u: &u32) -> bool {
+    *u == 25
+}
+
 impl Default for Config {
-    fn default() -> Config {
-        Config::Builtin {
+    fn default() -> Self {
+        Config {
+            enemies: Default::default(),
+            appear_rate_gold: default_appear_rate_gold(),
+            appear_rate_nogold: default_appear_rate_nogold(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum Enemies {
+    Builtin {
+        typ: BuiltinKind,
+        include: Vec<usize>,
+    },
+    Custom(Vec<Status>),
+}
+
+impl Default for Enemies {
+    fn default() -> Enemies {
+        Enemies::Builtin {
             typ: BuiltinKind::Rogue,
             include: (0..26).collect(),
         }
@@ -61,12 +119,12 @@ pub enum BuiltinKind {
 }
 
 impl BuiltinKind {
-    fn build(self, rng: RngHandle, include: Vec<usize>) -> EnemyHandler {
+    fn build(&self, rng: RngHandle, include: Vec<usize>, config: ConfigInner) -> EnemyHandler {
         match self {
             BuiltinKind::Rogue => {
                 let hash: HashSet<_> = include.into_iter().collect();
                 let stats = StaticStatus::get_owned(&ROGUE_ENEMIES, hash);
-                EnemyHandler::new(stats, rng)
+                EnemyHandler::new(stats, rng, config)
             }
         }
     }
@@ -131,22 +189,28 @@ pub struct Enemy {
 pub struct EnemyHandler {
     enemy_stats: Vec<Status>,
     enemies: Vec<Weak<Enemy>>,
+    placed_enemies: HashMap<DungeonPath, Rc<Enemy>>,
+    active_enemies: HashMap<DungeonPath, Rc<Enemy>>,
     rng: RngHandle,
+    config: ConfigInner,
     next_id: EnemyId,
 }
 
 impl EnemyHandler {
-    fn new(mut stats: Vec<Status>, rng: RngHandle) -> Self {
+    fn new(mut stats: Vec<Status>, rng: RngHandle, config: ConfigInner) -> Self {
         stats.sort_by_key(|stat| stat.rarelity);
         EnemyHandler {
             enemy_stats: stats,
             enemies: Vec::new(),
+            placed_enemies: HashMap::new(),
+            active_enemies: HashMap::new(),
             rng,
+            config,
             next_id: EnemyId(0),
         }
     }
-    fn trancate_idx(&mut self, idx: u32) -> usize {
-        let id = idx as usize;
+    fn select(&mut self, range: Range<u32>) -> usize {
+        let id = self.rng.range(range) as usize;
         if id > self.enemy_stats.len() {
             let len = self.enemy_stats.len();
             let range = ::std::cmp::min(len, 5);
@@ -166,9 +230,21 @@ impl EnemyHandler {
             Exp(base as u32 * 4)
         }
     }
-    pub fn gen_enemy(&mut self, range: Range<u32>, lev_add: i32) -> Rc<Enemy> {
-        let idx = self.rng.range(range);
-        let idx = self.trancate_idx(idx);
+    pub fn gen_enemy(
+        &mut self,
+        range: Range<u32>,
+        lev_add: i32,
+        has_gold: bool,
+    ) -> Option<Rc<Enemy>> {
+        let appear_parcent = if has_gold {
+            self.config.appear_rate_gold
+        } else {
+            self.config.appear_rate_nogold
+        };
+        if !self.rng.parcent(appear_parcent) {
+            return None;
+        }
+        let idx = self.select(range);
         let stat = &self.enemy_stats[idx];
         let level = stat.level + lev_add.into();
         let hp = Dice::new(8, level).exec::<i64>(&mut self.rng);
@@ -184,7 +260,12 @@ impl EnemyHandler {
         };
         let enem = Rc::new(enem);
         self.enemies.push(Rc::downgrade(&enem));
-        enem
+        Some(enem)
+    }
+    pub fn place(&mut self, path: DungeonPath, enemy: Rc<Enemy>) {
+        if let Some(enem) = self.placed_enemies.insert(path, enemy) {
+            debug!("EnemyHandler::place path is already used by {:?}", enem);
+        }
     }
 }
 

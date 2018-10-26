@@ -409,7 +409,10 @@ crate struct Address {
 }
 
 impl Address {
-    crate fn from_path(p: &DungeonPath) -> Address {
+    crate fn new(lev: u32, cd: Coord) -> Self {
+        Address { level: lev, cd }
+    }
+    crate fn from_path(p: &DungeonPath) -> Self {
         Address {
             level: p[0] as u32,
             cd: Coord::new(p[1], p[2]),

@@ -84,6 +84,10 @@ impl RngHandle {
     pub fn does_happen(&mut self, p_inv: u32) -> bool {
         self.gen_range(0, p_inv) == 0
     }
+    /// judge an event with p % chance happens or not
+    pub fn parcent(&mut self, p: u32) -> bool {
+        self.range(1..=100) <= p
+    }
 }
 
 impl RngCore for RngHandle {

@@ -1,6 +1,7 @@
 pub mod enemies;
 pub mod player;
 pub use self::player::{Action, Hunger, Leveling, Player};
+pub use enemies::{Enemy, EnemyHandler};
 use num_traits::PrimInt;
 use rand::distributions::uniform::SampleUniform;
 use rng::RngHandle;
