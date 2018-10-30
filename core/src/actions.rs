@@ -1,5 +1,5 @@
 //! module for handling actions and do some operations related to multiple modules
-use character::{Action, Player};
+use character::{Action, EnemyHandler, Player};
 use dungeon::{Direction, Dungeon};
 use error::*;
 use item::{itembox::Entry as ItemEntry, ItemHandler, ItemToken};
@@ -12,11 +12,12 @@ crate fn process_action(
     dungeon: &mut Dungeon,
     item: &mut ItemHandler,
     player: &mut Player,
+    enemies: &mut EnemyHandler,
 ) -> GameResult<Vec<Reaction>> {
     match action {
         Action::DownStair => {
             if dungeon.is_downstair(&player.pos) {
-                new_level(info, dungeon, item, player, false)
+                new_level(info, dungeon, item, player, enemies, false)
                     .chain_err(|| "action::process_action")?;
                 Ok(vec![Reaction::Redraw, Reaction::StatusUpdated])
             } else {
@@ -26,11 +27,11 @@ crate fn process_action(
         Action::UpStair => {
             Err(ErrorId::Unimplemented.into_with(|| "UpStair Command is unimplemented"))
         }
-        Action::Move(d) => Ok(move_player(d, dungeon, player)?.0),
+        Action::Move(d) => Ok(move_player(d, dungeon, player, enemies)?.0),
         Action::MoveUntil(d) => {
             let mut out = Vec::new();
             loop {
-                let res = move_player(d, dungeon, player)?;
+                let res = move_player(d, dungeon, player, enemies)?;
                 let tile = dungeon
                     .tile(&player.pos)
                     .map(|t| t.to_char())
@@ -53,29 +54,31 @@ crate fn new_level(
     dungeon: &mut Dungeon,
     item: &mut ItemHandler,
     player: &mut Player,
+    enemies: &mut EnemyHandler,
     is_init: bool,
 ) -> GameResult<()> {
     if !is_init {
         dungeon
-            .new_level(info, item)
+            .new_level(info, item, enemies)
             .chain_err(|| "action::new_level")?;
     }
     player.pos = dungeon
         .select_cell(true)
         .ok_or_else(|| ErrorId::MaybeBug.into_with(|| "action::new_level No space for player!"))?;
-    dungeon.enter_room(&player.pos)
+    dungeon.enter_room(&player.pos, enemies)
 }
 
 fn move_player(
     direction: Direction,
     dungeon: &mut Dungeon,
     player: &mut Player,
-) -> GameResult<(Vec<Reaction>, bool /*done*/)> {
+    enemies: &mut EnemyHandler,
+) -> GameResult<(Vec<Reaction>, bool)> {
     if !dungeon.can_move_player(&player.pos, direction) {
         return Ok((vec![Reaction::Notify(GameMsg::CantMove(direction))], true));
     }
     let new_pos = dungeon
-        .move_player(&player.pos, direction)
+        .move_player(&player.pos, direction, enemies)
         .chain_err(|| "actions::move_player")?;
     player.pos = new_pos;
     player.running(true);

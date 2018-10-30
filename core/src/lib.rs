@@ -37,7 +37,7 @@ pub mod symbol;
 pub mod tile;
 pub mod ui;
 
-use character::{enemies, player, Player};
+use character::{enemies, player, EnemyHandler, Player};
 use dungeon::{Direction, Dungeon, DungeonStyle, Positioned, X, Y};
 use error::*;
 use input::{InputCode, Key, KeyMap};
@@ -186,22 +186,31 @@ impl GameConfig {
         debug!("Building dungeon with seed {}", config.seed);
         // TODO: invalid checking
         let mut item = ItemHandler::new(self.item.clone(), config.seed);
+        let mut enemies = self.enemies.build(config.seed);
         let mut dungeon = self
             .dungeon
-            .build(&config, &mut item, &game_info, config.seed)
+            .build(&config, &mut item, &mut enemies, &game_info, config.seed)
             .chain_err(|| ERR_STR)?;
         // TODO: invalid checking
         let mut player = self.player.build();
         item.init_player_items(&mut player.itembox, &player.config.init_items)
             .chain_err(|| ERR_STR)?;
-        actions::new_level(&game_info, &mut dungeon, &mut item, &mut player, true)
-            .chain_err(|| ERR_STR)?;
+        actions::new_level(
+            &game_info,
+            &mut dungeon,
+            &mut item,
+            &mut player,
+            &mut enemies,
+            true,
+        )
+        .chain_err(|| ERR_STR)?;
         Ok(RunTime {
             game_info,
             config,
             dungeon,
             item,
             player,
+            enemies,
             ui: UiState::Dungeon,
             saved_inputs: vec![],
             keymap: self.keymap,
@@ -218,6 +227,7 @@ pub struct RunTime {
     player: Player,
     ui: UiState,
     saved_inputs: Vec<InputCode>,
+    enemies: EnemyHandler,
     pub keymap: KeyMap,
 }
 
@@ -252,6 +262,9 @@ impl RunTime {
             if let Some(item) = self.dungeon.get_item(&path) {
                 return drawer(Positioned(cd, item.tile()));
             }
+            if let Some(enemy) = self.enemies.get_enemy(&path) {
+                return drawer(Positioned(cd, enemy.tile()));
+            }
             Ok(())
         })
     }
@@ -263,13 +276,17 @@ impl RunTime {
                 None,
                 match input {
                     InputCode::Sys(sys) => self.check_interrupting(sys),
-                    InputCode::Act(act) | InputCode::Both { act, .. } => actions::process_action(
-                        act,
-                        &mut self.game_info,
-                        &mut self.dungeon,
-                        &mut self.item,
-                        &mut self.player,
-                    ),
+                    InputCode::Act(act) | InputCode::Both { act, .. } => {
+                        let res = actions::process_action(
+                            act,
+                            &mut self.game_info,
+                            &mut self.dungeon,
+                            &mut self.item,
+                            &mut self.player,
+                            &mut self.enemies,
+                        )?;
+                        Ok(res)
+                    }
                 },
             ),
             UiState::Mordal(ref mut kind) => match input {

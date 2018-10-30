@@ -5,6 +5,7 @@ mod rogue;
 pub use self::coord::{Coord, Direction, Positioned, X, Y};
 pub use self::field::{Cell, CellAttr, Field};
 use character::player::Status as PlayerStatus;
+use character::EnemyHandler;
 use error::*;
 use item::{ItemHandler, ItemToken};
 use ndarray::Array2;
@@ -37,14 +38,21 @@ impl DungeonStyle {
         self,
         config_global: &GlobalConfig,
         item_handle: &mut ItemHandler,
+        enemies: &mut EnemyHandler,
         game_info: &GameInfo,
         seed: u128,
     ) -> GameResult<Dungeon> {
         match self {
             DungeonStyle::Rogue(config) => {
-                let dungeon =
-                    rogue::Dungeon::new(config, config_global, game_info, item_handle, seed)
-                        .chain_err(|| "DungeonStyle::build")?;
+                let dungeon = rogue::Dungeon::new(
+                    config,
+                    config_global,
+                    game_info,
+                    item_handle,
+                    enemies,
+                    seed,
+                )
+                .chain_err(|| "DungeonStyle::build")?;
                 Ok(Dungeon::Rogue(Box::new(dungeon)))
             }
             _ => unimplemented!(),
@@ -80,9 +88,14 @@ impl Dungeon {
             _ => unimplemented!(),
         }
     }
-    crate fn new_level(&mut self, game_info: &GameInfo, item: &mut ItemHandler) -> GameResult<()> {
+    crate fn new_level(
+        &mut self,
+        game_info: &GameInfo,
+        item: &mut ItemHandler,
+        enemies: &mut EnemyHandler,
+    ) -> GameResult<()> {
         match self {
-            Dungeon::Rogue(dungeon) => dungeon.new_level(game_info, item),
+            Dungeon::Rogue(dungeon) => dungeon.new_level(game_info, item, enemies),
             _ => unimplemented!(),
         }
     }
@@ -99,11 +112,12 @@ impl Dungeon {
         &mut self,
         path: &DungeonPath,
         direction: Direction,
+        enemies: &mut EnemyHandler,
     ) -> GameResult<DungeonPath> {
         match self {
             Dungeon::Rogue(dungeon) => {
                 let address = rogue::Address::from_path(path);
-                dungeon.move_player(address, direction)
+                dungeon.move_player(address, direction, enemies)
             }
             _ => unimplemented!(),
         }
@@ -126,11 +140,15 @@ impl Dungeon {
             _ => unimplemented!(),
         }
     }
-    crate fn enter_room(&mut self, path: &DungeonPath) -> GameResult<()> {
+    crate fn enter_room(
+        &mut self,
+        path: &DungeonPath,
+        enemies: &mut EnemyHandler,
+    ) -> GameResult<()> {
         match self {
             Dungeon::Rogue(dungeon) => {
                 let address = rogue::Address::from_path(path);
-                dungeon.current_floor.player_in(address.cd, true)
+                dungeon.current_floor.player_in(address.cd, true, enemies)
             }
             _ => unimplemented!(),
         }

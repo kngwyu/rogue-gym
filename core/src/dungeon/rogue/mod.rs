@@ -6,6 +6,7 @@ pub mod rooms;
 use self::floor::Floor;
 pub use self::rooms::{Room, RoomKind};
 use super::{Coord, Direction, DungeonPath, Positioned, X, Y};
+use character::EnemyHandler;
 use error::*;
 use item::{ItemHandler, ItemToken};
 use ndarray::Array2;
@@ -169,13 +170,6 @@ impl Surface {
             _ => true,
         }
     }
-    fn wall(is_xdir: bool) -> Self {
-        if is_xdir {
-            Surface::WallX
-        } else {
-            Surface::WallY
-        }
-    }
 }
 
 /// representation of rogue dungeon
@@ -204,6 +198,7 @@ impl Dungeon {
         config_global: &GlobalConfig,
         game_info: &GameInfo,
         item_handle: &mut ItemHandler,
+        enemies: &mut EnemyHandler,
         seed: u128,
     ) -> GameResult<Self> {
         let rng = RngHandle::from_seed(seed);
@@ -217,7 +212,7 @@ impl Dungeon {
             rng,
         };
         dungeon
-            .new_level_(game_info, item_handle, true)
+            .new_level_(game_info, item_handle, enemies, true)
             .chain_err(|| "rogue::Dungeon::new")?;
         Ok(dungeon)
     }
@@ -239,14 +234,16 @@ impl Dungeon {
         &mut self,
         game_info: &GameInfo,
         item_handle: &mut ItemHandler,
+        enemies: &mut EnemyHandler,
     ) -> GameResult<()> {
-        self.new_level_(game_info, item_handle, false)
+        self.new_level_(game_info, item_handle, enemies, false)
     }
 
     fn new_level_(
         &mut self,
         game_info: &GameInfo,
         item_handle: &mut ItemHandler,
+        enemies: &mut EnemyHandler,
         is_initial: bool,
     ) -> GameResult<()> {
         const ERR_STR: &str = "in rogue::Dungeon::new_level";
@@ -266,6 +263,13 @@ impl Dungeon {
         debug!("[Dungeon::new_level] set_gold: {}", set_gold);
         floor.setup_items(level, item_handle, set_gold, &mut self.rng);
         // place traps (STUB)
+        // place enemies
+        let lev_add = if self.config.amulet_level < level {
+            level - self.config.amulet_level
+        } else {
+            0
+        };
+        floor.place_enemies(level, lev_add, enemies, &mut self.rng);
         // place stair
         floor.setup_stair(&mut self.rng).chain_err(|| ERR_STR)?;
         if !self.config_global.hide_dungeon {
@@ -310,6 +314,7 @@ impl Dungeon {
         &mut self,
         address: Address,
         direction: Direction,
+        enemies: &mut EnemyHandler,
     ) -> GameResult<DungeonPath> {
         const ERR_STR: &str = "[rogue::Dungeon::move_player]";
         if address.level != self.level {
@@ -324,7 +329,7 @@ impl Dungeon {
             cd,
         };
         self.current_floor
-            .player_in(cd, false)
+            .player_in(cd, false, enemies)
             .chain_err(|| ERR_STR)?;
         Ok(address.into())
     }

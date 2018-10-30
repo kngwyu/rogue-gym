@@ -1,4 +1,5 @@
 use super::{Damage, Defense, Dice, Exp, HitPoint};
+use crate::Drawable;
 use dungeon::DungeonPath;
 use item::ItemNum;
 use rng::RngHandle;
@@ -186,6 +187,12 @@ pub struct Enemy {
     tile: Tile,
 }
 
+impl Drawable for Enemy {
+    fn tile(&self) -> Tile {
+        self.tile
+    }
+}
+
 pub struct EnemyHandler {
     enemy_stats: Vec<Status>,
     enemies: Vec<Weak<Enemy>>,
@@ -267,6 +274,11 @@ impl EnemyHandler {
             debug!("EnemyHandler::place path is already used by {:?}", enem);
         }
     }
+    pub fn get_enemy(&self, path: &DungeonPath) -> Option<&Enemy> {
+        self.placed_enemies.get(&path).map(AsRef::as_ref)
+    }
+    pub fn move_active_enemies(&mut self) {}
+    pub fn activate(&mut self) {}
 }
 
 macro_rules! enem_attr {

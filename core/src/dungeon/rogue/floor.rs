@@ -109,7 +109,7 @@ impl Floor {
         &mut self,
         level: u32,
         lev_add: u32,
-        enemy_handle: &mut EnemyHandler,
+        enemies: &mut EnemyHandler,
         rng: &mut RngHandle,
     ) {
         let min = level.checked_sub(4).unwrap_or(0);
@@ -119,9 +119,9 @@ impl Floor {
             .iter_mut()
             .filter_map(|room| Some((room.select_cell(rng, true)?, room)))
         {
-            if let Some(enemy) = enemy_handle.gen_enemy(min..max, lev_add as i32, room.has_gold) {
+            if let Some(enemy) = enemies.gen_enemy(min..max, lev_add as i32, room.has_gold) {
                 let place = Address::new(level, cd).into();
-                enemy_handle.place(place, enemy);
+                enemies.place(place, enemy);
                 room.fill_cell(cd, true);
             }
         }
@@ -274,7 +274,12 @@ impl Floor {
     }
 
     /// player walks in the cell
-    crate fn player_in(&mut self, cd: Coord, init: bool) -> GameResult<()> {
+    crate fn player_in(
+        &mut self,
+        cd: Coord,
+        init: bool,
+        enemies: &mut EnemyHandler,
+    ) -> GameResult<()> {
         if init || self.doors.contains(&cd) {
             self.enters_room(cd).chain_err(|| "Floor::player_in")?;
         }
