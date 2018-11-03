@@ -102,6 +102,9 @@ class RogueEnv(gym.Env):
         """
         return self.game.channels()
 
+    def feature_dims(self) -> Tuple[int, int, int]:
+        return (self.channels(), *self.screen_size)
+
     def get_key_to_action(self) -> Dict[str, str]:
         return self.ACION_MEANINGS
 
