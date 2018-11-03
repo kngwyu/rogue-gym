@@ -147,12 +147,6 @@ impl<T: Copy> Maxed<T> {
     }
 }
 
-impl<T> Maxed<T> {
-    fn new(max: T, current: T) -> Maxed<T> {
-        Maxed { max, current }
-    }
-}
-
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Dice<T> {
     times: usize,

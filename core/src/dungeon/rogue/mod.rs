@@ -262,16 +262,11 @@ impl Dungeon {
         let set_gold = !game_info.is_cleared || level >= self.max_level;
         debug!("[Dungeon::new_level] set_gold: {}", set_gold);
         floor.setup_items(level, item_handle, set_gold, &mut self.rng);
-        // place traps (STUB)
-        // place enemies
-        let lev_add = if self.config.amulet_level < level {
-            level - self.config.amulet_level
-        } else {
-            0
-        };
-        floor.place_enemies(level, lev_add, enemies, &mut self.rng);
         // place stair
         floor.setup_stair(&mut self.rng).chain_err(|| ERR_STR)?;
+        // place enemies
+        floor.place_enemies(level, self.lev_add(), enemies, &mut self.rng);
+        // place traps (STUB)
         if !self.config_global.hide_dungeon {
             let xmax = self.config_global.width.0;
             let ymax = self.config_global.height.0 - 1;
@@ -288,6 +283,14 @@ impl Dungeon {
             self.past_floors.push(floor);
         }
         Ok(())
+    }
+
+    fn lev_add(&self) -> u32 {
+        if self.config.amulet_level < self.level {
+            self.level - self.config.amulet_level
+        } else {
+            0
+        }
     }
 
     /// takes addrees and judge if thers's a stair at that address

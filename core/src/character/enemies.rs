@@ -216,6 +216,9 @@ impl EnemyHandler {
             next_id: EnemyId(0),
         }
     }
+    pub fn is_no_enemy(&self) -> bool {
+        self.enemy_stats.is_empty()
+    }
     fn select(&mut self, range: Range<u32>) -> usize {
         let id = self.rng.range(range) as usize;
         if id > self.enemy_stats.len() {
@@ -252,7 +255,7 @@ impl EnemyHandler {
             return None;
         }
         let idx = self.select(range);
-        let stat = &self.enemy_stats[idx];
+        let stat = self.enemy_stats.get(idx)?;
         let level = stat.level + lev_add.into();
         let hp = Dice::new(8, level).exec::<i64>(&mut self.rng);
         let enem = Enemy {

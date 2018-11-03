@@ -112,6 +112,10 @@ impl Floor {
         enemies: &mut EnemyHandler,
         rng: &mut RngHandle,
     ) {
+        // For backward compatibility
+        if enemies.is_no_enemy() {
+            return;
+        }
         let min = level.checked_sub(4).unwrap_or(0);
         let max = level + 6;
         for (cd, room) in self

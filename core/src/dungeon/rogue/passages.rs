@@ -266,7 +266,7 @@ impl Node {
     }
 }
 
-#[cfg_attr(test, test)]
+#[test]
 fn test_inclusive_edges() {
     use std::ops::Range;
     let range = RectRange::from_ranges(5..10, 6..9).unwrap();

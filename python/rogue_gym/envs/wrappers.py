@@ -19,6 +19,9 @@ class StairRewardEnv(RogueEnv):
             reward += self.stair_reward
         return state, reward, end, info
 
+    def __repr__(self):
+        return super().__repr__()
+
 
 class FirstFloorEnv(StairRewardEnv):
     def step(self, action: Union[int, str]) -> Tuple[PlayerState, float, bool, None]:
@@ -26,3 +29,6 @@ class FirstFloorEnv(StairRewardEnv):
         if self.current_level == 2:
             end = True
         return state, reward, end, info
+
+    def __repr__(self):
+        return super().__repr__()

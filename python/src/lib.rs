@@ -288,12 +288,13 @@ impl GameState {
     ) -> PyResult<&PyArray3<f32>> {
         let py_array = state.symbol_image_with_offset(self.token.py(), 2)?;
         let mut array = py_array.as_array_mut()?;
+        let offset = usize::from(state.channels);
         {
-            let mut hist_array = array.subview_mut(Axis(0), 1);
+            let mut hist_array = array.subview_mut(Axis(0), offset);
             state.copy_hist(&mut hist_array);
         }
         {
-            let mut level_array = array.subview_mut(Axis(0), 2);
+            let mut level_array = array.subview_mut(Axis(0), offset + 1);
             state.copy_dungeon_level(&mut level_array);
         }
         Ok(py_array)
