@@ -8,8 +8,8 @@ extern crate rogue_gym_core;
 use ndarray::{Array2, ArrayViewMut, Axis, Ix2, Zip};
 use numpy::PyArray3;
 use pyo3::{
-    basic::{PyObjectReprProtocol, PyObjectStrProtocol},
-    exc,
+    basic::{PyObjectProtocol, PyObjectReprProtocol, PyObjectStrProtocol},
+    exceptions::{RuntimeError, TypeError},
     prelude::*,
 };
 use rect_iter::{Get2D, GetMut2D, RectRange};
@@ -71,7 +71,7 @@ impl PlayerState {
         symbol::construct_symbol_map(&self.map, h, w, self.channels - 1, |idx| unsafe {
             array.uget_mut(idx)
         })
-        .map_err(|e| PyErr::new::<exc::RuntimeError, _>(format!("{}", e)))?;
+        .map_err(|e| PyErr::new::<RuntimeError, _>(format!("{}", e)))?;
         Ok(())
     }
     fn gray_image_with_offset<'py>(
@@ -114,16 +114,10 @@ impl PlayerState {
     }
     fn symbol_image_with_hist<'py>(&self, py: Python<'py>) -> PyResult<&'py PyArray3<f32>> {
         let py_array = self.symbol_image_with_offset(py, 1)?;
-        let mut array = py_array.as_array_mut()?;
+        let mut array = py_array.as_array_mut();
         let mut hist_array = array.subview_mut(Axis(0), usize::from(self.channels));
         self.copy_hist(&mut hist_array);
         Ok(py_array)
-    }
-}
-
-impl ::pyo3::IntoPyObject for PlayerState {
-    fn into_object(self, py: ::pyo3::Python) -> ::pyo3::PyObject {
-        ::pyo3::Py::new(py, |_| self).unwrap().into_object(py)
     }
 }
 
@@ -192,7 +186,7 @@ impl GameState {
     fn __new__(obj: &PyRawObject, seed: Option<u64>, config_str: Option<String>) -> PyResult<()> {
         let mut config = if let Some(cfg) = config_str {
             GameConfig::from_json(&cfg).map_err(|e| {
-                PyErr::new::<exc::RuntimeError, _>(format!("failed to parse config, {}", e))
+                PyErr::new::<RuntimeError, _>(format!("failed to parse config, {}", e))
             })?
         } else {
             GameConfig::default()
@@ -244,9 +238,7 @@ impl GameState {
         let res = self
             .runtime
             .react_to_key(Key::Char(input as char))
-            .map_err(|e| {
-                PyErr::new::<exc::TypeError, _>(format!("error in rogue_gym_core: {}", e))
-            })?;
+            .map_err(|e| PyErr::new::<TypeError, _>(format!("error in rogue_gym_core: {}", e)))?;
         res.iter().for_each(|reaction| match reaction {
             Reaction::Redraw => {
                 self.state.draw_map(&self.runtime).unwrap();
@@ -266,7 +258,7 @@ impl GameState {
     }
     fn get_gray_image_with_hist(&self, state: &PlayerState) -> PyResult<&PyArray3<f32>> {
         let py_array = state.gray_image_with_offset(self.token.py(), 1)?;
-        let mut array = py_array.as_array_mut()?;
+        let mut array = py_array.as_array_mut();
         let mut hist_array = array.subview_mut(Axis(0), 1);
         state.copy_hist(&mut hist_array);
         Ok(py_array)
@@ -287,7 +279,7 @@ impl GameState {
         state: &PlayerState,
     ) -> PyResult<&PyArray3<f32>> {
         let py_array = state.symbol_image_with_offset(self.token.py(), 2)?;
-        let mut array = py_array.as_array_mut()?;
+        let mut array = py_array.as_array_mut();
         let offset = usize::from(state.channels);
         {
             let mut hist_array = array.subview_mut(Axis(0), offset);
@@ -302,14 +294,14 @@ impl GameState {
     /// Returns action history as Json
     fn dump_history(&self) -> PyResult<String> {
         self.runtime.saved_inputs_as_json().map_err(|e| {
-            PyErr::new::<exc::RuntimeError, _>(format!("error when getting history: {}", e))
+            PyErr::new::<RuntimeError, _>(format!("error when getting history: {}", e))
         })
     }
     /// Returns config as Json
     fn dump_config(&self) -> PyResult<String> {
-        self.config.to_json().map_err(|e| {
-            PyErr::new::<exc::RuntimeError, _>(format!("error when getting config: {}", e))
-        })
+        self.config
+            .to_json()
+            .map_err(|e| PyErr::new::<RuntimeError, _>(format!("error when getting config: {}", e)))
     }
 }
 
