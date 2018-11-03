@@ -182,6 +182,10 @@ pub fn process_reaction<W: Write>(
                     notify!(screen, "Now you have {} {:?}", num, kind)
                 }
                 GameMsg::SecretDoor => notify!(screen, "you found a secret door"),
+                GameMsg::HitTo(s) => notify!(screen, "You swings and hit {}", s),
+                GameMsg::HitFrom(s) => notify!(screen, "{} swings and hits you", s),
+                GameMsg::MissTo(s) => notify!(screen, "You swing and miss {}", s),
+                GameMsg::MissFrom(s) => notify!(screen, "{} swings and misses you", s),
                 GameMsg::Quit => {
                     notify!(screen, "Thank you for playing!")?;
                     return Ok(Some(Transition::Exit));

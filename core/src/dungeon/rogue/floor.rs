@@ -282,10 +282,18 @@ impl Floor {
         &mut self,
         cd: Coord,
         init: bool,
+        level: u32,
         enemies: &mut EnemyHandler,
     ) -> GameResult<()> {
         if init || self.doors.contains(&cd) {
             self.enters_room(cd).chain_err(|| "Floor::player_in")?;
+            if let Some(room_id) = self.cd_to_room_id(cd) {
+                let room = &self.rooms[room_id];
+                enemies.activate(|path| {
+                    let address = Address::from_path(path);
+                    address.level == level && room.assigned_area.contains(cd)
+                });
+            }
         }
         self.field
             .try_get_mut_p(cd)
@@ -308,6 +316,7 @@ impl Floor {
         if self.doors.contains(&cd) {
             self.leaves_room(cd).chain_err(|| "Floor::player_out")?;
         }
+        self.remove_obj(cd, true);
         Direction::into_enum_iter().take(9).for_each(|d| {
             let cd = cd + d.to_cd();
             if let Ok(cell) = self.field.try_get_mut_p(cd) {

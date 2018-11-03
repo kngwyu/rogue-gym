@@ -1,11 +1,11 @@
-use super::{Damage, Defense, Dice, Exp, HitPoint};
+use super::{Defense, Dice, Exp, HitPoint};
 use crate::Drawable;
-use dungeon::DungeonPath;
+use dungeon::{Dungeon, DungeonPath};
 use item::ItemNum;
 use rng::RngHandle;
 use smallvec::SmallVec;
 use std::cell::Cell;
-use std::collections::{HashMap, HashSet};
+use std::collections::{hash_map::Entry, HashMap, HashSet};
 use std::ops::Range;
 use std::rc::{Rc, Weak};
 use tile::Tile;
@@ -178,6 +178,7 @@ impl EnemyId {
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Enemy {
     attack: DiceVec<HitPoint>,
+    attr: EnemyAttr,
     defense: Defense,
     exp: Exp,
     hp: Cell<HitPoint>,
@@ -187,11 +188,22 @@ pub struct Enemy {
     tile: Tile,
 }
 
+impl Enemy {
+    pub fn is_mean(&self) -> bool {
+        self.attr.contains(EnemyAttr::MEAN)
+    }
+    pub fn is_greedy(&self) -> bool {
+        self.attr.contains(EnemyAttr::GREEDY)
+    }
+}
+
 impl Drawable for Enemy {
     fn tile(&self) -> Tile {
         self.tile
     }
 }
+
+pub struct Attack(Rc<Enemy>);
 
 pub struct EnemyHandler {
     enemy_stats: Vec<Status>,
@@ -259,6 +271,7 @@ impl EnemyHandler {
         let level = stat.level + lev_add.into();
         let hp = Dice::new(8, level).exec::<i64>(&mut self.rng);
         let enem = Enemy {
+            attr: stat.attr,
             attack: stat.attack.clone(),
             defense: stat.defense - lev_add.into(),
             exp: stat.exp + Exp::from((lev_add * 10) as u32) + self.exp_add(level, hp),
@@ -280,8 +293,34 @@ impl EnemyHandler {
     pub fn get_enemy(&self, path: &DungeonPath) -> Option<&Enemy> {
         self.placed_enemies.get(&path).map(AsRef::as_ref)
     }
-    pub fn move_active_enemies(&mut self) {}
-    pub fn activate(&mut self) {}
+    pub fn activate<'a, F>(&mut self, mut is_in_activation_area: F)
+    where
+        F: FnMut(&DungeonPath) -> bool,
+    {
+        for (path, enemy) in &mut self.placed_enemies {
+            if !is_in_activation_area(path) || !enemy.is_mean() {
+                continue;
+            }
+            if let Entry::Vacant(v) = self.active_enemies.entry(path.to_owned()) {
+                v.insert(Rc::clone(enemy));
+            }
+        }
+    }
+    pub fn move_actives(
+        &mut self,
+        player_pos: &DungeonPath,
+        gold_pos: &DungeonPath,
+        dungeon: &mut dyn Dungeon,
+    ) -> Vec<Attack> {
+        let mut out = Vec::new();
+        let active_enemies = {
+            let mut tmp = HashMap::new();
+            ::std::mem::swap(&mut tmp, &mut self.active_enemies);
+            tmp
+        };
+        for (path, enemy) in active_enemies {}
+        out
+    }
 }
 
 macro_rules! enem_attr {

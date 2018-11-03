@@ -222,7 +222,7 @@ impl GameConfig {
 pub struct RunTime {
     game_info: GameInfo,
     config: GlobalConfig,
-    dungeon: Dungeon,
+    dungeon: Box<dyn Dungeon>,
     item: ItemHandler,
     player: Player,
     ui: UiState,
@@ -248,13 +248,13 @@ impl RunTime {
         }
     }
     /// take draw function F and draw screen with it
-    pub fn draw_screen<F>(&self, mut drawer: F) -> GameResult<()>
-    where
-        F: FnMut(Positioned<Tile>) -> GameResult<()>,
-    {
+    pub fn draw_screen(
+        &self,
+        mut drawer: impl FnMut(Positioned<Tile>) -> GameResult<()>,
+    ) -> GameResult<()> {
         // floor => item & character
         self.dungeon.draw(&mut drawer)?;
-        self.dungeon.draw_ranges().try_for_each(|path| {
+        self.dungeon.draw_ranges().into_iter().try_for_each(|path| {
             let cd = self.dungeon.path_to_cd(&path);
             if self.player.pos == path {
                 return drawer(Positioned(cd, self.player.tile()));
@@ -277,7 +277,7 @@ impl RunTime {
                 match input {
                     InputCode::Sys(sys) => self.check_interrupting(sys),
                     InputCode::Act(act) | InputCode::Both { act, .. } => {
-                        let res = actions::process_action(
+                        let mut res = actions::process_action(
                             act,
                             &mut self.game_info,
                             &mut self.dungeon,
@@ -285,6 +285,11 @@ impl RunTime {
                             &mut self.player,
                             &mut self.enemies,
                         )?;
+                        res.extend(actions::move_active_enemies(
+                            &mut self.enemies,
+                            &mut self.dungeon,
+                            &mut self.player,
+                        )?);
                         Ok(res)
                     }
                 },
@@ -369,6 +374,10 @@ pub enum GameMsg {
     CantMove(Direction),
     CantGetItem(ItemKind),
     GotItem { kind: ItemKind, num: u32 },
+    HitTo(String),
+    HitFrom(String),
+    MissTo(String),
+    MissFrom(String),
     NoDownStair,
     SecretDoor,
     Quit,

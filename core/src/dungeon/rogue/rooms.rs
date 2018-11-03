@@ -120,12 +120,6 @@ impl Room {
             _ => false,
         }
     }
-    pub fn is_maze(&self) -> bool {
-        match self.kind {
-            RoomKind::Maze { .. } => true,
-            _ => false,
-        }
-    }
     pub fn is_empty(&self) -> bool {
         match self.kind {
             RoomKind::Empty { .. } => true,

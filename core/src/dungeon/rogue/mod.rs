@@ -5,8 +5,8 @@ pub mod rooms;
 
 use self::floor::Floor;
 pub use self::rooms::{Room, RoomKind};
-use super::{Coord, Direction, DungeonPath, Positioned, X, Y};
-use character::EnemyHandler;
+use super::{Coord, Direction, Dungeon as DungeonTrait, DungeonPath, MoveResult, Positioned, X, Y};
+use character::{player::Status as PlayerStatus, EnemyHandler};
 use error::*;
 use item::{ItemHandler, ItemToken};
 use ndarray::Array2;
@@ -191,6 +191,146 @@ pub struct Dungeon {
     pub rng: RngHandle,
 }
 
+impl DungeonTrait for Dungeon {
+    fn is_downstair(&self, path: &DungeonPath) -> bool {
+        let address = Address::from_path(path);
+        if address.level != self.level {
+            return false;
+        }
+        if let Ok(cell) = self.current_floor.field.try_get_p(address.cd) {
+            cell.surface == Surface::Stair
+        } else {
+            false
+        }
+    }
+    fn level(&self) -> u32 {
+        self.level
+    }
+    fn new_level(
+        &mut self,
+        game_info: &GameInfo,
+        item: &mut ItemHandler,
+        enemies: &mut EnemyHandler,
+    ) -> GameResult<()> {
+        self.new_level_(game_info, item, enemies, false)
+    }
+    fn can_move_player(&self, path: &DungeonPath, direction: Direction) -> bool {
+        let address = Address::from_path(path);
+        if address.level != self.level {
+            return false;
+        }
+        self.current_floor.can_move_player(address.cd, direction)
+    }
+    fn move_player(
+        &mut self,
+        path: &DungeonPath,
+        direction: Direction,
+        enemies: &mut EnemyHandler,
+    ) -> GameResult<DungeonPath> {
+        let address = Address::from_path(path);
+        const ERR_STR: &str = "[rogue::Dungeon::move_player]";
+        if address.level != self.level {
+            return Err(ErrorId::MaybeBug.into_with(|| ERR_STR));
+        }
+        self.current_floor
+            .player_out(address.cd)
+            .chain_err(|| ERR_STR)?;
+        let cd = address.cd + direction.to_cd();
+        let address = Address {
+            level: self.level,
+            cd,
+        };
+        self.current_floor
+            .player_in(cd, false, self.level, enemies)
+            .chain_err(|| ERR_STR)?;
+        Ok(address.into())
+    }
+    fn search(&mut self, path: &DungeonPath) -> GameResult<Vec<GameMsg>> {
+        let address = Address::from_path(path);
+        if address.level != self.level {
+            return Err(ErrorId::MaybeBug.into_with(|| "[rogue::Dungeon::search]"));
+        }
+        Ok(self
+            .current_floor
+            .search(address.cd, &mut self.rng, &self.config)
+            .collect())
+    }
+    fn select_cell(&mut self, is_character: bool) -> Option<DungeonPath> {
+        self.current_floor
+            .select_cell(&mut self.rng, is_character)
+            .map(|cd| [self.level as i32, cd.x.0, cd.y.0].into())
+    }
+    fn enter_room(&mut self, path: &DungeonPath, enemies: &mut EnemyHandler) -> GameResult<()> {
+        let address = Address::from_path(path);
+        let lev = self.level;
+        self.current_floor.player_in(address.cd, true, lev, enemies)
+    }
+    fn draw(&self, drawer: &mut dyn FnMut(Positioned<Tile>) -> GameResult<()>) -> GameResult<()> {
+        const ERR_STR: &str = "in rogue::Dungeon::move_player";
+        let range = self
+            .current_floor
+            .field
+            .size_ytrimed()
+            .ok_or_else(|| ErrorId::MaybeBug.into_with(|| ERR_STR))?;
+        range.into_iter().try_for_each(|cd| {
+            let cd = Coord::from(cd);
+            let cell = self.current_floor.field.try_get_p(cd)?;
+            drawer(Positioned(cd, cell.tile()))
+        })
+    }
+    fn draw_ranges(&self) -> Vec<DungeonPath> {
+        let xmax = self.config_global.width.0;
+        let ymax = self.config_global.height.0 - 1;
+        RectRange::from_ranges(0..xmax, 1..ymax)
+            .unwrap()
+            .into_iter()
+            .filter(|&cd| self.current_floor.field.get_p(cd).is_obj_visible())
+            .map(|cd| [self.level as i32, cd.0, cd.1].into())
+            .collect()
+    }
+    fn path_to_cd(&self, path: &DungeonPath) -> Coord {
+        Coord::new(path.0[1], path.0[2])
+    }
+    fn get_item(&self, path: &DungeonPath) -> Option<&ItemToken> {
+        let addr = Address::from_path(path);
+        if addr.level != self.level {
+            return None;
+        }
+        self.current_floor.items.get(&addr.cd)
+    }
+    fn remove_item(&mut self, path: &DungeonPath) -> Option<ItemToken> {
+        let addr = Address::from_path(path);
+        if addr.level != self.level {
+            return None;
+        }
+        if !self.current_floor.remove_obj(addr.cd, false) {
+            return None;
+        }
+        self.current_floor.items.remove(&addr.cd)
+    }
+    fn tile(&mut self, path: &DungeonPath) -> Option<Tile> {
+        let cd = self.path_to_cd(path);
+        self.current_floor
+            .field
+            .try_get_mut_p(cd)
+            .ok()
+            .map(|s| s.tile())
+    }
+    fn get_history(&self, status: &PlayerStatus) -> Option<Array2<bool>> {
+        let level = status.dungeon_level;
+        if level == self.level {
+            Some(self.current_floor.history_map())
+        } else if let Some(floor) = self.past_floors.get(level as usize - 1) {
+            Some(floor.history_map())
+        } else {
+            None
+        }
+    }
+    fn move_to(&self, path: &DungeonPath, dist: &DungeonPath) -> MoveResult {
+        unimplemented!()
+    }
+}
+
 impl Dungeon {
     /// make new dungeon
     pub fn new(
@@ -215,28 +355,6 @@ impl Dungeon {
             .new_level_(game_info, item_handle, enemies, true)
             .chain_err(|| "rogue::Dungeon::new")?;
         Ok(dungeon)
-    }
-
-    /// returns the range to draw
-    crate fn draw_ranges<'a>(&'a self) -> impl 'a + Iterator<Item = DungeonPath> {
-        let level = self.level;
-        let xmax = self.config_global.width.0;
-        let ymax = self.config_global.height.0 - 1;
-        RectRange::from_ranges(0..xmax, 1..ymax)
-            .unwrap()
-            .into_iter()
-            .filter(move |&cd| self.current_floor.field.get_p(cd).is_obj_visible())
-            .map(move |cd| [level as i32, cd.0, cd.1].into())
-    }
-
-    /// setup next floor
-    pub fn new_level(
-        &mut self,
-        game_info: &GameInfo,
-        item_handle: &mut ItemHandler,
-        enemies: &mut EnemyHandler,
-    ) -> GameResult<()> {
-        self.new_level_(game_info, item_handle, enemies, false)
     }
 
     fn new_level_(
@@ -290,118 +408,6 @@ impl Dungeon {
             self.level - self.config.amulet_level
         } else {
             0
-        }
-    }
-
-    /// takes addrees and judge if thers's a stair at that address
-    crate fn is_downstair(&self, address: Address) -> bool {
-        if address.level != self.level {
-            return false;
-        }
-        if let Ok(cell) = self.current_floor.field.try_get_p(address.cd) {
-            cell.surface == Surface::Stair
-        } else {
-            false
-        }
-    }
-
-    /// judge if the player can move from the address in the direction
-    crate fn can_move_player(&self, address: Address, direction: Direction) -> bool {
-        if address.level != self.level {
-            return false;
-        }
-        self.current_floor.can_move_player(address.cd, direction)
-    }
-    /// move the player from the address in the direction
-    crate fn move_player(
-        &mut self,
-        address: Address,
-        direction: Direction,
-        enemies: &mut EnemyHandler,
-    ) -> GameResult<DungeonPath> {
-        const ERR_STR: &str = "[rogue::Dungeon::move_player]";
-        if address.level != self.level {
-            return Err(ErrorId::MaybeBug.into_with(|| ERR_STR));
-        }
-        self.current_floor
-            .player_out(address.cd)
-            .chain_err(|| ERR_STR)?;
-        let cd = address.cd + direction.to_cd();
-        let address = Address {
-            level: self.level,
-            cd,
-        };
-        self.current_floor
-            .player_in(cd, false, enemies)
-            .chain_err(|| ERR_STR)?;
-        Ok(address.into())
-    }
-    crate fn search<'a>(
-        &'a mut self,
-        address: Address,
-    ) -> GameResult<impl 'a + Iterator<Item = GameMsg>> {
-        if address.level != self.level {
-            return Err(ErrorId::MaybeBug.into_with(|| "[rogue::Dungeon::search]"));
-        }
-        Ok(self
-            .current_floor
-            .search(address.cd, &mut self.rng, &self.config))
-    }
-    /// select an empty cell randomly
-    crate fn select_cell(&mut self, is_character: bool) -> Option<DungeonPath> {
-        self.current_floor
-            .select_cell(&mut self.rng, is_character)
-            .map(|cd| [self.level as i32, cd.x.0, cd.y.0].into())
-    }
-    crate fn remove_object(&mut self, address: Address, is_character: bool) -> bool {
-        self.current_floor.remove_obj(address.cd, is_character)
-    }
-    /// draw dungeon to screen by callback
-    crate fn draw<F>(&self, drawer: &mut F) -> GameResult<()>
-    where
-        F: FnMut(Positioned<Tile>) -> GameResult<()>,
-    {
-        const ERR_STR: &str = "in rogue::Dungeon::move_player";
-        let range = self
-            .current_floor
-            .field
-            .size_ytrimed()
-            .ok_or_else(|| ErrorId::MaybeBug.into_with(|| ERR_STR))?;
-        range.into_iter().try_for_each(|cd| {
-            let cd = Coord::from(cd);
-            let cell = self.current_floor.field.try_get_p(cd)?;
-            drawer(Positioned(cd, cell.tile()))
-        })
-    }
-    crate fn get_item(&self, addr: Address) -> Option<&ItemToken> {
-        if addr.level != self.level {
-            return None;
-        }
-        self.current_floor.items.get(&addr.cd)
-    }
-    crate fn remove_item(&mut self, addr: Address) -> Option<ItemToken> {
-        if addr.level != self.level {
-            return None;
-        }
-        if !self.current_floor.remove_obj(addr.cd, false) {
-            return None;
-        }
-        self.current_floor.items.remove(&addr.cd)
-    }
-    crate fn tile(&mut self, addr: Address) -> Option<Tile> {
-        self.current_floor
-            .field
-            .try_get_mut_p(addr.cd)
-            .ok()
-            .map(|s| s.tile())
-    }
-    crate fn gen_history_map(&self, level: u32) -> Option<Array2<bool>> {
-        if level == self.level {
-            Some(self.current_floor.history_map())
-        } else if let Some(floor) = self.past_floors.get(level as usize - 1) {
-            Some(floor.history_map())
-        } else {
-            None
         }
     }
 }
