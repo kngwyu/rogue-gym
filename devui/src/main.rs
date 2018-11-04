@@ -28,7 +28,10 @@ fn main() {
 
 fn main_() -> GameResult<()> {
     let args = parse_args();
-    let (config, is_default) = get_config(&args)?;
+    let (mut config, is_default) = get_config(&args)?;
+    if let Some(seed) = args.value_of("seed") {
+        config.seed = Some(seed.parse().into_chained(|| "Failed to parse seed!")?);
+    }
     setup_logger(&args)?;
     if let Some(fname) = args.value_of("replay") {
         let replay = read_file(fname).into_chained(|| "Failed to read replay file!")?;
@@ -36,7 +39,7 @@ fn main_() -> GameResult<()> {
         let mut interval = 500;
         if let Some(inter) = args.value_of("interval") {
             interval = inter
-                .parse::<u64>()
+                .parse()
                 .into_chained(|| "Failed to parse 'interval' arg!")?;
         }
         show_replay(config, replay, interval)
@@ -94,7 +97,15 @@ fn parse_args<'a>() -> ArgMatches<'a> {
                 .short("f")
                 .long("filter")
                 .value_name("FILTER")
-                .help("Sets up log level")
+                .help("Set up log level")
+                .takes_value(true),
+        )
+        .arg(
+            clap::Arg::with_name("seed")
+                .short("s")
+                .long("seed")
+                .value_name("SEED")
+                .help("Set seed")
                 .takes_value(true),
         )
         .arg(

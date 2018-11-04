@@ -7,12 +7,15 @@ use self::floor::Floor;
 pub use self::rooms::{Room, RoomKind};
 use super::{Coord, Direction, Dungeon as DungeonTrait, DungeonPath, MoveResult, Positioned, X, Y};
 use character::{player::Status as PlayerStatus, EnemyHandler};
+use enum_iterator::IntoEnumIterator;
 use error::*;
 use item::{ItemHandler, ItemToken};
 use ndarray::Array2;
 use rect_iter::{Get2D, GetMut2D, RectRange};
 use rng::RngHandle;
+use std::collections::BinaryHeap;
 use tile::{Drawable, Tile};
+use tuple_map::TupleMap2;
 use {GameInfo, GameMsg, GlobalConfig};
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
@@ -326,8 +329,27 @@ impl DungeonTrait for Dungeon {
             None
         }
     }
-    fn move_to(&self, path: &DungeonPath, dist: &DungeonPath) -> MoveResult {
-        unimplemented!()
+    fn move_enemy(&self, path: &DungeonPath, dist: &DungeonPath) -> MoveResult {
+        let (path, dist) = (path, dist).map(Address::from_path);
+        if path.level != dist.level {
+            return MoveResult::CantMove;
+        }
+        let mut cand = BinaryHeap::new();
+        for d in Direction::into_enum_iter() {
+            let next = path.cd + d.to_cd();
+            if next == dist.cd {
+                return MoveResult::Hit;
+            }
+            if self.current_floor.can_move_enemy(path.cd, d) {
+                let distance = next.euc_dist_squared(dist.cd);
+                cand.push((-distance, next));
+            }
+        }
+        if let Some((_, res)) = cand.pop() {
+            MoveResult::CanMove(Address::new(path.level, res).into())
+        } else {
+            MoveResult::CantMove
+        }
     }
 }
 
@@ -431,5 +453,29 @@ impl Address {
             level: p[0] as u32,
             cd: Coord::new(p[1], p[2]),
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::{Address, Coord, Direction, DungeonPath, MoveResult, TupleMap2};
+    use crate::{GameConfig, RunTime};
+    fn setup_runtime() -> RunTime {
+        let mut config = GameConfig::default();
+        config.seed = Some(1);
+        config.build().unwrap()
+    }
+    #[test]
+    fn test_move_enemy() {
+        let runtime = setup_runtime();
+        let check_can_move = |from, to, direc: Direction| {
+            let next = from + direc.to_cd();
+            let (from, to) = (from, to).map(|c| DungeonPath::from(Address::new(1, c)));
+            assert_eq!(
+                runtime.dungeon.move_enemy(&from, &to),
+                MoveResult::CanMove(Address::new(1, next).into())
+            )
+        };
+        check_can_move(Coord::new(4, 10), Coord::new(6, 12), Direction::RightDown);
     }
 }

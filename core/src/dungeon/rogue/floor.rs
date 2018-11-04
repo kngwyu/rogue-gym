@@ -208,6 +208,11 @@ impl Floor {
         self.can_move_impl(cd, direction, false).unwrap_or(false)
     }
 
+    /// judge if the enemy can move from `cd` in `direction`
+    crate fn can_move_enemy(&self, cd: Coord, direction: Direction) -> bool {
+        self.can_move_impl(cd, direction, true).unwrap_or(false)
+    }
+
     fn cd_to_room_id(&self, cd: Coord) -> Option<usize> {
         self.rooms
             .iter()
@@ -299,6 +304,7 @@ impl Floor {
             .try_get_mut_p(cd)
             .into_chained(|| "Floor::player_in Cannot move")?
             .visit();
+        self.set_obj(cd, true);
         Direction::into_enum_iter().take(9).for_each(|d| {
             let cd = cd + d.to_cd();
             debug!("player_in: cd {:?}", cd);

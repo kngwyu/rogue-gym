@@ -1,16 +1,15 @@
 //! module for handling actions and do some operations related to multiple modules
 use character::{Action, EnemyHandler, Player};
-use dungeon::{Direction, Dungeon as DungeonT};
+use dungeon::{Direction, Dungeon};
 use error::*;
 use item::{itembox::Entry as ItemEntry, ItemHandler, ItemToken};
 use std::iter;
 use {GameInfo, GameMsg, Reaction};
 
-type Dungeon = Box<dyn DungeonT>;
 crate fn process_action(
     action: Action,
     info: &mut GameInfo,
-    dungeon: &mut Dungeon,
+    dungeon: &mut dyn Dungeon,
     item: &mut ItemHandler,
     player: &mut Player,
     enemies: &mut EnemyHandler,
@@ -52,7 +51,7 @@ crate fn process_action(
 
 crate fn move_active_enemies(
     enemies: &mut EnemyHandler,
-    dungeon: &mut Dungeon,
+    dungeon: &mut dyn Dungeon,
     player: &mut Player,
 ) -> GameResult<Vec<Reaction>> {
     Ok(vec![])
@@ -60,7 +59,7 @@ crate fn move_active_enemies(
 
 crate fn new_level(
     info: &GameInfo,
-    dungeon: &mut Dungeon,
+    dungeon: &mut dyn Dungeon,
     item: &mut ItemHandler,
     player: &mut Player,
     enemies: &mut EnemyHandler,
@@ -79,7 +78,7 @@ crate fn new_level(
 
 fn move_player(
     direction: Direction,
-    dungeon: &mut Dungeon,
+    dungeon: &mut dyn Dungeon,
     player: &mut Player,
     enemies: &mut EnemyHandler,
 ) -> GameResult<(Vec<Reaction>, bool)> {
@@ -101,7 +100,7 @@ fn move_player(
     Ok((res, done))
 }
 
-fn search(dungeon: &mut Dungeon, player: &mut Player) -> GameResult<Vec<Reaction>> {
+fn search(dungeon: &mut dyn Dungeon, player: &mut Player) -> GameResult<Vec<Reaction>> {
     dungeon.search(&player.pos).map(|v| {
         v.into_iter()
             .map(|msg| Reaction::Notify(msg))
@@ -110,7 +109,7 @@ fn search(dungeon: &mut Dungeon, player: &mut Player) -> GameResult<Vec<Reaction
     })
 }
 
-fn get_item(dungeon: &mut Dungeon, player: &mut Player) -> GameResult<Option<GameMsg>> {
+fn get_item(dungeon: &mut dyn Dungeon, player: &mut Player) -> GameResult<Option<GameMsg>> {
     macro_rules! try_or_ok {
         ($res: expr) => {
             match $res {

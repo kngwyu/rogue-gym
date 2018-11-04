@@ -84,11 +84,14 @@ impl Coord {
             y: y.into(),
         }
     }
+    /// calc dist^2 of two points
+    pub fn euc_dist_squared(self, other: Coord) -> i32 {
+        let (x, y) = ((self.x - other.x).0, (self.y - other.y).0);
+        (x, y).map(|i| i * i).sum()
+    }
     /// calc euclidian distance of two points
     pub fn euc_dist(self, other: Coord) -> f64 {
-        let (x, y) = ((self.x - other.x).0, (self.y - other.y).0);
-        let f: f64 = (x, y).map(|i| i * i).sum().into();
-        f.sqrt()
+        f64::from(self.euc_dist_squared(other)).sqrt()
     }
     /// calc time step needto move from self to other,
     /// with the situation where both of two coordinates are in a same room.

@@ -197,7 +197,7 @@ impl GameConfig {
             .chain_err(|| ERR_STR)?;
         actions::new_level(
             &game_info,
-            &mut dungeon,
+            &mut *dungeon,
             &mut item,
             &mut player,
             &mut enemies,
@@ -280,14 +280,14 @@ impl RunTime {
                         let mut res = actions::process_action(
                             act,
                             &mut self.game_info,
-                            &mut self.dungeon,
+                            &mut *self.dungeon,
                             &mut self.item,
                             &mut self.player,
                             &mut self.enemies,
                         )?;
                         res.extend(actions::move_active_enemies(
                             &mut self.enemies,
-                            &mut self.dungeon,
+                            &mut *self.dungeon,
                             &mut self.player,
                         )?);
                         Ok(res)
