@@ -129,6 +129,12 @@ impl<S> Field<S> {
         RectRange::zero_start(self.width.0, self.height.0)
             .expect("[Field::size] Invalid dungeon size")
     }
+    pub fn width(&self) -> X {
+        self.width
+    }
+    pub fn height(&self) -> Y {
+        self.height
+    }
     pub fn size_ytrimed(&self) -> Option<RectRange<i32>> {
         RectRange::from_corners((0, 1), (self.width.0, self.height.0 - 1))
     }

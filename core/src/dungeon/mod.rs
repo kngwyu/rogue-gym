@@ -62,9 +62,9 @@ impl DungeonStyle {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Hash, Eq, PartialEq)]
 pub enum MoveResult {
-    Hit,
     CanMove(DungeonPath),
     CantMove,
+    Reach,
 }
 
 pub trait Dungeon {
@@ -93,7 +93,12 @@ pub trait Dungeon {
     fn remove_item(&mut self, path: &DungeonPath) -> Option<ItemToken>;
     fn tile(&mut self, path: &DungeonPath) -> Option<Tile>;
     fn get_history(&self, state: &PlayerStatus) -> Option<Array2<bool>>;
-    fn move_enemy(&self, path: &DungeonPath, dist: &DungeonPath) -> MoveResult;
+    fn move_enemy(
+        &self,
+        path: &DungeonPath,
+        dist: &DungeonPath,
+        skip: &dyn Fn(&DungeonPath) -> bool,
+    ) -> MoveResult;
 }
 
 type PathVec = SmallVec<[i32; 4]>;

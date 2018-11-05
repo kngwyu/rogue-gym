@@ -329,24 +329,33 @@ impl DungeonTrait for Dungeon {
             None
         }
     }
-    fn move_enemy(&self, path: &DungeonPath, dist: &DungeonPath) -> MoveResult {
-        let (path, dist) = (path, dist).map(Address::from_path);
-        if path.level != dist.level {
+    fn move_enemy(
+        &self,
+        current: &DungeonPath,
+        dist: &DungeonPath,
+        skip: &dyn Fn(&DungeonPath) -> bool,
+    ) -> MoveResult {
+        let (cur, dist) = (current, dist).map(Address::from_path);
+        if cur.level != dist.level {
             return MoveResult::CantMove;
         }
         let mut cand = BinaryHeap::new();
+        let dist_map = self.current_floor.make_dist_map(cur.cd, true);
         for d in Direction::into_enum_iter() {
-            let next = path.cd + d.to_cd();
-            if next == dist.cd {
-                return MoveResult::Hit;
+            let next = cur.cd + d.to_cd();
+            if skip(&DungeonPath::from(Address::new(cur.level, next))) {
+                continue;
             }
-            if self.current_floor.can_move_enemy(path.cd, d) {
-                let distance = next.euc_dist_squared(dist.cd);
-                cand.push((-distance, next));
+            if next == dist.cd {
+                return MoveResult::Reach;
+            }
+            let ndist = *dist_map.get_p(next);
+            if ndist != u32::max_value() {
+                cand.push((ndist, next))
             }
         }
         if let Some((_, res)) = cand.pop() {
-            MoveResult::CanMove(Address::new(path.level, res).into())
+            MoveResult::CanMove(Address::new(cur.level, res).into())
         } else {
             MoveResult::CantMove
         }
@@ -472,7 +481,7 @@ mod test {
             let next = from + direc.to_cd();
             let (from, to) = (from, to).map(|c| DungeonPath::from(Address::new(1, c)));
             assert_eq!(
-                runtime.dungeon.move_enemy(&from, &to),
+                runtime.dungeon.move_enemy(&from, &to, &|_p| false),
                 MoveResult::CanMove(Address::new(1, next).into())
             )
         };

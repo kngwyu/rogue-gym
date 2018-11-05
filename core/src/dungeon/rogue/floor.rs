@@ -9,7 +9,7 @@ use item::{ItemHandler, ItemToken};
 use ndarray::Array2;
 use rect_iter::{Get2D, GetMut2D};
 use rng::RngHandle;
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 use GameMsg;
 
 /// representation of 'floor'
@@ -399,6 +399,29 @@ impl Floor {
             *array.get_mut_p(cd) = self.field.get_p(cd).is_visited();
         });
         array
+    }
+
+    crate fn make_dist_map(&self, from: Coord, is_enemy: bool) -> Array2<u32> {
+        let (w, h) = (self.field.width(), self.field.height());
+        let inf = u32::max_value();
+        let mut dist = Array2::from_elem([h.0 as usize, w.0 as usize], inf);
+        let mut queue = VecDeque::new();
+        *dist.get_mut_p(from) = 0;
+        queue.push_back(from);
+        while let Some(current) = queue.pop_front() {
+            for d in Direction::into_enum_iter().take(8) {
+                let next = current + d.to_cd();
+                let cdist = *dist.get_p(current);
+                if let Ok(ndist) = dist.try_get_mut_p(next) {
+                    if *ndist != inf || !self.can_move_enemy(current, d) {
+                        continue;
+                    }
+                    queue.push_back(next);
+                    *ndist = cdist + 1;
+                }
+            }
+        }
+        dist
     }
 }
 
