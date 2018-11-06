@@ -140,7 +140,7 @@ pub struct Status {
     exp: Exp,
     gold: ItemNum,
     level: HitPoint,
-    name: String,
+    name: SmallStr,
     tile: Tile,
     rarelity: u8,
 }
@@ -280,6 +280,7 @@ impl EnemyHandler {
             hp: Cell::new(hp),
             id: self.next_id.increment(),
             level,
+            name: stat.name.clone(),
             max_hp: hp,
             tile: stat.tile,
         };
@@ -398,7 +399,7 @@ impl StaticStatus {
                 exp: stat.exp,
                 gold: stat.gold,
                 level: stat.level,
-                name: stat.name.to_owned(),
+                name: SmallStr::from_str(stat.name),
                 tile: Tile::from(b'A' + i as u8),
                 rarelity: stat.rarelity,
             })
