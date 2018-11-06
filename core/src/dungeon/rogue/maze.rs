@@ -42,7 +42,7 @@ pub(super) fn dig_maze<F>(
 where
     F: FnMut(Coord) -> GameResult<()>,
 {
-    let start: Coord = range.upper_left().into();
+    let start: Coord = range.lower_left().into();
     register(start).chain_err(|| "dungeon::rogue::maze::dig_maze")?;
     let mut used = HashSet::new();
     used.insert(start);

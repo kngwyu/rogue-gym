@@ -1,12 +1,13 @@
 use super::{Defense, Dice, Exp, HitPoint};
-use crate::Drawable;
-use dungeon::{Dungeon, DungeonPath};
+use crate::{Drawable, SmallStr};
+use dungeon::{Dungeon, DungeonPath, MoveResult};
 use item::ItemNum;
 use rng::RngHandle;
 use smallvec::SmallVec;
 use std::cell::Cell;
-use std::collections::{hash_map::Entry, HashMap, HashSet};
-use std::ops::Range;
+use std::collections::{BTreeMap, HashSet};
+use std::fmt::Debug;
+use std::ops::{Range, RangeBounds};
 use std::rc::{Rc, Weak};
 use tile::Tile;
 
@@ -185,6 +186,7 @@ pub struct Enemy {
     id: EnemyId,
     level: HitPoint,
     max_hp: HitPoint,
+    name: SmallStr,
     tile: Tile,
 }
 
@@ -208,8 +210,8 @@ pub struct Attack(Rc<Enemy>);
 pub struct EnemyHandler {
     enemy_stats: Vec<Status>,
     enemies: Vec<Weak<Enemy>>,
-    placed_enemies: HashMap<DungeonPath, Rc<Enemy>>,
-    active_enemies: HashMap<DungeonPath, Rc<Enemy>>,
+    placed_enemies: BTreeMap<DungeonPath, Rc<Enemy>>,
+    active_enemies: BTreeMap<DungeonPath, Rc<Enemy>>,
     rng: RngHandle,
     config: ConfigInner,
     next_id: EnemyId,
@@ -221,8 +223,8 @@ impl EnemyHandler {
         EnemyHandler {
             enemy_stats: stats,
             enemies: Vec::new(),
-            placed_enemies: HashMap::new(),
-            active_enemies: HashMap::new(),
+            placed_enemies: Default::default(),
+            active_enemies: Default::default(),
             rng,
             config,
             next_id: EnemyId(0),
@@ -291,34 +293,76 @@ impl EnemyHandler {
         }
     }
     pub fn get_enemy(&self, path: &DungeonPath) -> Option<&Enemy> {
-        self.placed_enemies.get(&path).map(AsRef::as_ref)
+        self.placed_enemies
+            .get(&path)
+            .or_else(|| self.active_enemies.get(&path))
+            .map(AsRef::as_ref)
     }
-    pub fn activate<'a, F>(&mut self, mut is_in_activation_area: F)
+    pub fn activate<'a, R>(&mut self, range: R)
     where
-        F: FnMut(&DungeonPath) -> bool,
+        R: RangeBounds<DungeonPath> + Debug,
     {
-        for (path, enemy) in &mut self.placed_enemies {
-            if !is_in_activation_area(path) || !enemy.is_mean() {
-                continue;
-            }
-            if let Entry::Vacant(v) = self.active_enemies.entry(path.to_owned()) {
-                v.insert(Rc::clone(enemy));
+        debug!("[EnemyHandler::activate] range: {:?}", range);
+        let removes: Vec<_> = self
+            .placed_enemies
+            .range(range)
+            .filter(|(_, e)| e.is_mean())
+            .map(|(p, _)| p.to_owned())
+            .collect();
+        for path in removes {
+            if let Some(enem) = self.placed_enemies.remove(&path) {
+                debug!(
+                    "[EnemyHandler::activate] activated {:?} at {:?}",
+                    enem.name, path
+                );
+                self.active_enemies.insert(path, enem);
             }
         }
     }
     pub fn move_actives(
         &mut self,
         player_pos: &DungeonPath,
-        gold_pos: &DungeonPath,
+        gold_pos: Option<&DungeonPath>,
         dungeon: &mut dyn Dungeon,
     ) -> Vec<Attack> {
         let mut out = Vec::new();
+        debug!(
+            "[EnemyHandler::move_actives] before: {:?}",
+            self.active_enemies
+        );
         let active_enemies = {
-            let mut tmp = HashMap::new();
+            let mut tmp = BTreeMap::new();
             ::std::mem::swap(&mut tmp, &mut self.active_enemies);
             tmp
         };
-        for (path, enemy) in active_enemies {}
+        for (path, enemy) in active_enemies {
+            let next = (|| {
+                let skip: &dyn Fn(&DungeonPath) -> bool =
+                    &|p| self.active_enemies.contains_key(p) || self.placed_enemies.contains_key(p);
+                if let Some(gold_pos) = gold_pos {
+                    if enemy.is_greedy() {
+                        match dungeon.move_enemy(&path, gold_pos, skip) {
+                            MoveResult::Reach => return path,
+                            MoveResult::CanMove(p) => return p,
+                            MoveResult::CantMove => {}
+                        }
+                    }
+                }
+                match dungeon.move_enemy(&path, player_pos, skip) {
+                    MoveResult::Reach => {
+                        out.push(Attack(Rc::clone(&enemy)));
+                        path
+                    }
+                    MoveResult::CanMove(p) => p,
+                    MoveResult::CantMove => path,
+                }
+            })();
+            self.active_enemies.insert(next, enemy);
+        }
+        debug!(
+            "[EnemyHandler::move_actives] after: {:?}",
+            self.active_enemies
+        );
         out
     }
 }

@@ -54,6 +54,7 @@ crate fn move_active_enemies(
     dungeon: &mut dyn Dungeon,
     player: &mut Player,
 ) -> GameResult<Vec<Reaction>> {
+    let _stub = enemies.move_actives(&player.pos, None, dungeon);
     Ok(vec![])
 }
 

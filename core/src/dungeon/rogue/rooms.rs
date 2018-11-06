@@ -195,17 +195,17 @@ crate fn gen_rooms(
         .map(|(i, (x, y))| {
             let mut room_size = room_size;
             // adjust room positions so as not to hit the comment area
-            let upper_left = if y == 0 {
+            let lower_left = if y == 0 {
                 room_size.y -= Y(1);
                 room_size.scale(x, y).slide_y(1)
             } else {
                 room_size.scale(x, y)
             };
-            if upper_left.y + room_size.y == height {
+            if lower_left.y + room_size.y == height {
                 room_size.y -= Y(1);
             }
             let is_empty = empty_rooms.contains(i);
-            make_room(is_empty, room_size, upper_left, i, &config, level, rng)
+            make_room(is_empty, room_size, lower_left, i, &config, level, rng)
         })
         .collect()
 }
@@ -214,17 +214,17 @@ crate fn gen_rooms(
 crate fn make_room(
     is_empty: bool,
     room_size: Coord,
-    upper_left: Coord,
+    lower_left: Coord,
     id: usize,
     config: &Config,
     level: u32,
     rng: &mut RngHandle,
 ) -> GameResult<Room> {
-    let assigned_range = RectRange::from_corners(upper_left, upper_left + room_size).unwrap();
+    let assigned_range = RectRange::from_corners(lower_left, lower_left + room_size).unwrap();
     if is_empty {
         let (x, y) = (room_size.x.0, room_size.y.0)
             .map(|size| rng.range(1..size - 1))
-            .add(upper_left.into_tuple2());
+            .add(lower_left.into_tuple2());
         return Ok(Room::new(
             RoomKind::Empty {
                 up_left: Coord::new(x, y),
@@ -238,7 +238,7 @@ crate fn make_room(
     let kind = if is_dark && rng.does_happen(config.maze_rate_inv) {
         // maze
         let range =
-            RectRange::from_corners(upper_left, upper_left + room_size - Coord::new(1, 1)).unwrap();
+            RectRange::from_corners(lower_left, lower_left + room_size - Coord::new(1, 1)).unwrap();
         let len = range.len();
         let mut passages = FenwickSet::with_capacity(len);
         maze::dig_maze(range.clone(), rng, |cd| {
@@ -257,11 +257,11 @@ crate fn make_room(
             let (xmin, ymin) = config.min_room_size.into_tuple2();
             ((room_size.x.0, xmin), (room_size.y.0, ymin)).map(|(max, min)| rng.range(min..max))
         };
-        let upper_left = (room_size.x.0, room_size.y.0)
+        let lower_left = (room_size.x.0, room_size.y.0)
             .sub(size)
             .map(|rest| rng.range(0..rest))
-            .add(upper_left.into_tuple2());
-        let room_range = RectRange::from_corners(upper_left, upper_left.add(size)).unwrap();
+            .add(lower_left.into_tuple2());
+        let room_range = RectRange::from_corners(lower_left, lower_left.add(size)).unwrap();
         // Take care that doors is empty at this phase
         RoomKind::Normal { range: room_range }
     };
@@ -324,10 +324,10 @@ crate mod test {
                         if let Some(r2) = room2.range() {
                             assert!(r2.area() >= 9);
                             let diff = match d {
-                                Direction::Up => r1.upper_left().1 - r2.lower_right().1,
-                                Direction::Right => r2.upper_left().0 - r1.lower_right().0,
-                                Direction::Left => r1.upper_left().0 - r2.lower_right().0,
-                                Direction::Down => r2.upper_left().1 - r1.lower_right().1,
+                                Direction::Up => r1.lower_left().1 - r2.upper_right().1,
+                                Direction::Right => r2.lower_left().0 - r1.upper_right().0,
+                                Direction::Left => r1.lower_left().0 - r2.upper_right().0,
+                                Direction::Down => r2.lower_left().1 - r1.upper_right().1,
                                 _ => unreachable!(),
                             };
                             assert!(diff >= 1, "{:?}", diff);

@@ -1,15 +1,16 @@
 //! rogue floor
 use super::{passages, rooms, Address, Config, Room, Surface};
-use dungeon::{Cell, CellAttr, Coord, Direction, Field, Positioned, X, Y};
+use dungeon::{Cell, CellAttr, Coord, Direction, DungeonPath, Field, Positioned, X, Y};
 use enemies::EnemyHandler;
 use enum_iterator::IntoEnumIterator;
 use error::*;
 use fenwick::FenwickSet;
 use item::{ItemHandler, ItemToken};
 use ndarray::Array2;
-use rect_iter::{Get2D, GetMut2D};
+use rect_iter::{FromTuple2, Get2D, GetMut2D};
 use rng::RngHandle;
 use std::collections::{HashMap, HashSet, VecDeque};
+use tuple_map::TupleMap2;
 use GameMsg;
 
 /// representation of 'floor'
@@ -290,14 +291,17 @@ impl Floor {
         level: u32,
         enemies: &mut EnemyHandler,
     ) -> GameResult<()> {
+        debug!("[Floor::player_in] cd: {:?}", cd);
         if init || self.doors.contains(&cd) {
             self.enters_room(cd).chain_err(|| "Floor::player_in")?;
             if let Some(room_id) = self.cd_to_room_id(cd) {
                 let room = &self.rooms[room_id];
-                enemies.activate(|path| {
-                    let address = Address::from_path(path);
-                    address.level == level && room.assigned_area.contains(cd)
+                let area = &room.assigned_area;
+                let (ll, ur) = (area.lower_left(), area.upper_right()).map(|t| {
+                    let address = Address::new(level, Coord::from_tuple2(t));
+                    DungeonPath::from(address)
                 });
+                enemies.activate(ll..=ur);
             }
         }
         self.field
@@ -307,7 +311,6 @@ impl Floor {
         self.set_obj(cd, true);
         Direction::into_enum_iter().take(9).for_each(|d| {
             let cd = cd + d.to_cd();
-            debug!("player_in: cd {:?}", cd);
             if let Ok(cell) = self.field.try_get_mut_p(cd) {
                 if !d.is_diag() || cell.surface != Surface::Passage {
                     cell.approached();

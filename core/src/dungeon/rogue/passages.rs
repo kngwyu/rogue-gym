@@ -181,34 +181,34 @@ fn edges(range: &RectRange<i32>, direction: Direction, is_inclusive: bool) -> Ve
     let bound_y = Y(range.get_y().end - offset);
     match direction {
         Direction::Down => {
-            let start: Coord = range.lower_left().into();
+            let start: Coord = range.upper_left().into();
             start
                 .slide_x(offset)
                 .direc_iter(Direction::Right, |cd: Coord| cd.x < bound_x)
                 .collect()
         }
         Direction::Left => {
-            let start: Coord = range.upper_left().into();
+            let start: Coord = range.lower_left().into();
             start
                 .slide_y(offset)
                 .direc_iter(Direction::Down, |cd| cd.y < bound_y)
                 .collect()
         }
         Direction::Right => {
-            let start: Coord = range.upper_right().into();
+            let start: Coord = range.lower_right().into();
             start
                 .slide_y(offset)
                 .direc_iter(Direction::Down, |cd| cd.y < bound_y)
                 .collect()
         }
         Direction::Up => {
-            let start: Coord = range.upper_left().into();
+            let start: Coord = range.lower_left().into();
             start
                 .slide_x(offset)
                 .direc_iter(Direction::Right, |cd| cd.x < bound_x)
                 .collect()
         }
-        _ => panic!(
+        _ => unreachable!(
             "[passages::connet_2rooms] invalid direction {:?}",
             direction
         ),

@@ -33,7 +33,7 @@ version = "0.5.0"
 features = ["serde1", "i128_support"]
 
 [dependencies.rect-iter]
-version = "0.2.1"
+version = "0.2.2"
 default-features = false
 features = ["ndarray", "serde"]
 
