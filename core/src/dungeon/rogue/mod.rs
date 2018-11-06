@@ -477,7 +477,7 @@ mod test {
     #[test]
     fn test_move_enemy() {
         let runtime = setup_runtime();
-        let check_can_move = |from, to, direc: Direction| {
+        let check_move = |from, to, direc: Direction| {
             let next = from + direc.to_cd();
             let (from, to) = (from, to).map(|c| DungeonPath::from(Address::new(1, c)));
             assert_eq!(
@@ -485,6 +485,7 @@ mod test {
                 MoveResult::CanMove(Address::new(1, next).into())
             )
         };
-        check_can_move(Coord::new(4, 10), Coord::new(6, 12), Direction::RightDown);
+        check_move(Coord::new(4, 10), Coord::new(6, 12), Direction::RightDown);
+        check_move(Coord::new(6, 12), Coord::new(4, 10), Direction::LeftUp);
     }
 }

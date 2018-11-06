@@ -104,7 +104,7 @@ pub trait Dungeon {
 type PathVec = SmallVec<[i32; 4]>;
 
 #[derive(
-    Clone, Debug, Default, Serialize, Deserialize, Hash, Eq, PartialEq, Ord, PartialOrd, Index,
+    Clone, Debug, Default, Serialize, Deserialize, Hash, Eq, PartialEq,Index, Ord, PartialOrd,
 )]
 pub struct DungeonPath(PathVec);
 

@@ -6,7 +6,6 @@ use rng::RngHandle;
 use smallvec::SmallVec;
 use std::cell::Cell;
 use std::collections::{BTreeMap, HashSet};
-use std::fmt::Debug;
 use std::ops::{Range, RangeBounds};
 use std::rc::{Rc, Weak};
 use tile::Tile;
@@ -299,27 +298,27 @@ impl EnemyHandler {
             .or_else(|| self.active_enemies.get(&path))
             .map(AsRef::as_ref)
     }
-    pub fn activate<'a, R>(&mut self, range: R)
+    pub fn activate<'a, F>(&mut self, is_in_activation_area: F)
     where
-        R: RangeBounds<DungeonPath> + Debug,
+        F: Fn(&DungeonPath) -> bool,
     {
-        debug!("[EnemyHandler::activate] range: {:?}", range);
+        debug!("activate: {:?}", self.placed_enemies);
         let removes: Vec<_> = self
-            .placed_enemies
-            .range(range)
-            .filter(|(_, e)| e.is_mean())
-            .map(|(p, _)| p.to_owned())
-            .collect();
+                .placed_enemies
+                .iter()
+                .filter(|(p, e)| is_in_activation_area(p) && e.is_mean())
+                .map(|(p, _)| p.to_owned())
+                .collect();
         for path in removes {
             if let Some(enem) = self.placed_enemies.remove(&path) {
                 debug!(
-                    "[EnemyHandler::activate] activated {:?} at {:?}",
+                    "[EnemyHandler::activate] activated {} at {:?}",
                     enem.name, path
                 );
                 self.active_enemies.insert(path, enem);
             }
         }
-    }
+}
     pub fn move_actives(
         &mut self,
         player_pos: &DungeonPath,
@@ -368,12 +367,6 @@ impl EnemyHandler {
     }
 }
 
-macro_rules! enem_attr {
-    ($($x: ident,)*) => {
-        EnemyAttr($(EnemyAttr::$x.0 |)* 0)
-    }
-}
-
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct StaticStatus {
     attack: &'static [Dice<HitPoint>],
@@ -411,6 +404,12 @@ macro_rules! hp_dice {
     ($n: expr, $m: expr) => {
         Dice::new($n, HitPoint($m))
     };
+}
+
+macro_rules! enem_attr {
+    ($($x: ident,)*) => {
+        EnemyAttr($(EnemyAttr::$x.0 |)* 0)
+    }
 }
 
 pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
@@ -516,7 +515,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
     },
     StaticStatus {
         attack: &[hp_dice!(1, 4)],
-        attr: enem_attr!(),
+        attr: enem_attr!(MEAN,),
         defense: Defense(7),
         exp: Exp(1),
         gold: ItemNum(0),

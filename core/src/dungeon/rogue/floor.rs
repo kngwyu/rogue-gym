@@ -296,12 +296,10 @@ impl Floor {
             self.enters_room(cd).chain_err(|| "Floor::player_in")?;
             if let Some(room_id) = self.cd_to_room_id(cd) {
                 let room = &self.rooms[room_id];
-                let area = &room.assigned_area;
-                let (ll, ur) = (area.lower_left(), area.upper_right()).map(|t| {
-                    let address = Address::new(level, Coord::from_tuple2(t));
-                    DungeonPath::from(address)
+                enemies.activate(|p| {
+                    let cd = Address::from_path(p).cd;
+                    room.assigned_area.contains(cd)
                 });
-                enemies.activate(ll..=ur);
             }
         }
         self.field
@@ -416,7 +414,7 @@ impl Floor {
                 let next = current + d.to_cd();
                 let cdist = *dist.get_p(current);
                 if let Ok(ndist) = dist.try_get_mut_p(next) {
-                    if *ndist != inf || !self.can_move_enemy(current, d) {
+                    if *ndist != inf || self.can_move_impl(current, d, is_enemy) != Some(true) {
                         continue;
                     }
                     queue.push_back(next);

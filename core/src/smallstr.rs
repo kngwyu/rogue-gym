@@ -2,13 +2,13 @@ use serde::{Serialize, Serializer, Deserialize, Deserializer, de::Visitor, de::E
 use std::str;
 use std::marker::PhantomData;
 use std::fmt;
-use std::slice;
 use std::cmp::Ordering;
 
 #[derive(Clone, Default)]
 pub struct SmallStr(Repr);
 
 const MAX_SHORT_LEN: usize = 15;
+
 #[derive(Clone, Debug)]
 enum Repr {
     Inline([u8; MAX_SHORT_LEN], u8),
