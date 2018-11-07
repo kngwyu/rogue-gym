@@ -1,7 +1,7 @@
 use super::ItemNum;
 use rng::RngHandle;
 
-/// Item configuration
+/// Gold configuration
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Config {
     #[serde(default = "default_gold_rate")]

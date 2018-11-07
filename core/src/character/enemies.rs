@@ -78,11 +78,11 @@ const fn default_appear_rate_nogold() -> u32 {
 }
 
 const fn is_default_appear_rate_gold(u: &u32) -> bool {
-    *u == 80
+    *u == default_appear_rate_gold()
 }
 
 const fn is_default_appear_rate_nogold(u: &u32) -> bool {
-    *u == 25
+    *u == default_appear_rate_nogold()
 }
 
 impl Default for Config {

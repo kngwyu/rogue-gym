@@ -2,6 +2,7 @@
 pub mod food;
 mod gold;
 pub mod itembox;
+mod weapon;
 
 use self::food::Food;
 use self::itembox::ItemBox;

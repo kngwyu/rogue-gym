@@ -44,7 +44,7 @@ use error::*;
 use input::{InputCode, Key, KeyMap};
 use item::{ItemHandler, ItemKind};
 use ndarray::Array2;
-use smallstr::SmallStr;
+pub use smallstr::SmallStr;
 use std::collections::VecDeque;
 use tile::{Drawable, Tile};
 use ui::{MordalKind, MordalMsg, UiState};
@@ -376,10 +376,10 @@ pub enum GameMsg {
     CantMove(Direction),
     CantGetItem(ItemKind),
     GotItem { kind: ItemKind, num: u32 },
-    HitTo(String),
-    HitFrom(String),
-    MissTo(String),
-    MissFrom(String),
+    HitTo(SmallStr),
+    HitFrom(SmallStr),
+    MissTo(SmallStr),
+    MissFrom(SmallStr),
     NoDownStair,
     SecretDoor,
     Quit,
