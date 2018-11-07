@@ -15,6 +15,8 @@ use rogue_gym_core::{json_to_inputs, GameConfig};
 use rogue_gym_devui::error::*;
 use rogue_gym_devui::{play_game, show_replay};
 
+const DEFAULT_INTERVAL_MS: u64 = 500;
+
 fn main() {
     if let Err(err) = main_() {
         eprintln!("Oops! Error occured in rogue-gym-devui:");
@@ -33,11 +35,12 @@ fn main_() -> GameResult<()> {
         config.seed = Some(seed.parse().into_chained(|| "Failed to parse seed!")?);
     }
     setup_logger(&args)?;
-    if let Some(fname) = args.value_of("replay") {
+    if let Some(replay_arg) = args.subcommand_matches("replay") {
+        let fname = replay_arg.value_of("file").unwrap();
         let replay = read_file(fname).into_chained(|| "Failed to read replay file!")?;
         let replay = json_to_inputs(&replay)?;
-        let mut interval = 500;
-        if let Some(inter) = args.value_of("interval") {
+        let mut interval = DEFAULT_INTERVAL_MS;
+        if let Some(inter) = replay_arg.value_of("interval") {
             interval = inter
                 .parse()
                 .into_chained(|| "Failed to parse 'interval' arg!")?;
@@ -80,7 +83,7 @@ fn parse_args<'a>() -> ArgMatches<'a> {
             clap::Arg::with_name("config")
                 .short("c")
                 .long("config")
-                .value_name("FILE")
+                .value_name("CONFIG")
                 .help("Sets your config json file")
                 .takes_value(true),
         )
@@ -108,21 +111,27 @@ fn parse_args<'a>() -> ArgMatches<'a> {
                 .help("Set seed")
                 .takes_value(true),
         )
-        .arg(
-            clap::Arg::with_name("replay")
-                .short("r")
-                .long("replay")
-                .value_name("RFILE")
-                .help("Open client as replay mode")
-                .takes_value(true),
-        )
-        .arg(
-            clap::Arg::with_name("interval")
-                .short("i")
-                .long("interval")
-                .value_name("INTERVAL")
-                .help("Interval in replay mode")
-                .takes_value(true),
+        .subcommand(
+            clap::SubCommand::with_name("replay")
+                .about("Show replay by json file")
+                .version("0.1")
+                .arg(
+                    clap::Arg::with_name("file")
+                        .short("f")
+                        .long("file")
+                        .required(true)
+                        .value_name("FILE")
+                        .help("replay json file")
+                        .takes_value(true),
+                )
+                .arg(
+                    clap::Arg::with_name("interval")
+                        .short("i")
+                        .long("interval")
+                        .value_name("INTERVAL")
+                        .help("Interval in replay mode")
+                        .takes_value(true),
+                ),
         )
         .get_matches()
 }

@@ -1,7 +1,7 @@
 # rogue-gym
 [![Buid Status](https://travis-ci.org/kngwyu/rogue-gym.svg?branch=master)](https://travis-ci.org/kngwyu/rogue-gym)
 
-Highly customizable rogue-like implmentation for AI expmeriments
+Highly customizable rogue-like implmentation for AI expmeriments.
 
 # Play as human
 
@@ -9,6 +9,14 @@ Highly customizable rogue-like implmentation for AI expmeriments
 git clone https://github.com/kngwyu/rogue-gym.git
 cd rogue-gym/rogue-gym-devui
 cargo run --release
+```
+
+# Watch learned AI
+Now this repository has Double DQN result
+```
+cargo install --path ./devui --force
+cd data/learned/ddqn-minidugeon/
+rogue_gym_devui --config config.json replay --file best-actions.json --interval 100
 ```
 
 # Python API

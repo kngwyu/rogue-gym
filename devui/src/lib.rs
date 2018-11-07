@@ -88,7 +88,7 @@ pub fn show_replay(
         let key = key.into_chained(|| "in show_replay")?;
         let mut end = false;
         let res = match key {
-            Key::Char('e') | Key::Char('q') | Key::Esc => {
+            Key::Char('E') | Key::Char('Q') | Key::Char('e') | Key::Char('q') | Key::Esc => {
                 end = true;
                 tx.send(ReplayInst::End)
             }
