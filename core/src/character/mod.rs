@@ -1,4 +1,5 @@
 pub mod enemies;
+mod fight;
 pub mod player;
 pub use self::player::{Action, Hunger, Leveling, Player};
 pub use enemies::{Enemy, EnemyHandler};
@@ -32,7 +33,34 @@ use rng::RngHandle;
     Serialize,
     Deserialize,
 )]
-pub struct HitPoint(i64);
+pub struct HitPoint(pub i64);
+
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Default,
+    Hash,
+    PartialEq,
+    PartialOrd,
+    Ord,
+    Eq,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Display,
+    Neg,
+    AddAssign,
+    SubAssign,
+    MulAssign,
+    DivAssign,
+    From,
+    Into,
+    Serialize,
+    Deserialize,
+)]
+pub struct Level(pub i64);
 
 /// values compatible with strength
 #[derive(
@@ -60,7 +88,7 @@ pub struct HitPoint(i64);
     Serialize,
     Deserialize,
 )]
-pub struct Strength(i64);
+pub struct Strength(pub i64);
 
 /// values compatible with defense power of Armors
 #[derive(
@@ -88,7 +116,13 @@ pub struct Strength(i64);
     Serialize,
     Deserialize,
 )]
-pub struct Defense(i64);
+pub struct Defense(pub i64);
+
+impl Defense {
+    fn max() -> Self {
+        Defense(10)
+    }
+}
 
 /// values compatible with exp
 #[derive(
@@ -115,7 +149,7 @@ pub struct Defense(i64);
     Serialize,
     Deserialize,
 )]
-pub struct Exp(u32);
+pub struct Exp(pub u32);
 
 macro_rules! from_impls {
     ($t: ident, $($from: ty)+) => {

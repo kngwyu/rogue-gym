@@ -13,7 +13,6 @@ use item::{ItemHandler, ItemToken};
 use ndarray::Array2;
 use rect_iter::{Get2D, GetMut2D, RectRange};
 use rng::RngHandle;
-use std::collections::BinaryHeap;
 use tile::{Drawable, Tile};
 use tuple_map::TupleMap2;
 use {GameInfo, GameMsg, GlobalConfig};
@@ -489,6 +488,7 @@ impl Address {
 mod test {
     use super::{Address, Coord, Direction, DungeonPath, MoveResult, TupleMap2};
     use crate::{GameConfig, RunTime};
+    // tiny dungeon setting
     const CONFIG: &str = r#"
 {
     "width": 32,

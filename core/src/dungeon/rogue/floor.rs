@@ -1,16 +1,15 @@
 //! rogue floor
 use super::{passages, rooms, Address, Config, Room, Surface};
-use dungeon::{Cell, CellAttr, Coord, Direction, DungeonPath, Field, Positioned, X, Y};
+use dungeon::{Cell, CellAttr, Coord, Direction, Field, Positioned, X, Y};
 use enemies::EnemyHandler;
 use enum_iterator::IntoEnumIterator;
 use error::*;
 use fenwick::FenwickSet;
 use item::{ItemHandler, ItemToken};
 use ndarray::Array2;
-use rect_iter::{FromTuple2, Get2D, GetMut2D};
+use rect_iter::{Get2D, GetMut2D};
 use rng::RngHandle;
 use std::collections::{HashMap, HashSet, VecDeque};
-use tuple_map::TupleMap2;
 use GameMsg;
 
 /// representation of 'floor'
@@ -124,7 +123,7 @@ impl Floor {
             .iter_mut()
             .filter_map(|room| Some((room.select_cell(rng, true)?, room)))
         {
-            if let Some(enemy) = enemies.gen_enemy(min..max, lev_add as i32, room.has_gold) {
+            if let Some(enemy) = enemies.gen_enemy(min..max, i64::from(lev_add), room.has_gold) {
                 let place = Address::new(level, cd).into();
                 enemies.place(place, enemy);
                 room.fill_cell(cd, true);

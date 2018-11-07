@@ -1,4 +1,4 @@
-use super::{Defense, Dice, Exp, HitPoint};
+use super::{Defense, Dice, Exp, HitPoint, Level};
 use crate::{Drawable, SmallStr};
 use dungeon::{Dungeon, DungeonPath, MoveResult};
 use item::ItemNum;
@@ -6,7 +6,7 @@ use rng::RngHandle;
 use smallvec::SmallVec;
 use std::cell::Cell;
 use std::collections::{BTreeMap, HashSet};
-use std::ops::{Range, RangeBounds};
+use std::ops::Range;
 use std::rc::{Rc, Weak};
 use tile::Tile;
 
@@ -138,7 +138,7 @@ pub struct Status {
     defense: Defense,
     exp: Exp,
     gold: ItemNum,
-    level: HitPoint,
+    level: Level,
     name: SmallStr,
     tile: Tile,
     rarelity: u8,
@@ -183,9 +183,10 @@ pub struct Enemy {
     exp: Exp,
     hp: Cell<HitPoint>,
     id: EnemyId,
-    level: HitPoint,
+    level: Level,
     max_hp: HitPoint,
     name: SmallStr,
+    running: Cell<bool>,
     tile: Tile,
 }
 
@@ -195,6 +196,18 @@ impl Enemy {
     }
     pub fn is_greedy(&self) -> bool {
         self.attr.contains(EnemyAttr::GREEDY)
+    }
+    pub fn is_running(&self) -> bool {
+        self.running.get()
+    }
+    pub fn level(&self) -> Level {
+        self.level
+    }
+    pub fn defense(&self) -> Defense {
+        self.defense
+    }
+    fn run(&self) {
+        self.running.replace(true);
     }
 }
 
@@ -242,7 +255,7 @@ impl EnemyHandler {
             id
         }
     }
-    fn exp_add(&self, level: HitPoint, maxhp: HitPoint) -> Exp {
+    fn exp_add(&self, level: Level, maxhp: HitPoint) -> Exp {
         let base = match level.0 {
             1 => maxhp.0 / 8,
             _ => maxhp.0 / 6,
@@ -256,7 +269,7 @@ impl EnemyHandler {
     pub fn gen_enemy(
         &mut self,
         range: Range<u32>,
-        lev_add: i32,
+        lev_add: i64,
         has_gold: bool,
     ) -> Option<Rc<Enemy>> {
         let appear_parcent = if has_gold {
@@ -270,7 +283,7 @@ impl EnemyHandler {
         let idx = self.select(range);
         let stat = self.enemy_stats.get(idx)?;
         let level = stat.level + lev_add.into();
-        let hp = Dice::new(8, level).exec::<i64>(&mut self.rng);
+        let hp = Dice::new(8, level).exec::<i64>(&mut self.rng).0.into();
         let enem = Enemy {
             attr: stat.attr,
             attack: stat.attack.clone(),
@@ -281,6 +294,7 @@ impl EnemyHandler {
             level,
             name: stat.name.clone(),
             max_hp: hp,
+            running: Cell::default(),
             tile: stat.tile,
         };
         let enem = Rc::new(enem);
@@ -315,11 +329,11 @@ impl EnemyHandler {
                     "[EnemyHandler::activate] activated {} at {:?}",
                     enem.name, path
                 );
+                enem.run();
                 self.active_enemies.insert(path, enem);
             }
         }
     }
-
     pub fn move_actives(
         &mut self,
         player_pos: &DungeonPath,
@@ -375,7 +389,7 @@ pub struct StaticStatus {
     defense: Defense,
     exp: Exp,
     gold: ItemNum,
-    level: HitPoint,
+    level: Level,
     rarelity: u8,
     name: &'static str,
 }
@@ -420,7 +434,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(2 | 8),
         exp: Exp(20),
         gold: ItemNum(0),
-        level: HitPoint(5),
+        level: Level(5),
         name: "aquator",
         rarelity: 12,
     },
@@ -430,7 +444,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(3),
         exp: Exp(1),
         gold: ItemNum(0),
-        level: HitPoint(1),
+        level: Level(1),
         name: "bat",
         rarelity: 2,
     },
@@ -440,7 +454,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(4),
         exp: Exp(17),
         gold: ItemNum(15),
-        level: HitPoint(4),
+        level: Level(4),
         name: "centaur",
         rarelity: 10,
     },
@@ -450,7 +464,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(3),
         exp: Exp(5000),
         gold: ItemNum(100),
-        level: HitPoint(10),
+        level: Level(10),
         name: "dragon",
         rarelity: 25,
     },
@@ -460,7 +474,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(7),
         exp: Exp(2),
         gold: ItemNum(0),
-        level: HitPoint(1),
+        level: Level(1),
         name: "emu",
         rarelity: 1,
     },
@@ -470,7 +484,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(3),
         gold: ItemNum(0),
         exp: Exp(80),
-        level: HitPoint(8),
+        level: Level(8),
         name: "venus flytrap",
         rarelity: 15,
     },
@@ -480,7 +494,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(2),
         exp: Exp(2000),
         gold: ItemNum(20),
-        level: HitPoint(13),
+        level: Level(13),
         name: "griffin",
         rarelity: 23,
     },
@@ -490,7 +504,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(5),
         exp: Exp(3),
         gold: ItemNum(0),
-        level: HitPoint(1),
+        level: Level(1),
         name: "hobgoblin",
         rarelity: 4,
     },
@@ -500,7 +514,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(9),
         exp: Exp(5),
         gold: ItemNum(0),
-        level: HitPoint(1),
+        level: Level(1),
         name: "icemonster",
         rarelity: 5,
     },
@@ -510,7 +524,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         exp: Exp(3000),
         defense: Defense(6),
         gold: ItemNum(70),
-        level: HitPoint(15),
+        level: Level(15),
         name: "jabberwock",
         rarelity: 24,
     },
@@ -520,7 +534,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(7),
         exp: Exp(1),
         gold: ItemNum(0),
-        level: HitPoint(1),
+        level: Level(1),
         name: "kestrel",
         rarelity: 0,
     },
@@ -530,7 +544,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(8),
         exp: Exp(10),
         gold: ItemNum(0),
-        level: HitPoint(3),
+        level: Level(3),
         name: "leperachaun",
         rarelity: 9,
     },
@@ -540,7 +554,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(2),
         gold: ItemNum(40),
         exp: Exp(200),
-        level: HitPoint(8),
+        level: Level(8),
         name: "medusa",
         rarelity: 21,
     },
@@ -550,7 +564,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(9),
         exp: Exp(37),
         gold: ItemNum(100),
-        level: HitPoint(3),
+        level: Level(3),
         name: "nymph",
         rarelity: 13,
     },
@@ -560,7 +574,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(6),
         exp: Exp(5),
         gold: ItemNum(15),
-        level: HitPoint(1),
+        level: Level(1),
         name: "orc",
         rarelity: 7,
     },
@@ -570,7 +584,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(3),
         exp: Exp(120),
         gold: ItemNum(0),
-        level: HitPoint(8),
+        level: Level(8),
         name: "phantom",
         rarelity: 18,
     },
@@ -580,7 +594,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(3),
         exp: Exp(15),
         gold: ItemNum(0),
-        level: HitPoint(3),
+        level: Level(3),
         name: "quagga",
         rarelity: 11,
     },
@@ -590,7 +604,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(3),
         exp: Exp(9),
         gold: ItemNum(0),
-        level: HitPoint(2),
+        level: Level(2),
         name: "rattlesnake",
         rarelity: 6,
     },
@@ -600,7 +614,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(5),
         exp: Exp(2),
         gold: ItemNum(0),
-        level: HitPoint(1),
+        level: Level(1),
         name: "snake",
         rarelity: 3,
     },
@@ -610,7 +624,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(4),
         exp: Exp(120),
         gold: ItemNum(50),
-        level: HitPoint(6),
+        level: Level(6),
         name: "troll",
         rarelity: 16,
     },
@@ -620,7 +634,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(-2),
         exp: Exp(190),
         gold: ItemNum(0),
-        level: HitPoint(7),
+        level: Level(7),
         name: "urvile",
         rarelity: 20,
     },
@@ -630,7 +644,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(1),
         exp: Exp(350),
         gold: ItemNum(20),
-        level: HitPoint(8),
+        level: Level(8),
         name: "vampire",
         rarelity: 22,
     },
@@ -640,7 +654,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(4),
         exp: Exp(55),
         gold: ItemNum(0),
-        level: HitPoint(5),
+        level: Level(5),
         name: "wraith",
         rarelity: 17,
     },
@@ -650,7 +664,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(7),
         exp: Exp(100),
         gold: ItemNum(30),
-        level: HitPoint(7),
+        level: Level(7),
         name: "xeroc",
         rarelity: 19,
     },
@@ -660,7 +674,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(6),
         exp: Exp(50),
         gold: ItemNum(30),
-        level: HitPoint(4),
+        level: Level(4),
         name: "yeti",
         rarelity: 14,
     },
@@ -670,7 +684,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         defense: Defense(8),
         exp: Exp(6),
         gold: ItemNum(0),
-        level: HitPoint(2),
+        level: Level(2),
         name: "zombie",
         rarelity: 8,
     },

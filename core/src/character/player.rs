@@ -1,6 +1,6 @@
-use super::{Defense, Exp, HitPoint, Maxed, Strength};
+use super::{Defense, Exp, HitPoint, Level, Maxed, Strength};
 use dungeon::{Direction, DungeonPath};
-use item::{food::Food, itembox::ItemBox, Item, ItemKind};
+use item::{food::Food, itembox::ItemBox, Item, ItemKind, ItemToken};
 use std::fmt;
 use tile::{Drawable, Tile};
 /// Player configuration
@@ -65,6 +65,7 @@ impl Config {
             status,
             itembox: ItemBox::with_capacity(self.max_items),
             config: self,
+            armer: None,
         }
     }
 }
@@ -80,6 +81,7 @@ pub struct Player {
     crate config: Config,
     /// item box
     crate itembox: ItemBox,
+    crate armer: Option<ItemToken>,
 }
 
 impl Player {
@@ -87,7 +89,7 @@ impl Player {
         status.hp = self.status.hp;
         status.strength = self.status.strength;
         status.exp = self.status.exp;
-        status.player_level = self.status.level;
+        status.player_level = self.status.level.0 as u32;
         let hunger = self.config.hunger_time / 10;
         status.hunger_level = match self.status.food_left {
             x if x <= hunger => Hunger::Weak,
@@ -97,6 +99,9 @@ impl Player {
     }
     crate fn running(&mut self, b: bool) {
         self.status.running = b;
+    }
+    crate fn arm(&self) -> Defense {
+        unimplemented!()
     }
 }
 
@@ -110,16 +115,16 @@ impl Drawable for Player {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 crate struct StatusInner {
     /// hit point
-    hp: Maxed<HitPoint>,
+    crate hp: Maxed<HitPoint>,
     /// strength
-    strength: Maxed<Strength>,
+    crate strength: Maxed<Strength>,
     /// exp
-    exp: Exp,
+    crate exp: Exp,
     /// level
-    level: u32,
+    crate level: Level,
     /// count down to death
-    food_left: u32,
-    running: bool,
+    crate food_left: u32,
+    crate running: bool,
 }
 
 impl StatusInner {
@@ -128,7 +133,7 @@ impl StatusInner {
             hp: Maxed::max(config.init_hp),
             strength: Maxed::max(Strength(16)),
             exp: Exp(0),
-            level: 1,
+            level: Level(1),
             food_left: config.hunger_time,
             running: false,
         }

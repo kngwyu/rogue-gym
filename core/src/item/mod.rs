@@ -5,7 +5,6 @@ pub mod itembox;
 
 use self::food::Food;
 use self::itembox::ItemBox;
-use dungeon::DungeonPath;
 use error::*;
 use rng::RngHandle;
 use std::cell::UnsafeCell;
@@ -13,6 +12,7 @@ use std::collections::BTreeMap;
 use std::ops::{Deref, DerefMut};
 use std::rc::{Rc, Weak};
 use tile::{Drawable, Tile};
+
 /// Item configuration
 #[derive(Clone, Debug, Default, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Config {
@@ -106,6 +106,9 @@ pub struct ItemId(u32);
 impl ItemId {
     fn increment(&mut self) {
         self.0 += 1;
+    }
+    fn noitem() -> Self {
+        ItemId(u32::max_value())
     }
 }
 
