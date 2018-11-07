@@ -175,6 +175,8 @@ impl Surface {
     }
 }
 
+const MAX_CACHED_DIST: usize = 6;
+
 /// representation of rogue dungeon
 #[derive(Clone)]
 pub struct Dungeon {
@@ -192,6 +194,7 @@ pub struct Dungeon {
     pub past_floors: Vec<Floor>,
     /// random number generator
     pub rng: RngHandle,
+    dist_cache: Vec<(Array2<u32>, Coord)>,
 }
 
 impl DungeonTrait for Dungeon {
@@ -330,7 +333,7 @@ impl DungeonTrait for Dungeon {
         }
     }
     fn move_enemy(
-        &self,
+        &mut self,
         current: &DungeonPath,
         dist: &DungeonPath,
         skip: &dyn Fn(&DungeonPath) -> bool,
@@ -339,8 +342,8 @@ impl DungeonTrait for Dungeon {
         if cur.level != dist.level {
             return MoveResult::CantMove;
         }
-        let mut cand = BinaryHeap::new();
-        let dist_map = self.current_floor.make_dist_map(cur.cd, true);
+        let mut cand = Vec::new();
+        let dist_map = self.enemy_dist_map(dist.cd);
         for d in Direction::into_enum_iter() {
             let next = cur.cd + d.to_cd();
             if skip(&DungeonPath::from(Address::new(cur.level, next))) {
@@ -354,11 +357,12 @@ impl DungeonTrait for Dungeon {
                 cand.push((ndist, next))
             }
         }
-        if let Some((_, res)) = cand.pop() {
-            MoveResult::CanMove(Address::new(cur.level, res).into())
-        } else {
-            MoveResult::CantMove
+        if cand.is_empty() {
+            return MoveResult::CantMove;
         }
+        cand.sort_by_key(|t| t.0);
+        let res = cand[0].1;
+        MoveResult::CanMove(Address::new(cur.level, res).into())
     }
 }
 
@@ -381,6 +385,7 @@ impl Dungeon {
             config_global: config_global.clone(),
             past_floors: vec![],
             rng,
+            dist_cache: vec![],
         };
         dungeon
             .new_level_(game_info, item_handle, enemies, true)
@@ -441,6 +446,21 @@ impl Dungeon {
             0
         }
     }
+
+    fn enemy_dist_map(&mut self, cd: Coord) -> &Array2<u32> {
+        if let Some(pos) = self.dist_cache.iter().position(|t| t.1 == cd) {
+            return &self.dist_cache[pos].0;
+        }
+        let dist_map = self.current_floor.make_dist_map(cd, true);
+        let len = self.dist_cache.len();
+        if len >= MAX_CACHED_DIST {
+            self.dist_cache[0] = (dist_map, cd);
+            &self.dist_cache[0].0
+        } else {
+            self.dist_cache.push((dist_map, cd));
+            &self.dist_cache[len].0
+        }
+    }
 }
 
 /// Address in the dungeon.
@@ -469,15 +489,29 @@ impl Address {
 mod test {
     use super::{Address, Coord, Direction, DungeonPath, MoveResult, TupleMap2};
     use crate::{GameConfig, RunTime};
+    const CONFIG: &str = r#"
+{
+    "width": 32,
+    "height": 16,
+    "seed": 5,
+    "dungeon": {
+        "style": "rogue",
+        "room_num_x": 2,
+        "room_num_y": 2,
+        "min_room_size": {
+            "x": 4,
+            "y": 4
+        }
+    }
+}
+"#;
     fn setup_runtime() -> RunTime {
-        let mut config = GameConfig::default();
-        config.seed = Some(1);
-        config.build().unwrap()
+        GameConfig::from_json(CONFIG).unwrap().build().unwrap()
     }
     #[test]
     fn test_move_enemy() {
-        let runtime = setup_runtime();
-        let check_move = |from, to, direc: Direction| {
+        let mut runtime = setup_runtime();
+        let mut check_move = |from, to, direc: Direction| {
             let next = from + direc.to_cd();
             let (from, to) = (from, to).map(|c| DungeonPath::from(Address::new(1, c)));
             assert_eq!(
@@ -485,7 +519,6 @@ mod test {
                 MoveResult::CanMove(Address::new(1, next).into())
             )
         };
-        check_move(Coord::new(4, 10), Coord::new(6, 12), Direction::RightDown);
-        check_move(Coord::new(6, 12), Coord::new(4, 10), Direction::LeftUp);
+        check_move(Coord::new(9, 9), Coord::new(28, 4), Direction::Right);
     }
 }

@@ -94,7 +94,7 @@ pub trait Dungeon {
     fn tile(&mut self, path: &DungeonPath) -> Option<Tile>;
     fn get_history(&self, state: &PlayerStatus) -> Option<Array2<bool>>;
     fn move_enemy(
-        &self,
+        &mut self,
         path: &DungeonPath,
         dist: &DungeonPath,
         skip: &dyn Fn(&DungeonPath) -> bool,
@@ -104,7 +104,7 @@ pub trait Dungeon {
 type PathVec = SmallVec<[i32; 4]>;
 
 #[derive(
-    Clone, Debug, Default, Serialize, Deserialize, Hash, Eq, PartialEq,Index, Ord, PartialOrd,
+    Clone, Debug, Default, Serialize, Deserialize, Hash, Eq, PartialEq, Index, Ord, PartialOrd,
 )]
 pub struct DungeonPath(PathVec);
 

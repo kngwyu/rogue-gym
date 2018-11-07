@@ -304,11 +304,11 @@ impl EnemyHandler {
     {
         debug!("activate: {:?}", self.placed_enemies);
         let removes: Vec<_> = self
-                .placed_enemies
-                .iter()
-                .filter(|(p, e)| is_in_activation_area(p) && e.is_mean())
-                .map(|(p, _)| p.to_owned())
-                .collect();
+            .placed_enemies
+            .iter()
+            .filter(|(p, e)| is_in_activation_area(p) && e.is_mean())
+            .map(|(p, _)| p.to_owned())
+            .collect();
         for path in removes {
             if let Some(enem) = self.placed_enemies.remove(&path) {
                 debug!(
@@ -318,7 +318,8 @@ impl EnemyHandler {
                 self.active_enemies.insert(path, enem);
             }
         }
-}
+    }
+
     pub fn move_actives(
         &mut self,
         player_pos: &DungeonPath,
@@ -343,7 +344,7 @@ impl EnemyHandler {
                     if enemy.is_greedy() {
                         match dungeon.move_enemy(&path, gold_pos, skip) {
                             MoveResult::Reach => return path,
-                            MoveResult::CanMove(p) => return p,
+                            MoveResult::CanMove(path) => return path,
                             MoveResult::CantMove => {}
                         }
                     }
