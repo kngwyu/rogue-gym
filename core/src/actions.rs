@@ -6,7 +6,7 @@ use item::{itembox::Entry as ItemEntry, ItemHandler, ItemToken};
 use std::iter;
 use {GameInfo, GameMsg, Reaction};
 
-crate fn process_action(
+pub(crate) fn process_action(
     action: Action,
     info: &mut GameInfo,
     dungeon: &mut dyn Dungeon,
@@ -49,7 +49,7 @@ crate fn process_action(
     }
 }
 
-crate fn move_active_enemies(
+pub(crate) fn move_active_enemies(
     enemies: &mut EnemyHandler,
     dungeon: &mut dyn Dungeon,
     player: &mut Player,
@@ -58,7 +58,7 @@ crate fn move_active_enemies(
     Ok(vec![])
 }
 
-crate fn new_level(
+pub(crate) fn new_level(
     info: &GameInfo,
     dungeon: &mut dyn Dungeon,
     item: &mut ItemHandler,
@@ -90,7 +90,7 @@ fn move_player(
         .move_player(&player.pos, direction, enemies)
         .chain_err(|| "actions::move_player")?;
     player.pos = new_pos;
-    player.running(true);
+    player.run(true);
     let mut done = false;
     let mut res = vec![Reaction::Redraw];
     if let Some(msg) = get_item(dungeon, player).chain_err(|| "in actions::move_player")? {

@@ -9,19 +9,19 @@ use std::collections::HashSet;
 /// structure of maze
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Maze {
-    crate range: RectRange<i32>,
-    crate passages: FenwickSet,
+    pub range: RectRange<i32>,
+    pub passages: FenwickSet,
 }
 
 impl Maze {
     /// return an iterator ehich enumerates passages
-    crate fn passage_iter<'a>(&'a self) -> impl 'a + Iterator<Item = Coord> {
+    pub fn passages<'a>(&'a self) -> impl 'a + Iterator<Item = Coord> {
         self.passages
             .iter()
             .filter_map(move |u| self.range.nth(u).map(|t| Coord::from(t)))
     }
-    /// jusges if a cd is in a maze
-    crate fn has_cd(&self, cd: Coord) -> bool {
+    /// judges if a cd is in a maze
+    pub fn has_cd(&self, cd: Coord) -> bool {
         let has_cd_impl = |cd| {
             let id = self.range.index(cd)?;
             Some(self.passages.contains(id))

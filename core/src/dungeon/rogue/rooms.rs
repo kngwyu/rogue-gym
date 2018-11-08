@@ -74,7 +74,7 @@ impl Room {
                 })
                 .chain_err(|| "Room::draw"),
             RoomKind::Maze(ref maze) => maze
-                .passage_iter()
+                .passages()
                 .try_for_each(|cd| register(Positioned(cd, Surface::Passage)))
                 .chain_err(|| "Room::draw"),
             RoomKind::Empty { .. } => Ok(()),
@@ -162,7 +162,7 @@ fn gen_empty_cells(kind: &RoomKind) -> FenwickSet {
 }
 
 /// generate rooms
-crate fn gen_rooms(
+pub(super) fn gen_rooms(
     level: u32,
     config: &Config,
     width: X,
@@ -211,7 +211,7 @@ crate fn gen_rooms(
 }
 
 /// generata a room
-crate fn make_room(
+pub(super) fn make_room(
     is_empty: bool,
     room_size: Coord,
     lower_left: Coord,
@@ -269,19 +269,19 @@ crate fn make_room(
 }
 
 #[cfg(test)]
-crate mod test {
+pub(super) mod test {
     use super::*;
     use dungeon::Direction;
     use rect_iter::GetMut2D;
     use tile::Drawable;
-    crate fn gen(level: u32) -> Vec<Room> {
+    pub fn gen(level: u32) -> Vec<Room> {
         let mut config = Config::default();
         config.maze_rate_inv = 5;
         let (w, h) = (X(80), Y(24));
         let mut rng = RngHandle::new();
         gen_rooms(level, &config, w, h, &mut rng).unwrap()
     }
-    crate fn draw_to_buffer(rooms: &[Room]) -> Vec<Vec<Surface>> {
+    pub fn draw_to_buffer(rooms: &[Room]) -> Vec<Vec<Surface>> {
         let mut buffer = vec![vec![Surface::None; 80]; 24];
         for room in rooms {
             room.draw(|Positioned(cd, s)| {

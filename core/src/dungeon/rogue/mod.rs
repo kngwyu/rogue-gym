@@ -465,18 +465,18 @@ impl Dungeon {
 /// Address in the dungeon.
 /// It's quite simple in rogue.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-crate struct Address {
+pub struct Address {
     /// level
-    crate level: u32,
+    pub level: u32,
     /// coordinate
-    crate cd: Coord,
+    pub cd: Coord,
 }
 
 impl Address {
-    crate fn new(lev: u32, cd: Coord) -> Self {
+    pub fn new(lev: u32, cd: Coord) -> Self {
         Address { level: lev, cd }
     }
-    crate fn from_path(p: &DungeonPath) -> Self {
+    pub fn from_path(p: &DungeonPath) -> Self {
         Address {
             level: p[0] as u32,
             cd: Coord::new(p[1], p[2]),

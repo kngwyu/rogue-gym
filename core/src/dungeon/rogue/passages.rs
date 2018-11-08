@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use tuple_map::TupleMap2;
 
 /// make passages between rooms
-crate fn dig_passges<F>(
+pub(super) fn dig_passges<F>(
     rooms: &[Room],
     xrooms: X,
     yrooms: Y,

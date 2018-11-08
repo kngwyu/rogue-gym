@@ -1,8 +1,10 @@
 use super::{Defense, Exp, HitPoint, Level, Maxed, Strength};
 use dungeon::{Direction, DungeonPath};
-use item::{food::Food, itembox::ItemBox, Item, ItemKind, ItemToken};
+use error::GameResult;
+use item::{food::Food, itembox::ItemBox, Item, ItemHandler, ItemKind, ItemToken};
 use std::fmt;
 use tile::{Drawable, Tile};
+
 /// Player configuration
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Config {
@@ -74,14 +76,14 @@ impl Config {
 #[derive(Clone, Debug)]
 pub struct Player {
     /// player position
-    crate pos: DungeonPath,
-    /// player status(for drawing)
-    crate status: StatusInner,
-    /// configuration
-    crate config: Config,
+    pub pos: DungeonPath,
     /// item box
-    crate itembox: ItemBox,
-    crate armer: Option<ItemToken>,
+    pub itembox: ItemBox,
+    armer: Option<ItemToken>,
+    /// player status(for drawing)
+    status: StatusInner,
+    /// configuration
+    config: Config,
 }
 
 impl Player {
@@ -97,11 +99,20 @@ impl Player {
             _ => Hunger::Normal,
         };
     }
-    crate fn running(&mut self, b: bool) {
+    pub fn run(&mut self, b: bool) {
         self.status.running = b;
     }
-    crate fn arm(&self) -> Defense {
+    pub fn arm(&self) -> Defense {
         unimplemented!()
+    }
+    pub fn init_items(&mut self, items: &mut ItemHandler) -> GameResult<()> {
+        items.init_player_items(&mut self.itembox, &self.config.init_items)
+    }
+    pub fn strength(&self) -> Maxed<Strength> {
+        self.status.strength
+    }
+    pub fn level(&self) -> Level {
+        self.status.level
     }
 }
 
@@ -113,18 +124,18 @@ impl Drawable for Player {
 
 /// statuses only for internal
 #[derive(Clone, Debug, Serialize, Deserialize)]
-crate struct StatusInner {
+struct StatusInner {
     /// hit point
-    crate hp: Maxed<HitPoint>,
+    hp: Maxed<HitPoint>,
     /// strength
-    crate strength: Maxed<Strength>,
+    strength: Maxed<Strength>,
     /// exp
-    crate exp: Exp,
+    exp: Exp,
     /// level
-    crate level: Level,
+    level: Level,
     /// count down to death
-    crate food_left: u32,
-    crate running: bool,
+    food_left: u32,
+    running: bool,
 }
 
 impl StatusInner {

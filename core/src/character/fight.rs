@@ -17,9 +17,9 @@ pub fn enemy_attack(enemy: &Enemy, player: &mut Player, rng: &mut RngHandle) -> 
 }
 
 fn hit_attack(player: &Player, enemy: &Enemy) -> Parcent {
-    let st = player.status.strength.current;
+    let st = player.strength().current;
     let str_p = str_plus(st) + if enemy.is_running() { 0 } else { 4 };
-    hit_sub(player.status.level, enemy.defense(), str_p + 1)
+    hit_sub(player.level(), enemy.defense(), str_p + 1)
 }
 
 fn hit_defense(player: &Player, enemy: &Enemy) -> Parcent {

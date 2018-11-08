@@ -1,4 +1,3 @@
-#![feature(crate_visibility_modifier, const_fn, const_panic)]
 #![cfg_attr(test, feature(test))]
 #[macro_use]
 extern crate bitflags;
@@ -195,8 +194,7 @@ impl GameConfig {
             .chain_err(|| ERR_STR)?;
         // TODO: invalid checking
         let mut player = self.player.build();
-        item.init_player_items(&mut player.itembox, &player.config.init_items)
-            .chain_err(|| ERR_STR)?;
+        player.init_items(&mut item).chain_err(|| ERR_STR)?;
         actions::new_level(
             &game_info,
             &mut *dungeon,
@@ -423,7 +421,6 @@ mod config_test {
     fn default() {
         let game_config = GameConfig::default();
         let json = serde_json::to_string(&game_config).unwrap();
-        assert_eq!(json, "{}");
         let config: GameConfig = serde_json::from_str(&json).unwrap();
         assert_eq!(config, game_config);
     }

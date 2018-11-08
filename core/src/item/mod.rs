@@ -129,25 +129,25 @@ pub struct Item {
 }
 
 impl Item {
-    crate fn new<N: Into<ItemNum>>(kind: ItemKind, num: N) -> Self {
+    pub fn new<N: Into<ItemNum>>(kind: ItemKind, num: N) -> Self {
         Item {
             kind,
             how_many: num.into(),
             attr: ItemAttr::default(),
         }
     }
-    crate fn merge<F>(&mut self, other: Self, attr_merger: F)
+    pub fn merge<F>(&mut self, other: Self, attr_merger: F)
     where
         F: FnOnce(ItemAttr, ItemAttr) -> ItemAttr,
     {
         self.attr = attr_merger(self.attr, other.attr);
         self.how_many += other.how_many;
     }
-    crate fn many(mut self) -> Self {
+    pub fn many(mut self) -> Self {
         self.attr |= ItemAttr::IS_MANY;
         self
     }
-    crate fn is_many(&self) -> bool {
+    pub fn is_many(&self) -> bool {
         self.attr.contains(ItemAttr::IS_MANY)
     }
 }

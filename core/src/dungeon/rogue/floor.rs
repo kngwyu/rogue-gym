@@ -202,17 +202,14 @@ impl Floor {
         res &= !nxt_cell.is_locked();
         Some(res)
     }
-
     /// judge if the player can move from `cd` in `direction`
-    crate fn can_move_player(&self, cd: Coord, direction: Direction) -> bool {
+    pub(super) fn can_move_player(&self, cd: Coord, direction: Direction) -> bool {
         self.can_move_impl(cd, direction, false).unwrap_or(false)
     }
-
     /// judge if the enemy can move from `cd` in `direction`
-    crate fn can_move_enemy(&self, cd: Coord, direction: Direction) -> bool {
+    pub(super) fn can_move_enemy(&self, cd: Coord, direction: Direction) -> bool {
         self.can_move_impl(cd, direction, true).unwrap_or(false)
     }
-
     fn cd_to_room_id(&self, cd: Coord) -> Option<usize> {
         self.rooms
             .iter()
@@ -220,7 +217,6 @@ impl Floor {
             .find(|(_, room)| room.assigned_area.contains(cd))
             .map(|t| t.0)
     }
-
     fn with_current_room<S, M>(&mut self, cd: Coord, select: S, mut mark: M) -> GameResult<()>
     where
         S: FnOnce(&mut Room) -> bool,
@@ -250,7 +246,7 @@ impl Floor {
     }
 
     /// player enters room
-    crate fn enters_room(&mut self, cd: Coord) -> GameResult<()> {
+    pub(super) fn enters_room(&mut self, cd: Coord) -> GameResult<()> {
         self.with_current_room(
             cd,
             |room| {
@@ -269,7 +265,7 @@ impl Floor {
     }
 
     /// player enters room
-    crate fn leaves_room(&mut self, cd: Coord) -> GameResult<()> {
+    pub(super) fn leaves_room(&mut self, cd: Coord) -> GameResult<()> {
         self.with_current_room(
             cd,
             |room| room.is_visited && room.is_dark,
@@ -283,7 +279,7 @@ impl Floor {
     }
 
     /// player walks in the cell
-    crate fn player_in(
+    pub(super) fn player_in(
         &mut self,
         cd: Coord,
         init: bool,
@@ -318,7 +314,7 @@ impl Floor {
     }
 
     /// player leaves the cell
-    crate fn player_out(&mut self, cd: Coord) -> GameResult<()> {
+    pub(super) fn player_out(&mut self, cd: Coord) -> GameResult<()> {
         if self.doors.contains(&cd) {
             self.leaves_room(cd).chain_err(|| "Floor::player_out")?;
         }
@@ -335,7 +331,7 @@ impl Floor {
     }
 
     /// register an object to cell
-    crate fn set_obj(&mut self, cd: Coord, is_character: bool) -> bool {
+    pub(super) fn set_obj(&mut self, cd: Coord, is_character: bool) -> bool {
         let mut impl_ = || {
             let room = self.rooms.iter_mut().find(|room| room.contains(cd))?;
             Some(room.fill_cell(cd, is_character))
@@ -344,7 +340,7 @@ impl Floor {
     }
 
     /// unregister an object to cell
-    crate fn remove_obj(&mut self, cd: Coord, is_character: bool) -> bool {
+    pub(super) fn remove_obj(&mut self, cd: Coord, is_character: bool) -> bool {
         let mut impl_ = || {
             let room = self.rooms.iter_mut().find(|room| room.contains(cd))?;
             Some(room.unfill_cell(cd, is_character))
@@ -353,7 +349,7 @@ impl Floor {
     }
 
     /// select an empty cell from rooms randomly
-    crate fn select_cell(&self, rng: &mut RngHandle, is_character: bool) -> Option<Coord> {
+    pub(super) fn select_cell(&self, rng: &mut RngHandle, is_character: bool) -> Option<Coord> {
         let mut candidates = self.non_empty_rooms.clone();
         while candidates.len() > 0 {
             let room_idx = candidates
@@ -369,7 +365,7 @@ impl Floor {
     }
 
     /// search command
-    crate fn search<'a>(
+    pub(super) fn search<'a>(
         &'a mut self,
         cd: Coord,
         rng: &'a mut RngHandle,
@@ -392,7 +388,7 @@ impl Floor {
         })
     }
 
-    crate fn history_map(&self) -> Array2<bool> {
+    pub(super) fn history_map(&self) -> Array2<bool> {
         let size = self.field.size();
         let mut array = Array2::from_elem([size.ylen() as usize, size.xlen() as usize], false);
         size.into_iter().for_each(|cd| {
@@ -401,7 +397,7 @@ impl Floor {
         array
     }
 
-    crate fn make_dist_map(&self, from: Coord, is_enemy: bool) -> Array2<u32> {
+    pub(super) fn make_dist_map(&self, from: Coord, is_enemy: bool) -> Array2<u32> {
         let (w, h) = (self.field.width(), self.field.height());
         let inf = u32::max_value();
         let mut dist = Array2::from_elem([h.0 as usize, w.0 as usize], inf);

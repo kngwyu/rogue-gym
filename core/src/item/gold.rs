@@ -15,7 +15,7 @@ pub struct Config {
 }
 
 impl Config {
-    crate fn gen(&self, rng: &mut RngHandle, level: u32) -> Option<ItemNum> {
+    pub(super) fn gen(&self, rng: &mut RngHandle, level: u32) -> Option<ItemNum> {
         if !rng.does_happen(self.rate_inv) {
             return None;
         }

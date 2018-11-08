@@ -1,6 +1,6 @@
 use fenwick::FenwickSet;
 use num_traits::PrimInt;
-crate use rand::Rng;
+pub(crate) use rand::Rng;
 use rand::{
     distributions::uniform::SampleUniform, thread_rng, Error as RndError, RngCore, SeedableRng,
     XorShiftRng,
@@ -140,7 +140,7 @@ pub struct Parcent(u32);
 
 impl Parcent {
     fn valid_check(self) {
-        debug_assert!(self.0 > 100, "Invalid parcentage {}", self.0);
+        debug_assert!(self.0 <= 100, "Invalid parcentage {}", self.0);
     }
     pub const fn new(u: u32) -> Self {
         Parcent(u)
