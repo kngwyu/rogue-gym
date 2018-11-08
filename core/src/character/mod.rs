@@ -192,6 +192,7 @@ impl<T> Dice<T> {
         Dice { times: n, max: m }
     }
 }
+
 impl<T: Clone> Dice<T> {
     pub fn exec<I>(&self, rng: &mut RngHandle) -> T
     where

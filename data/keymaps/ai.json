@@ -1,30 +1,38 @@
 {
-    "s": {
-        "Act": "Search"
+    "n": {
+        "Act": {
+            "Move": "RightDown"
+        }
+    },
+    "K": {
+        "Act": {
+            "MoveUntil": "Up"
+        }
     },
     "Y": {
         "Act": {
             "MoveUntil": "LeftUp"
         }
     },
+    "s": {
+        "Act": "Search"
+    },
     "N": {
         "Act": {
             "MoveUntil": "RightDown"
         }
     },
-    "H": {
+    ">": {
+        "Act": "DownStair"
+    },
+    "k": {
         "Act": {
-            "MoveUntil": "Left"
+            "Move": "Up"
         }
     },
-    "n": {
+    "B": {
         "Act": {
-            "Move": "RightDown"
-        }
-    },
-    "b": {
-        "Act": {
-            "Move": "LeftDown"
+            "MoveUntil": "LeftDown"
         }
     },
     "y": {
@@ -37,9 +45,9 @@
             "MoveUntil": "RightUp"
         }
     },
-    "k": {
+    "H": {
         "Act": {
-            "Move": "Up"
+            "MoveUntil": "Left"
         }
     },
     "l": {
@@ -47,24 +55,9 @@
             "Move": "Right"
         }
     },
-    "L": {
-        "Act": {
-            "MoveUntil": "Right"
-        }
-    },
-    "B": {
-        "Act": {
-            "MoveUntil": "LeftDown"
-        }
-    },
     "j": {
         "Act": {
             "Move": "Down"
-        }
-    },
-    "h": {
-        "Act": {
-            "Move": "Left"
         }
     },
     "u": {
@@ -72,17 +65,24 @@
             "Move": "RightUp"
         }
     },
-    "K": {
+    "L": {
         "Act": {
-            "MoveUntil": "Up"
+            "MoveUntil": "Right"
+        }
+    },
+    "h": {
+        "Act": {
+            "Move": "Left"
+        }
+    },
+    "b": {
+        "Act": {
+            "Move": "LeftDown"
         }
     },
     "J": {
         "Act": {
             "MoveUntil": "Down"
         }
-    },
-    ">": {
-        "Act": "DownStair"
     }
 }

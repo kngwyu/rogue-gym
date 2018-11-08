@@ -1,4 +1,5 @@
-#![feature(const_fn, crate_visibility_modifier, test)]
+#![feature(crate_visibility_modifier, const_fn, const_panic)]
+#![cfg_attr(test, feature(test))]
 #[macro_use]
 extern crate bitflags;
 #[macro_use]
@@ -89,7 +90,6 @@ pub struct GameConfig {
     /// hide dungeon or not
     /// this setting is only for debugging and don't use it when you play game
     #[serde(default = "default_hide_dungeon")]
-    #[serde(skip_serializing_if = "Clone::clone")]
     pub hide_dungeon: bool,
 }
 
@@ -97,7 +97,7 @@ fn is_default<T>(s: &T) -> bool
 where
     T: Default + PartialEq,
 {
-    *s == T::default()
+    cfg!(not(test)) && *s == T::default()
 }
 
 const fn default_screen_width() -> i32 {
@@ -105,7 +105,7 @@ const fn default_screen_width() -> i32 {
 }
 
 fn is_default_width(w: &i32) -> bool {
-    *w == DEFAULT_WIDTH
+    cfg!(not(test)) && *w == DEFAULT_WIDTH
 }
 
 const fn default_screen_height() -> i32 {
@@ -113,7 +113,7 @@ const fn default_screen_height() -> i32 {
 }
 
 fn is_default_height(h: &i32) -> bool {
-    *h == DEFAULT_HEIGHT
+    cfg!(not(test)) && *h == DEFAULT_HEIGHT
 }
 
 const fn default_hide_dungeon() -> bool {

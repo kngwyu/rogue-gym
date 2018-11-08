@@ -1,30 +1,30 @@
 {
-  "width": 32,
-  "height": 16,
-  "seed": 5,
-  "dungeon": {
-    "style": "rogue",
-    "room_num_x": 2,
-    "room_num_y": 2,
-    "min_room_size": {
-      "x": 4,
-      "y": 4
+    "width": 32,
+    "height": 16,
+    "seed": 5,
+    "dungeon": {
+        "style": "rogue",
+        "room_num_x": 2,
+        "room_num_y": 2,
+        "min_room_size": {
+            "x": 4,
+            "y": 4
+        },
+        "enable_trap": true,
+        "max_empty_rooms": 3,
+        "amulet_level": 25,
+        "maze_rate_inv": 15,
+        "dark_level": 10,
+        "hidden_passage_rate_inv": 40,
+        "locked_door_rate_inv": 5,
+        "max_extra_edges": 5,
+        "door_unlock_rate_inv": 5,
+        "passage_unlock_rate_inv": 3
     },
-    "enable_trap": true,
-    "max_empty_rooms": 3,
-    "amulet_level": 25,
-    "maze_rate_inv": 15,
-    "dark_level": 10,
-    "hidden_passage_rate_inv": 40,
-    "locked_door_rate_inv": 5,
-    "max_extra_edges": 5,
-    "door_unlock_rate_inv": 5,
-    "passage_unlock_rate_inv": 3
-  },
-  "enemies": {
-    "builtin": {
-      "typ": "Rogue",
-      "include": []
+    "enemies": {
+        "builtin": {
+            "typ": "Rogue",
+            "include": []
+        }
     }
-  }
 }

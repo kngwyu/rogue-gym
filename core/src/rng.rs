@@ -85,8 +85,9 @@ impl RngHandle {
         self.gen_range(0, p_inv) == 0
     }
     /// judge an event with p % chance happens or not
-    pub fn parcent(&mut self, p: u32) -> bool {
-        self.range(1..=100) <= p
+    pub fn parcent(&mut self, p: Parcent) -> bool {
+        p.valid_check();
+        self.range(1..=100) <= p.0
     }
 }
 
@@ -131,6 +132,18 @@ impl<'a, T: PrimInt> Iterator for RandomSelecter<'a, T> {
         self.selected.remove(res);
         let res = T::from(res).expect("[RngSelect::Iterator::next] NumCast error") + self.offset;
         Some(res)
+    }
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
+pub struct Parcent(u32);
+
+impl Parcent {
+    fn valid_check(self) {
+        debug_assert!(self.0 > 100, "Invalid parcentage {}", self.0);
+    }
+    pub const fn new(u: u32) -> Self {
+        Parcent(u)
     }
 }
 

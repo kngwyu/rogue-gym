@@ -30,64 +30,34 @@
         }
     },
     "keymap": {
-        "L": {
-            "Act": {
-                "MoveUntil": "Right"
-            }
-        },
-        "S": {
-            "Sys": "Save"
-        },
-        "Y": {
-            "Act": {
-                "MoveUntil": "LeftUp"
-            }
-        },
-        "u": {
-            "Act": {
-                "Move": "RightUp"
-            }
-        },
-        "j": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
-        "K": {
-            "Act": {
-                "MoveUntil": "Up"
-            }
-        },
-        "B": {
-            "Act": {
-                "MoveUntil": "LeftDown"
-            }
-        },
-        "U": {
-            "Act": {
-                "MoveUntil": "RightUp"
-            }
-        },
-        "Left": {
-            "Act": {
-                "Move": "Left"
-            }
+        ">": {
+            "Act": "DownStair"
         },
         "Down": {
             "Act": {
                 "Move": "Down"
             }
         },
-        "J": {
+        "H": {
             "Act": {
-                "MoveUntil": "Down"
+                "MoveUntil": "Left"
             }
+        },
+        "N": {
+            "Act": {
+                "MoveUntil": "RightDown"
+            }
+        },
+        "Q": {
+            "Sys": "Quit"
         },
         "Esc": {
             "Sys": "Cancel"
         },
-        "Q": {
-            "Sys": "Quit"
+        "B": {
+            "Act": {
+                "MoveUntil": "LeftDown"
+            }
         },
         "y": {
             "Both": {
@@ -100,14 +70,47 @@
         "s": {
             "Act": "Search"
         },
+        "j": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "L": {
+            "Act": {
+                "MoveUntil": "Right"
+            }
+        },
+        "U": {
+            "Act": {
+                "MoveUntil": "RightUp"
+            }
+        },
+        "K": {
+            "Act": {
+                "MoveUntil": "Up"
+            }
+        },
+        "Y": {
+            "Act": {
+                "MoveUntil": "LeftUp"
+            }
+        },
         "l": {
             "Act": {
                 "Move": "Right"
             }
         },
-        "Right": {
+        "k": {
             "Act": {
-                "Move": "Right"
+                "Move": "Up"
+            }
+        },
+        "S": {
+            "Sys": "Save"
+        },
+        "J": {
+            "Act": {
+                "MoveUntil": "Down"
             }
         },
         "h": {
@@ -115,12 +118,9 @@
                 "Move": "Left"
             }
         },
-        ">": {
-            "Act": "DownStair"
-        },
-        "Up": {
+        "u": {
             "Act": {
-                "Move": "Up"
+                "Move": "RightUp"
             }
         },
         "n": {
@@ -131,14 +131,9 @@
                 "sys": "No"
             }
         },
-        "k": {
+        "Up": {
             "Act": {
                 "Move": "Up"
-            }
-        },
-        "H": {
-            "Act": {
-                "MoveUntil": "Left"
             }
         },
         "b": {
@@ -146,9 +141,14 @@
                 "Move": "LeftDown"
             }
         },
-        "N": {
+        "Left": {
             "Act": {
-                "MoveUntil": "RightDown"
+                "Move": "Left"
+            }
+        },
+        "Right": {
+            "Act": {
+                "Move": "Right"
             }
         }
     },
@@ -230,8 +230,9 @@
                 24,
                 25
             ]
-        }
+        },
+        "appear_rate_gold": 80,
+        "appear_rate_nogold": 25
     },
-    "save_inputs": false,
     "hide_dungeon": true
 }

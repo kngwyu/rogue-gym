@@ -2,7 +2,7 @@ use super::{Defense, Dice, Exp, HitPoint, Level};
 use crate::{Drawable, SmallStr};
 use dungeon::{Dungeon, DungeonPath, MoveResult};
 use item::ItemNum;
-use rng::RngHandle;
+use rng::{Parcent, RngHandle};
 use smallvec::SmallVec;
 use std::cell::Cell;
 use std::collections::{BTreeMap, HashSet};
@@ -18,11 +18,9 @@ pub struct Config {
     #[serde(flatten)]
     pub enemies: Enemies,
     #[serde(default = "default_appear_rate_gold")]
-    #[serde(skip_serializing_if = "is_default_appear_rate_gold")]
-    pub appear_rate_gold: u32,
+    pub appear_rate_gold: Parcent,
     #[serde(default = "default_appear_rate_nogold")]
-    #[serde(skip_serializing_if = "is_default_appear_rate_nogold")]
-    pub appear_rate_nogold: u32,
+    pub appear_rate_nogold: Parcent,
 }
 
 impl Config {
@@ -65,24 +63,24 @@ impl Config {
 
 #[derive(Clone, Debug)]
 struct ConfigInner {
-    appear_rate_gold: u32,
-    appear_rate_nogold: u32,
+    appear_rate_gold: Parcent,
+    appear_rate_nogold: Parcent,
 }
 
-const fn default_appear_rate_gold() -> u32 {
-    80
+const fn default_appear_rate_gold() -> Parcent {
+    Parcent::new(80)
 }
 
-const fn default_appear_rate_nogold() -> u32 {
-    25
+const fn default_appear_rate_nogold() -> Parcent {
+    Parcent::new(25)
 }
 
-const fn is_default_appear_rate_gold(u: &u32) -> bool {
-    *u == default_appear_rate_gold()
+fn is_default_appear_rate_gold(u: &Parcent) -> bool {
+    cfg!(not(test)) && *u == default_appear_rate_gold()
 }
 
-const fn is_default_appear_rate_nogold(u: &u32) -> bool {
-    *u == default_appear_rate_nogold()
+fn is_default_appear_rate_nogold(u: &Parcent) -> bool {
+    cfg!(not(test)) && *u == default_appear_rate_nogold()
 }
 
 impl Default for Config {
@@ -424,7 +422,7 @@ macro_rules! hp_dice {
 macro_rules! enem_attr {
     ($($x: ident,)*) => {
         EnemyAttr($(EnemyAttr::$x.0 |)* 0)
-    }
+    };
 }
 
 pub const ROGUE_ENEMIES: [StaticStatus; 26] = [

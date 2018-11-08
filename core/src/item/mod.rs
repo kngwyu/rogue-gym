@@ -101,6 +101,13 @@ bitflags!{
     }
 }
 
+pub trait ItemStatus {
+    fn value(&self) -> ItemNum {
+        ItemNum::default()
+    }
+    fn prob(&self) {}
+}
+
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
 pub struct ItemId(u32);
 
