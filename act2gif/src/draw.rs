@@ -99,8 +99,7 @@ impl<'a> GifEncoder<'a> {
     fn dungeon(&mut self, runtime: &mut RunTime) {
         runtime
             .draw_screen(|Positioned(cd, tile)| {
-                let c = tile.to_char();
-                self.term.write_char(cd, c, &mut self.font);
+                self.term.write_char(cd, tile.to_char(), &mut self.font);
                 Ok(())
             })
             .unwrap();

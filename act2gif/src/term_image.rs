@@ -1,6 +1,6 @@
 use crate::font::{DrawInst, FontHandle};
 use image::{gif::Frame, Pixel, Rgb, Rgba, RgbaImage};
-use rect_iter::{GetMut2D, RectRange};
+use rect_iter::GetMut2D;
 use rogue_gym_core::dungeon::{Coord, X, Y};
 use rusttype::point;
 use tuple_map::TupleMap2;
@@ -21,7 +21,7 @@ impl TermImage {
         background: Rgb<u8>,
         fontcolor: Rgb<u8>,
     ) -> Self {
-        let (x, y) = (width.0, height.0).map(|x| x as u32 * fontsize);
+        let (x, y) = (width.0, height.0).map(|x| x as u32 * (fontsize + 1));
         let mut buffer = RgbaImage::new(x / 2, y);
         let mut rgba = background.to_rgba();
         rgba.channels_mut()[3] = u8::max_value();
@@ -36,16 +36,11 @@ impl TermImage {
     }
     pub fn write_char<'a>(&mut self, pos: Coord, c: char, font: &mut FontHandle<'a>) {
         let (x, y) = (pos.x.0, pos.y.0).map(|x| x as u32 * self.fontsize);
-        let x = x / 2;
-        for p in RectRange::from_ranges(x..x + self.fontsize / 2, y..y + self.fontsize).unwrap() {
-            if let Ok(cell) = self.buffer.try_get_mut_p(p) {
-                *cell = self.background;
-            }
-        }
-        font.draw(c, point(x, y), |DrawInst { x, y, alpha }| {
-            let mut rgba = self.fontcolor.to_rgba();
+        let mut rgba = self.fontcolor.to_rgba();
+        font.draw(c, point(x / 2, y), |DrawInst { x, y, alpha }| {
             rgba.channels_mut()[3] = alpha;
             if let Ok(cell) = self.buffer.try_get_mut_xy(x, y) {
+                *cell = self.background;
                 cell.blend(&rgba);
             }
         });
@@ -65,8 +60,8 @@ impl TermImage {
     }
     pub fn frame(&mut self) -> Frame {
         Frame::from_rgba(
-            (self.size.x.0 as u32 * self.fontsize) as u16,
-            (self.size.y.0 as u32 * self.fontsize) as u16,
+            self.buffer.width() as u16,
+            self.buffer.height() as u16,
             &mut *self.buffer,
         )
     }
