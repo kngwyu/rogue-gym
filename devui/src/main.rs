@@ -7,11 +7,10 @@ extern crate rogue_gym_devui;
 extern crate termion;
 extern crate tuple_map;
 
-use std::fs::{File, OpenOptions};
-use std::io::{self, Read};
+use std::fs::OpenOptions;
 
 use clap::ArgMatches;
-use rogue_gym_core::{json_to_inputs, GameConfig};
+use rogue_gym_core::{json_to_inputs, read_file, GameConfig};
 use rogue_gym_devui::error::*;
 use rogue_gym_devui::{play_game, show_replay};
 
@@ -49,13 +48,6 @@ fn main_() -> GameResult<()> {
     } else {
         play_game(config, is_default)
     }
-}
-
-fn read_file(name: &str) -> io::Result<String> {
-    let mut file = File::open(name)?;
-    let mut buf = String::new();
-    file.read_to_string(&mut buf)?;
-    Ok(buf)
 }
 
 fn get_config(args: &ArgMatches) -> GameResult<(GameConfig, bool)> {

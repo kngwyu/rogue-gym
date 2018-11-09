@@ -1,0 +1,21 @@
+[package]
+name = "rogue-gym-act2gif"
+version = "0.1.0"
+authors = ["kngwyu <yuji.kngw.80s.revive@gmail.com>"]
+edition = "2018"
+workspace = "../"
+
+[dependencies]
+image = "0.20.1"
+rusttype = "0.7.2"
+tuple-map = "0.4.0"
+clap = "2.32.0"
+
+[dependencies.rogue-gym-core]
+path = "../core/"
+version = "0.1.0"
+
+[dependencies.rect-iter]
+version = "0.2.2"
+default-features = false
+features = ["image"]

@@ -76,7 +76,6 @@ pub fn show_replay(
 ) -> GameResult<()> {
     debug!("devui::show_replay config: {:?}", config);
     let (tx, rx) = mpsc::channel();
-    let replay: VecDeque<_> = replay.iter().map(|&x| x).collect();
     let replay_thread = thread::spawn(move || {
         let res = show_replay_(config, replay, interval_ms, rx);
         if let Err(e) = res {

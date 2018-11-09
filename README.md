@@ -15,7 +15,7 @@ cargo run --release
 Now this repository has Double DQN result
 ```
 cargo install --path ./devui --force
-cd data/learned/ddqn-minidugeon/
+cd data/learned/ddqn-minidungeon/
 rogue_gym_devui --config config.json replay --file best-actions.json --interval 100
 ```
 
@@ -27,7 +27,8 @@ See [this page](./python/README.md)
 [rogue5.4](https://github.com/kngwyu/rogue5.4.4)
 
 # Required minimum version of rust
-1.31.0-beta
+- core/devui 1.31.0-beta
+- python 1.32.0 nightly
 
 # License
 

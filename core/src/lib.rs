@@ -26,6 +26,8 @@ extern crate test;
 extern crate tuple_map;
 
 mod actions;
+use std::fs::File;
+use std::io::{self, Read};
 pub mod character;
 pub mod dungeon;
 pub mod error;
@@ -402,6 +404,13 @@ impl GameInfo {
     fn new() -> Self {
         GameInfo { is_cleared: false }
     }
+}
+
+pub fn read_file(name: &str) -> io::Result<String> {
+    let mut file = File::open(name)?;
+    let mut buf = String::new();
+    file.read_to_string(&mut buf)?;
+    Ok(buf)
 }
 
 #[cfg(test)]
