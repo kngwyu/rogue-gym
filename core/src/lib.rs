@@ -359,7 +359,7 @@ pub fn json_to_inputs(json: &str) -> GameResult<VecDeque<InputCode>> {
 }
 
 /// Reaction to user input
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Reaction {
     /// dungeon
     Redraw,
@@ -371,7 +371,7 @@ pub enum Reaction {
     Notify(GameMsg),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum GameMsg {
     CantMove(Direction),
     CantGetItem(ItemKind),

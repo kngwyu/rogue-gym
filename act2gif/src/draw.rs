@@ -1,6 +1,6 @@
 use crate::font::FontHandle;
 use crate::term_image::TermImage;
-use image::gif::Encoder;
+use image::gif::{DisposalMethod, Encoder};
 use rogue_gym_core::{
     character::player::Status, dungeon::Positioned, error::*, input::InputCode, ui::*, GameConfig,
     GameMsg, Reaction, RunTime,
@@ -39,10 +39,14 @@ impl<'a> GifEncoder<'a> {
         for &i in self.inputs.clone().iter().take(20) {
             let reaction = runtime.react_to_input(i)?;
             for r in reaction {
+                let draw = r == Reaction::Redraw;
                 self.process_reaction(&mut runtime, r);
-                let mut frame = self.term.frame();
-                frame.delay = self.interval as u16;
-                encoder.encode(&frame).expect("Failed to encode gif");
+                if draw {
+                    let mut frame = self.term.frame();
+                    frame.delay = self.interval as u16;
+                    frame.dispose = DisposalMethod::Background;
+                    encoder.encode(&frame).expect("Failed to encode gif");
+                }
             }
         }
         Ok(())
@@ -93,18 +97,10 @@ impl<'a> GifEncoder<'a> {
         self.term.write_status(&status, &mut self.font)
     }
     fn dungeon(&mut self, runtime: &mut RunTime) {
-        self.term.reset();
-        let mut at = false;
         runtime
             .draw_screen(|Positioned(cd, tile)| {
                 let c = tile.to_char();
-                if c != ' ' {
-                    self.term.write_char(cd, c, &mut self.font);
-                }
-                if c == '@' {
-                    assert!(!at);
-                    at = true;
-                }
+                self.term.write_char(cd, c, &mut self.font);
                 Ok(())
             })
             .unwrap();

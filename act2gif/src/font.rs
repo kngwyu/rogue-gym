@@ -69,7 +69,7 @@ impl<'a> FontHandle<'a> {
 }
 
 fn truncate_alpha(f: f32) -> u8 {
-    //let f = f + 0.2;
+    let f = if f < 0.2 { 0.0 } else { f };
     if f > 1.0 {
         u8::max_value()
     } else {

@@ -36,11 +36,17 @@ impl TermImage {
     }
     pub fn write_char<'a>(&mut self, pos: Coord, c: char, font: &mut FontHandle<'a>) {
         let (x, y) = (pos.x.0, pos.y.0).map(|x| x as u32 * self.fontsize);
-        font.draw(c, point(x / 2, y), |DrawInst { x, y, alpha }| {
+        let x = x / 2;
+        for p in RectRange::from_ranges(x..x + self.fontsize / 2, y..y + self.fontsize).unwrap() {
+            if let Ok(cell) = self.buffer.try_get_mut_p(p) {
+                *cell = self.background;
+            }
+        }
+        font.draw(c, point(x, y), |DrawInst { x, y, alpha }| {
             let mut rgba = self.fontcolor.to_rgba();
             rgba.channels_mut()[3] = alpha;
             if let Ok(cell) = self.buffer.try_get_mut_xy(x, y) {
-                *cell = rgba;
+                cell.blend(&rgba);
             }
         });
     }
@@ -64,14 +70,8 @@ impl TermImage {
             &mut *self.buffer,
         )
     }
-    pub fn reset(&mut self) {
-        for p in RectRange::from_ranges(
-            0..self.buffer.width(),
-            self.fontsize..self.buffer.height() - self.fontsize,
-        )
-        .unwrap()
-        {
-            *self.buffer.get_mut_p(p) = self.background;
-        }
+    #[allow(unused)]
+    pub fn save(&self, fname: &str) {
+        self.buffer.save(fname).unwrap();
     }
 }
