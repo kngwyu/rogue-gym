@@ -12,8 +12,9 @@ cargo run --release
 ```
 
 # Watch learned AI
+![Double DQN gif](data/gif/ddqn-small-16.gif)
+
 Now this repository has Double DQN result.
-![Double DQN gif](act2gif/rogue-gym.gif)
 
 ```
 cargo install --path ./devui --force
