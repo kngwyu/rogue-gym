@@ -1,15 +1,17 @@
 mod draw;
 mod font;
 mod term_image;
+mod theme;
 use self::draw::GifEncoder;
 use self::term_image::TermImage;
 use clap::{self, ArgMatches};
 use rogue_gym_core::{error::*, input::InputCode, json_to_inputs, read_file, GameConfig};
-use std::collections::VecDeque;
 const DEFAULT_INTERVAL_MS: u32 = 50;
+const DEFAULT_MAX_ACTIONS: usize = 30;
+const DEFAULT_FONT_SIZE: u32 = 16;
 const UBUNTU_MONO: &[u8; 205748] = include_bytes!("../../data/fonts/UbuntuMono-R.ttf");
 use self::font::FontHandle;
-use image::Rgb;
+use self::theme::Theme;
 
 fn parse_args<'a>() -> ArgMatches<'a> {
     clap::App::new("rogue-gym-act2gif")
@@ -41,6 +43,29 @@ fn parse_args<'a>() -> ArgMatches<'a> {
                 .help("Interval in replay mode")
                 .takes_value(true),
         )
+        .arg(
+            clap::Arg::with_name("theme")
+                .short("t")
+                .long("theme")
+                .value_name("THEME")
+                .takes_value(true),
+        )
+        .arg(
+            clap::Arg::with_name("fontsize")
+                .short("f")
+                .long("font")
+                .value_name("FONT")
+                .help("Font size")
+                .takes_value(true),
+        )
+        .arg(
+            clap::Arg::with_name("max_actions")
+                .short("m")
+                .long("max")
+                .value_name("MAX")
+                .help("Replay only <MAX> times")
+                .takes_value(true),
+        )
         .get_matches()
 }
 
@@ -55,37 +80,38 @@ fn get_config(args: &ArgMatches) -> GameResult<GameConfig> {
     GameConfig::from_json(&f)
 }
 
-fn get_replay(args: &ArgMatches) -> GameResult<VecDeque<InputCode>> {
+fn get_replay(args: &ArgMatches) -> GameResult<Vec<InputCode>> {
     let fname = args.value_of("actions").unwrap();
     let replay = read_file(fname).into_chained(|| "Failed to read replay file!")?;
     json_to_inputs(&replay)
 }
 
-fn setup<'a>() -> GameResult<GifEncoder<'a>> {
+fn get_arg<T: ::std::str::FromStr>(args: &ArgMatches, value: &str) -> Option<T> {
+    args.value_of(value).and_then(|v| v.parse::<T>().ok())
+}
+
+fn setup<'a>() -> GameResult<(GifEncoder<'a>, Vec<InputCode>)> {
     let args = parse_args();
     let config = get_config(&args)?;
-    let replay = get_replay(&args)?;
-    let mut interval = DEFAULT_INTERVAL_MS;
-    if let Some(inter) = args.value_of("interval") {
-        interval = inter
-            .parse()
-            .into_chained(|| "Failed to parse 'interval' arg!")?;
-    }
-    let black = Rgb([0, 0, 0]);
-    let white = Rgb([255, 255, 255]);
-    let scale = 16;
+    let mut replay = get_replay(&args)?;
+    let interval = get_arg(&args, "interval").unwrap_or(DEFAULT_INTERVAL_MS);
+    let scale = get_arg(&args, "fontsize").unwrap_or(DEFAULT_FONT_SIZE);
+    let max = get_arg(&args, "max_actions").unwrap_or(DEFAULT_MAX_ACTIONS);
+    replay.truncate(max);
+    let theme = args.value_of("theme").unwrap_or("solarized-dark");
+    let theme = Theme::from_str(theme).expect("Unknown theme was specified");
     let term = TermImage::new(
         config.width.into(),
         config.height.into(),
         scale,
-        white,
-        black,
+        theme.back,
+        theme.font,
     );
     let font = FontHandle::new(&UBUNTU_MONO[..], scale);
-    Ok(GifEncoder::new(replay, config, font, term, interval))
+    Ok((GifEncoder::new(config, font, term, interval), replay))
 }
 
 fn main() -> GameResult<()> {
-    let mut encoder = setup()?;
-    encoder.exec("rogue.gif")
+    let (mut encoder, inputs) = setup()?;
+    encoder.exec(inputs, "rogue-gym.gif")
 }

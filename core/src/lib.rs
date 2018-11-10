@@ -47,7 +47,6 @@ use input::{InputCode, Key, KeyMap};
 use item::{ItemHandler, ItemKind};
 use ndarray::Array2;
 pub use smallstr::SmallStr;
-use std::collections::VecDeque;
 use tile::{Drawable, Tile};
 use ui::{MordalKind, MordalMsg, UiState};
 
@@ -354,7 +353,7 @@ impl RunTime {
     }
 }
 
-pub fn json_to_inputs(json: &str) -> GameResult<VecDeque<InputCode>> {
+pub fn json_to_inputs(json: &str) -> GameResult<Vec<InputCode>> {
     serde_json::from_str(json).into_chained(|| "json_to_inputs: Failed to deserialize")
 }
 

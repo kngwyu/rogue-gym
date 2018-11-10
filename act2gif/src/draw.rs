@@ -5,11 +5,9 @@ use rogue_gym_core::{
     character::player::Status, dungeon::Positioned, error::*, input::InputCode, ui::*, GameConfig,
     GameMsg, Reaction, RunTime,
 };
-use std::collections::VecDeque;
 use std::fs::File;
 
 pub struct GifEncoder<'a> {
-    inputs: VecDeque<InputCode>,
     config: GameConfig,
     font: FontHandle<'a>,
     term: TermImage,
@@ -17,26 +15,19 @@ pub struct GifEncoder<'a> {
 }
 
 impl<'a> GifEncoder<'a> {
-    pub fn new(
-        inputs: VecDeque<InputCode>,
-        config: GameConfig,
-        font: FontHandle<'a>,
-        term: TermImage,
-        interval: u32,
-    ) -> Self {
+    pub fn new(config: GameConfig, font: FontHandle<'a>, term: TermImage, interval: u32) -> Self {
         GifEncoder {
-            inputs,
             config,
             font,
             term,
             interval,
         }
     }
-    pub fn exec(&mut self, filename: &str) -> GameResult<()> {
+    pub fn exec(&mut self, inputs: Vec<InputCode>, filename: &str) -> GameResult<()> {
         let mut runtime = self.config.clone().build()?;
         let file = File::create(filename).into_chained(|| "Failed to crate file")?;
         let mut encoder = Encoder::new(file);
-        for &i in self.inputs.clone().iter().take(20) {
+        for i in inputs {
             let reaction = runtime.react_to_input(i)?;
             for r in reaction {
                 let draw = r == Reaction::Redraw;

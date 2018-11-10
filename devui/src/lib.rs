@@ -69,11 +69,7 @@ pub fn play_game(config: GameConfig, is_default: bool) -> GameResult<()> {
     screen.clear_screen()
 }
 
-pub fn show_replay(
-    config: GameConfig,
-    replay: VecDeque<InputCode>,
-    interval_ms: u64,
-) -> GameResult<()> {
+pub fn show_replay(config: GameConfig, replay: Vec<InputCode>, interval_ms: u64) -> GameResult<()> {
     debug!("devui::show_replay config: {:?}", config);
     let (tx, rx) = mpsc::channel();
     let replay_thread = thread::spawn(move || {
@@ -115,12 +111,13 @@ enum ReplayInst {
 
 fn show_replay_(
     config: GameConfig,
-    mut replay: VecDeque<InputCode>,
+    mut replay: Vec<InputCode>,
     interval_ms: u64,
     rx: mpsc::Receiver<ReplayInst>,
 ) -> GameResult<()> {
     let (mut screen, mut runtime) = setup_screen(config, false)?;
     let mut sleeping = false;
+    replay.reverse();
     loop {
         match rx.try_recv() {
             Ok(ReplayInst::Start) => sleeping = false,
@@ -133,7 +130,7 @@ fn show_replay_(
         if sleeping {
             continue;
         }
-        let input = match replay.pop_front() {
+        let input = match replay.pop() {
             Some(x) => x,
             None => continue,
         };

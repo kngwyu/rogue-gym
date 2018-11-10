@@ -14,6 +14,7 @@ pub struct FontHandle<'a> {
     font: Font<'a>,
     cache: HashMap<char, FontCache>,
     scale: u32,
+    padding: u32,
 }
 
 impl<'a> FontHandle<'a> {
@@ -24,6 +25,7 @@ impl<'a> FontHandle<'a> {
             font,
             cache: HashMap::new(),
             scale,
+            padding: scale / 4,
         }
     }
     pub fn draw<D>(&mut self, c: char, start: Point<u32>, mut draw_fn: D)
@@ -42,16 +44,19 @@ impl<'a> FontHandle<'a> {
                 let glyph = glyph.positioned(point(start.x as f32, start.y as f32));
                 if let Some(bbox) = glyph.pixel_bounding_box() {
                     let offset = (bbox.min.x, bbox.min.y + scale.1 as i32).map(|x| x as u32);
-                    let mut cache = FontCache::new(scale.1, offset.1 - start.y);
+                    let padding = self.padding;
+                    let mut cache = FontCache::new(scale.1);
                     glyph.draw(|x, y, alpha| {
                         let (x, y) = (x, y).add(offset).sub(start_t);
                         let alpha = truncate_alpha(alpha);
-                        cache.set(x, y, alpha)
+                        if y >= padding {
+                            cache.set(x, y - padding, alpha)
+                        }
                     });
                     Self::draw_range(scale, &cache, start_t, &mut draw_fn);
                     entry.insert(cache);
                 } else {
-                    let cache = FontCache::new(scale.1, scale.1 / 4);
+                    let cache = FontCache::new(scale.1);
                     Self::draw_range(scale, &cache, start_t, &mut draw_fn);
                     entry.insert(cache);
                 }
@@ -62,9 +67,10 @@ impl<'a> FontHandle<'a> {
     where
         D: FnMut(DrawInst),
     {
+        let padding = scale.1 / 4;
         for (x, y) in RectRange::zero_start(scale.0, scale.1).unwrap() {
             let alpha = cache.get(x, y);
-            let (x, y) = (x, y + cache.y_offset).add(start);
+            let (x, y) = (x, y + padding).add(start);
             draw_fn(DrawInst { x, y, alpha });
         }
     }
@@ -83,21 +89,19 @@ fn truncate_alpha(f: f32) -> u8 {
 #[derive(Clone, Debug)]
 struct FontCache {
     inner: Vec<u8>,
-    y_offset: u32,
     scale: u32,
 }
 
 impl FontCache {
-    fn new(scale: u32, y_offset: u32) -> FontCache {
+    fn new(scale: u32) -> FontCache {
         let len = (scale * scale) / 2;
         FontCache {
             inner: vec![0u8; len as usize],
-            y_offset,
             scale,
         }
     }
     fn set(&mut self, x: u32, y: u32, val: u8) {
-        let idx = self.scale / 2 * (y - self.y_offset) + x;
+        let idx = self.scale / 2 * y + x;
         self.inner[idx as usize] = val;
     }
     fn get(&self, x: u32, y: u32) -> u8 {
