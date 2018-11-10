@@ -12,7 +12,9 @@ cargo run --release
 ```
 
 # Watch learned AI
-Now this repository has Double DQN result
+Now this repository has Double DQN result.
+![Double DQN gif](act2gif/rogue-gym.gif)
+
 ```
 cargo install --path ./devui --force
 cd data/learned/ddqn-minidungeon/
@@ -32,7 +34,7 @@ See [this page](./python/README.md)
 
 # License
 
-This project is licensed under either of
+This project itself is licensed under either of
 
  * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or
    http://www.apache.org/licenses/LICENSE-2.0)
@@ -40,3 +42,12 @@ This project is licensed under either of
    http://opensource.org/licenses/MIT)
 
 at your option.
+
+This project contains some third party products.
+
+The following third party products are included, and carry their
+own copyright notices and license terms:
+
+
+- [Ubuntu mono font](./data/fonts/UbuntuMono-R.ttf) is distributed
+under [UBUNTU FONT LICENCE](./data/fonts/LICENCE.txt)
