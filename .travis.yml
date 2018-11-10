@@ -34,3 +34,6 @@ install:
 
 script:
   - ./ci/test.sh
+
+notifications:
+  email: false
