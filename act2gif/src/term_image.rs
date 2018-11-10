@@ -31,7 +31,7 @@ impl TermImage {
             fontcolor,
             background: rgba,
             fontsize,
-            size: Coord::new(width / 2, height),
+            size: Coord::new(width, height),
         }
     }
     pub fn write_char<'a>(&mut self, pos: Coord, c: char, font: &mut FontHandle<'a>) {
@@ -50,6 +50,9 @@ impl TermImage {
         for c in s.chars() {
             self.write_char(current, c, font);
             current.x.0 += 1;
+            if current.x > self.size.x {
+                break;
+            }
         }
     }
     pub fn write_msg<'a>(&mut self, msg: &str, font: &mut FontHandle<'a>) {

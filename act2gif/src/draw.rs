@@ -6,6 +6,7 @@ use rogue_gym_core::{
     GameMsg, Reaction, RunTime,
 };
 use std::fs::File;
+use std::io::BufWriter;
 
 pub struct GifEncoder<'a> {
     config: GameConfig,
@@ -26,7 +27,8 @@ impl<'a> GifEncoder<'a> {
     pub fn exec(&mut self, inputs: Vec<InputCode>, filename: &str) -> GameResult<()> {
         let mut runtime = self.config.clone().build()?;
         let file = File::create(filename).into_chained(|| "Failed to crate file")?;
-        let mut encoder = Encoder::new(file);
+        let writer = BufWriter::new(file);
+        let mut encoder = Encoder::new(writer);
         for i in inputs {
             let reaction = runtime.react_to_input(i)?;
             for r in reaction {
@@ -51,9 +53,9 @@ impl<'a> GifEncoder<'a> {
                     self.message(format!("Hmm... there seems to be no downstair"))
                 }
                 GameMsg::GotItem { kind, num } => {
-                    self.message(format!("Now you have {} {:?}", num, kind));
+                    self.message(format!("You got {} {:?}", num, kind));
                 }
-                GameMsg::SecretDoor => self.message(format!("you found a secret door")),
+                GameMsg::SecretDoor => self.message(format!("You found a secret door")),
                 GameMsg::HitTo(s) => self.message(format!("You swings and hit {}", s)),
                 GameMsg::HitFrom(s) => self.message(format!("{} swings and hits you", s)),
                 GameMsg::MissTo(s) => self.message(format!("You swing and miss {}", s)),
