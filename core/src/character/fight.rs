@@ -6,6 +6,7 @@ pub fn player_attack(player: &Player, enemy: &mut Enemy, rng: &mut RngHandle) ->
     if !rng.parcent(hit_attack(player, enemy)) {
         return None;
     }
+
     None
 }
 

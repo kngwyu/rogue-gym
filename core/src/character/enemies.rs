@@ -146,16 +146,16 @@ pub struct Status {
 pub struct EnemyAttr(u16);
 
 impl EnemyAttr {
-    pub const MEAN: EnemyAttr = EnemyAttr(0b0000000001);
-    pub const FLYING: EnemyAttr = EnemyAttr(0b0000000010);
-    pub const REGENERATE: EnemyAttr = EnemyAttr(0b0000000100);
-    pub const GREEDY: EnemyAttr = EnemyAttr(0b0000001000);
-    pub const INVISIBLE: EnemyAttr = EnemyAttr(0b0000010000);
-    pub const RUSTS_ARMOR: EnemyAttr = EnemyAttr(0b0000100000);
-    pub const STEAL_GOLD: EnemyAttr = EnemyAttr(0b0001000000);
-    pub const REDUCE_STR: EnemyAttr = EnemyAttr(0b0010000000);
-    pub const FREEZES: EnemyAttr = EnemyAttr(0b0100000000);
-    pub const RANDOM: EnemyAttr = EnemyAttr(0b1000000000);
+    pub const MEAN: EnemyAttr = EnemyAttr(0b0_000_000_001);
+    pub const FLYING: EnemyAttr = EnemyAttr(0b0_000_000_010);
+    pub const REGENERATE: EnemyAttr = EnemyAttr(0b0_000_000_100);
+    pub const GREEDY: EnemyAttr = EnemyAttr(0b0_000_001_000);
+    pub const INVISIBLE: EnemyAttr = EnemyAttr(0b0_000_010_000);
+    pub const RUSTS_ARMOR: EnemyAttr = EnemyAttr(0b0_000_100_000);
+    pub const STEAL_GOLD: EnemyAttr = EnemyAttr(0b0_001_000_000);
+    pub const REDUCE_STR: EnemyAttr = EnemyAttr(0b0_010_000_000);
+    pub const FREEZES: EnemyAttr = EnemyAttr(0b0_100_000_000);
+    pub const RANDOM: EnemyAttr = EnemyAttr(0b1_000_000_000);
     pub const NONE: EnemyAttr = EnemyAttr(0);
     pub fn contains(self, r: Self) -> bool {
         (self.0 & r.0) != 0

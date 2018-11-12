@@ -2,10 +2,11 @@
 pub mod food;
 mod gold;
 pub mod itembox;
-mod weapon;
+pub mod weapon;
 
 use self::food::Food;
 use self::itembox::ItemBox;
+use self::weapon::{Weapon, WeaponHandler};
 use error::*;
 use rng::RngHandle;
 use std::cell::UnsafeCell;
@@ -18,10 +19,11 @@ use tile::{Drawable, Tile};
 #[derive(Clone, Debug, Default, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Config {
     gold: gold::Config,
+    weapon: weapon::Config,
 }
 
 /// item tag
-#[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub enum ItemKind {
     Armor,
     Food(Food),
@@ -30,7 +32,7 @@ pub enum ItemKind {
     Ring,
     Scroll,
     Wand,
-    Weapon,
+    Weapon(Weapon),
 }
 
 impl ItemKind {
@@ -58,7 +60,7 @@ impl Drawable for ItemKind {
             ItemKind::Ring => b'=',
             ItemKind::Scroll => b'?',
             ItemKind::Wand => b'/',
-            ItemKind::Weapon => b')',
+            ItemKind::Weapon(_) => b')',
         }
         .into()
     }
@@ -88,16 +90,43 @@ impl Drawable for ItemKind {
 )]
 pub struct ItemNum(pub u32);
 
-// TODO: add more attribute
-bitflags!{
-    #[derive(Serialize, Deserialize, Default)]
-    pub struct ItemAttr: u32 {
-        /// the item is cursed or not
-        const IS_CURSED = 0b00_000_001;
-        /// we can throw that item or not
-        const CAN_THROW = 0b00_000_010;
-        /// we can merge 2 sets of the item or not
-        const IS_MANY   = 0b00_000_100;
+#[derive(
+    BitAnd,
+    BitAndAssign,
+    BitOr,
+    BitOrAssign,
+    Clone,
+    Copy,
+    Debug,
+    Default,
+    Deserialize,
+    Eq,
+    PartialEq,
+    Serialize,
+)]
+pub struct ItemAttr(u8);
+
+impl ItemAttr {
+    /// the item is cursed or not
+    pub const IS_CURSED: ItemAttr = ItemAttr(0b00_000_001);
+    /// we can throw that item or not
+    pub const CAN_THROW: ItemAttr = ItemAttr(0b00_000_010);
+    /// we can merge 2 sets of the item or not
+    pub const IS_MANY: ItemAttr = ItemAttr(0b00_000_100);
+}
+
+impl ItemAttr {
+    pub const fn empty() -> Self {
+        ItemAttr(0u8)
+    }
+    pub const fn merge(self, other: Self) -> Self {
+        ItemAttr(self.0 | other.0)
+    }
+    pub fn contains(&self, other: Self) -> bool {
+        (self.0 & other.0) == other.0
+    }
+    pub fn intersects(&self, other: Self) -> bool {
+        (self.0 & other.0) != 0
     }
 }
 
@@ -115,9 +144,6 @@ impl ItemId {
     fn increment(&mut self) {
         self.0 += 1;
     }
-    fn noitem() -> Self {
-        ItemId(u32::max_value())
-    }
 }
 
 /// Unique item
@@ -129,6 +155,13 @@ pub struct Item {
 }
 
 impl Item {
+    fn weapon(weapon: Weapon, attr: ItemAttr) -> Self {
+        Item {
+            kind: ItemKind::Weapon(weapon),
+            how_many: 1.into(),
+            attr,
+        }
+    }
     pub fn new<N: Into<ItemNum>>(kind: ItemKind, num: N) -> Self {
         Item {
             kind,
@@ -208,16 +241,20 @@ pub struct ItemHandler {
     items: BTreeMap<ItemId, Weak<UnsafeCell<Item>>>,
     config: Config,
     rng: RngHandle,
+    weapon_handle: WeaponHandler,
     next_id: ItemId,
 }
 
 impl ItemHandler {
     /// generate new ItemHandler
-    pub fn new(config: Config, seed: u128) -> Self {
+    pub fn new(config_: Config, seed: u128) -> Self {
+        let config = config_.clone();
+        let Config { gold: _, weapon } = config_;
         ItemHandler {
             items: BTreeMap::new(),
             config,
             rng: RngHandle::from_seed(seed),
+            weapon_handle: weapon.build(),
             next_id: ItemId(0),
         }
     }
