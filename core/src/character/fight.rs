@@ -6,7 +6,6 @@ pub fn player_attack(player: &Player, enemy: &mut Enemy, rng: &mut RngHandle) ->
     if !rng.parcent(hit_attack(player, enemy)) {
         return None;
     }
-
     None
 }
 
@@ -19,7 +18,7 @@ pub fn enemy_attack(enemy: &Enemy, player: &mut Player, rng: &mut RngHandle) -> 
 
 fn hit_attack(player: &Player, enemy: &Enemy) -> Parcent {
     let st = player.strength().current;
-    let str_p = str_plus(st) + if enemy.is_running() { 0 } else { 4 };
+    let str_p = hit_prob_plus(st) + if enemy.is_running() { 0 } else { 4 };
     hit_sub(player.level(), enemy.defense(), str_p + 1)
 }
 
@@ -36,13 +35,24 @@ fn hit_sub(level: Level, armor: Defense, revision: i64) -> Parcent {
     Parcent::new((100 / HIT_RATE_MAX) * val as u32)
 }
 
-fn str_plus(strength: Strength) -> i64 {
-    const STR_PLUS: [i64; 32] = [
+fn hit_prob_plus(strength: Strength) -> i64 {
+    const DATA: [i64; 32] = [
         -7, -6, -5, -4, -3, -2, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2,
         2, 2, 2, 3,
     ];
-    if strength.0 <= 0 || strength.0 > STR_PLUS.len() as i64 {
+    if strength.0 <= 0 || strength.0 > DATA.len() as i64 {
         return 0;
     }
-    STR_PLUS[strength.0 as usize - 1]
+    DATA[strength.0 as usize - 1]
+}
+
+fn damage_plus(strength: Strength) -> i64 {
+    const DATA: [i64; 32] = [
+        -7, -6, -5, -4, -3, -2, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 3, 3, 4, 5, 5, 5, 5, 5, 5,
+        5, 5, 5, 6,
+    ];
+    if strength.0 <= 0 || strength.0 > DATA.len() as i64 {
+        return 0;
+    }
+    DATA[strength.0 as usize - 1]
 }
