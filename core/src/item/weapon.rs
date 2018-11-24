@@ -1,6 +1,7 @@
 use super::{Item, ItemAttr};
 use crate::character::{Dice, HitPoint};
 use crate::SmallStr;
+use std::ops::Range;
 
 /// Weapon configuration
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
@@ -107,12 +108,7 @@ pub struct Weapon {
     at_weild: Dice<HitPoint>,
     at_throw: Dice<HitPoint>,
     name: SmallStr,
-}
-
-macro_rules! hp_dice {
-    ($n: expr, $m: expr) => {
-        Dice::new($n, HitPoint($m))
-    };
+    init_num: Range<u32>,
 }
 
 pub struct WeaponHandler {
@@ -121,11 +117,17 @@ pub struct WeaponHandler {
     powerup_rate: u32,
 }
 
+impl WeaponHandler {
+    pub fn gen_weapon(&self) -> Item {}
+}
+
 struct StaticWeapon {
     at_weild: Dice<HitPoint>,
     at_throw: Dice<HitPoint>,
     name: &'static str,
     attr: ItemAttr,
+    min: u32,
+    max: u32,
 }
 
 impl StaticWeapon {
@@ -135,11 +137,14 @@ impl StaticWeapon {
             at_throw,
             name,
             attr,
+            min,
+            max,
         } = self;
         let weapon = Weapon {
             at_weild,
             at_throw,
             name: SmallStr::from_str(name),
+            init_num: min..max + 1,
         };
         Item::weapon(weapon, attr)
     }
@@ -147,59 +152,83 @@ impl StaticWeapon {
 
 const MANY_AND_THROW: ItemAttr = ItemAttr::IS_MANY.merge(ItemAttr::CAN_THROW);
 
+macro_rules! hp_dice {
+    ($n: expr, $m: expr) => {
+        Dice::new($n, HitPoint($m))
+    };
+}
+
 const ROGUE_WEAPONS: [StaticWeapon; 9] = [
     StaticWeapon {
         at_weild: hp_dice!(2, 4),
         at_throw: hp_dice!(1, 3),
         name: "mace",
         attr: ItemAttr::empty(),
+        min: 1,
+        max: 1,
     },
     StaticWeapon {
         at_weild: hp_dice!(3, 4),
         at_throw: hp_dice!(1, 2),
         name: "long-sword",
         attr: ItemAttr::empty(),
+        min: 1,
+        max: 1,
     },
     StaticWeapon {
         at_weild: hp_dice!(1, 1),
         at_throw: hp_dice!(1, 1),
         name: "bow",
         attr: ItemAttr::empty(),
+        min: 1,
+        max: 1,
     },
     StaticWeapon {
         at_weild: hp_dice!(1, 1),
         at_throw: hp_dice!(2, 3),
         name: "arrow",
         attr: MANY_AND_THROW,
+        min: 8,
+        max: 16,
     },
     StaticWeapon {
         at_weild: hp_dice!(1, 6),
         at_throw: hp_dice!(1, 4),
         name: "dagger",
         attr: ItemAttr::CAN_THROW,
+        min: 2,
+        max: 6,
     },
     StaticWeapon {
         at_weild: hp_dice!(4, 4),
         at_throw: hp_dice!(1, 2),
         name: "two-handed-sword",
         attr: ItemAttr::empty(),
+        min: 1,
+        max: 1,
     },
     StaticWeapon {
         at_weild: hp_dice!(1, 1),
         at_throw: hp_dice!(1, 3),
         name: "dart",
         attr: MANY_AND_THROW,
+        min: 8,
+        max: 16,
     },
     StaticWeapon {
         at_weild: hp_dice!(1, 2),
         at_throw: hp_dice!(2, 4),
         name: "shuriken",
         attr: MANY_AND_THROW,
+        min: 8,
+        max: 16,
     },
     StaticWeapon {
         at_weild: hp_dice!(2, 3),
         at_throw: hp_dice!(1, 6),
         name: "spear",
         attr: ItemAttr::IS_MANY,
+        min: 8,
+        max: 16,
     },
 ];
