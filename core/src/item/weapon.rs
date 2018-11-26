@@ -1,5 +1,6 @@
-use super::{Item, ItemAttr};
-use crate::character::{Dice, HitPoint};
+use super::{Item, ItemAttr, ItemHandler, ItemToken};
+use crate::character::{Dice, HitPoint, Level};
+use crate::rng::Parcent;
 use crate::SmallStr;
 use std::ops::Range;
 
@@ -11,10 +12,10 @@ pub struct Config {
     pub weapons: Weapons,
     #[serde(default = "default_cursed_rate")]
     #[serde(skip_serializing_if = "is_default_cursed_rate")]
-    pub cursed_rate: u32,
+    pub cursed_rate: Parcent,
     #[serde(default = "default_powerup_rate")]
     #[serde(skip_serializing_if = "is_default_powerup_rate")]
-    pub powerup_rate: u32,
+    pub powerup_rate: Parcent,
 }
 
 impl Default for Config {
@@ -42,19 +43,19 @@ impl Config {
     }
 }
 
-const fn default_cursed_rate() -> u32 {
-    10
+const fn default_cursed_rate() -> Parcent {
+    Parcent::new(10)
 }
 
-const fn default_powerup_rate() -> u32 {
-    5
+const fn default_powerup_rate() -> Parcent {
+    Parcent::new(5)
 }
 
-fn is_default_cursed_rate(u: &u32) -> bool {
+fn is_default_cursed_rate(u: &Parcent) -> bool {
     cfg!(not(test)) && *u == default_cursed_rate()
 }
 
-fn is_default_powerup_rate(u: &u32) -> bool {
+fn is_default_powerup_rate(u: &Parcent) -> bool {
     cfg!(not(test)) && *u == default_powerup_rate()
 }
 
@@ -77,7 +78,7 @@ impl Default for Weapons {
 }
 
 impl Weapons {
-    fn build(self) -> Vec<Item> {
+    fn build(self) -> Vec<(Weapon, ItemAttr)> {
         match self {
             Weapons::Builtin { typ, include } => match typ {
                 BuiltinKind::Rogue => include
@@ -90,10 +91,7 @@ impl Weapons {
                     })
                     .collect(),
             },
-            Weapons::Custom(v) => v
-                .into_iter()
-                .map(|(w, attr)| Item::weapon(w, attr))
-                .collect(),
+            Weapons::Custom(v) => v,
         }
     }
 }
@@ -109,16 +107,32 @@ pub struct Weapon {
     at_throw: Dice<HitPoint>,
     name: SmallStr,
     init_num: Range<u32>,
+    hit_plus: Level,
+    dam_plus: HitPoint,
 }
 
 pub struct WeaponHandler {
-    weapons: Vec<Item>,
-    cursed_rate: u32,
-    powerup_rate: u32,
+    weapons: Vec<(Weapon, ItemAttr)>,
+    cursed_rate: Parcent,
+    powerup_rate: Parcent,
 }
 
 impl WeaponHandler {
-    pub fn gen_weapon(&self) -> Item {}
+    pub fn get_weapon(&self, weapon_id: usize) -> Item {
+        let (w, a) = self.weapons[weapon_id].clone();
+        Item::weapon(w, a)
+    }
+    pub fn gen_weapon(&self, item_handle: &mut ItemHandler) -> ItemToken {
+        let idx = item_handle.rng.range(0..self.weapons.len());
+        let (mut weapon, mut attr) = self.weapons[idx].clone();
+        if item_handle.rng.parcent(self.cursed_rate) {
+            attr |= ItemAttr::IS_CURSED;
+            weapon.hit_plus -= Level(item_handle.rng.range(1..=4));
+        } else if item_handle.rng.parcent(self.powerup_rate) {
+            weapon.hit_plus += Level(item_handle.rng.range(1..=4));
+        }
+        item_handle.gen_item(|| Item::weapon(weapon, attr))
+    }
 }
 
 struct StaticWeapon {
@@ -131,7 +145,7 @@ struct StaticWeapon {
 }
 
 impl StaticWeapon {
-    fn into_weapon(&self) -> Item {
+    fn into_weapon(&self) -> (Weapon, ItemAttr) {
         let &StaticWeapon {
             at_weild,
             at_throw,
@@ -145,8 +159,10 @@ impl StaticWeapon {
             at_throw,
             name: SmallStr::from_str(name),
             init_num: min..max + 1,
+            hit_plus: Level(0),
+            dam_plus: HitPoint(0),
         };
-        Item::weapon(weapon, attr)
+        (weapon, attr)
     }
 }
 
