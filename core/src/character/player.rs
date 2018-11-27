@@ -1,7 +1,7 @@
 use super::{Defense, Exp, HitPoint, Level, Maxed, Strength};
 use dungeon::{Direction, DungeonPath};
 use error::GameResult;
-use item::{food::Food, itembox::ItemBox, Item, ItemHandler, ItemKind, ItemToken};
+use item::{food::Food, itembox::ItemBox, weapon, Item, ItemHandler, ItemKind, ItemToken};
 use std::fmt;
 use tile::{Drawable, Tile};
 
@@ -51,7 +51,6 @@ const fn default_max_items() -> usize {
     27
 }
 
-// TODO: more items
 #[inline]
 fn default_init_items() -> Vec<Item> {
     let money = Item::new(ItemKind::Gold, 0).many();

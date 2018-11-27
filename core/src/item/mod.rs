@@ -146,6 +146,10 @@ impl ItemId {
     }
 }
 
+pub(crate) enum PreInitItem {
+    Noinit(Item),
+}
+
 /// Unique item
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Item {

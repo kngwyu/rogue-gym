@@ -87,7 +87,7 @@ impl Weapons {
                         if i >= ROGUE_WEAPONS.len() {
                             return None;
                         }
-                        Some(ROGUE_WEAPONS[i].into_weapon())
+                        Some(ROGUE_WEAPONS[i].to_weapon())
                     })
                     .collect(),
             },
@@ -118,10 +118,6 @@ pub struct WeaponHandler {
 }
 
 impl WeaponHandler {
-    pub fn get_weapon(&self, weapon_id: usize) -> Item {
-        let (w, a) = self.weapons[weapon_id].clone();
-        Item::weapon(w, a)
-    }
     pub fn gen_weapon(&self, item_handle: &mut ItemHandler) -> ItemToken {
         let idx = item_handle.rng.range(0..self.weapons.len());
         let (mut weapon, mut attr) = self.weapons[idx].clone();
@@ -135,6 +131,10 @@ impl WeaponHandler {
     }
 }
 
+pub fn rogue_init_weapons(vec: &mut Vec<Item>) {
+    vec.push(ROGUE_WEAPONS[0].to_item());
+}
+
 struct StaticWeapon {
     at_weild: Dice<HitPoint>,
     at_throw: Dice<HitPoint>,
@@ -145,7 +145,7 @@ struct StaticWeapon {
 }
 
 impl StaticWeapon {
-    fn into_weapon(&self) -> (Weapon, ItemAttr) {
+    fn to_weapon(&self) -> (Weapon, ItemAttr) {
         let &StaticWeapon {
             at_weild,
             at_throw,
@@ -163,6 +163,10 @@ impl StaticWeapon {
             dam_plus: HitPoint(0),
         };
         (weapon, attr)
+    }
+    fn to_item(&self) -> Item {
+        let (w, a) = self.to_weapon();
+        Item::weapon(w, a)
     }
 }
 
