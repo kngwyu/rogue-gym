@@ -6,7 +6,7 @@ pub mod weapon;
 
 use self::food::Food;
 use self::itembox::ItemBox;
-use self::weapon::{Weapon, WeaponHandler};
+use self::weapon::{Weapon, WeaponHandler, WeaponStatus};
 use error::*;
 use rng::RngHandle;
 use std::cell::UnsafeCell;
@@ -128,13 +128,9 @@ impl ItemAttr {
     pub fn intersects(&self, other: Self) -> bool {
         (self.0 & other.0) != 0
     }
-}
-
-pub trait ItemStatus {
-    fn value(&self) -> ItemNum {
-        ItemNum::default()
+    pub fn or(&mut self, other: ItemAttr) {
+        self.0 |= other.0;
     }
-    fn prob(&self) {}
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
@@ -146,8 +142,20 @@ impl ItemId {
     }
 }
 
-pub(crate) enum PreInitItem {
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+pub enum InitItem {
     Noinit(Item),
+    Weapon(WeaponStatus),
+}
+
+impl InitItem {
+    pub(crate) fn equip(self, handle: &mut ItemHandler) -> ItemToken {
+        let item = match self {
+            InitItem::Noinit(item) => item,
+            InitItem::Weapon(stat) => stat.into_item(&mut handle.rng, |_, _, _| ()),
+        };
+        handle.gen_item(item)
+    }
 }
 
 /// Unique item
@@ -159,10 +167,10 @@ pub struct Item {
 }
 
 impl Item {
-    fn weapon(weapon: Weapon, attr: ItemAttr) -> Self {
+    fn weapon(weapon: Weapon, attr: ItemAttr, num: impl Into<ItemNum>) -> Self {
         Item {
             kind: ItemKind::Weapon(weapon),
-            how_many: 1.into(),
+            how_many: num.into(),
             attr,
         }
     }
@@ -263,11 +271,7 @@ impl ItemHandler {
         }
     }
     /// generate and register an item
-    fn gen_item<F>(&mut self, itemgen: F) -> ItemToken
-    where
-        F: FnOnce() -> Item,
-    {
-        let item = itemgen();
+    fn gen_item(&mut self, item: Item) -> ItemToken {
         let id = self.next_id;
         debug!("[gen_item] now new item {:?} is generated", item);
         // register the generated item
@@ -279,14 +283,14 @@ impl ItemHandler {
     /// Sets up gold for 1 room
     pub fn setup_gold(&mut self, level: u32) -> Option<ItemToken> {
         let num = self.config.gold.gen(&mut self.rng, level)?;
-        Some(self.gen_item(|| ItemKind::Gold.numbered(num).many()))
+        Some(self.gen_item(ItemKind::Gold.numbered(num).many()))
     }
     /// Sets up player items
-    pub fn init_player_items(&mut self, pack: &mut ItemBox, items: &[Item]) -> GameResult<()> {
+    pub fn init_player_items(&mut self, pack: &mut ItemBox, items: &[InitItem]) -> GameResult<()> {
         items
             .iter()
             .try_for_each(|item| {
-                let item = self.gen_item(|| item.clone());
+                let item = item.clone().equip(self);
                 if pack.add(item) {
                     Ok(())
                 } else {

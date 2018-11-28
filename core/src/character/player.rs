@@ -1,9 +1,12 @@
 use super::{Defense, Exp, HitPoint, Level, Maxed, Strength};
 use dungeon::{Direction, DungeonPath};
 use error::GameResult;
-use item::{food::Food, itembox::ItemBox, weapon, Item, ItemHandler, ItemKind, ItemToken};
+use item::{
+    food::Food, itembox::ItemBox, weapon, InitItem, Item, ItemHandler, ItemKind, ItemToken,
+};
 use std::fmt;
 use tile::{Drawable, Tile};
+use tuple_map::TupleMap2;
 
 /// Player configuration
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
@@ -19,7 +22,7 @@ pub struct Config {
     #[serde(default = "default_max_items")]
     pub max_items: usize,
     #[serde(default = "default_init_items")]
-    pub init_items: Vec<Item>,
+    pub init_items: Vec<InitItem>,
 }
 
 impl Default for Config {
@@ -52,10 +55,12 @@ const fn default_max_items() -> usize {
 }
 
 #[inline]
-fn default_init_items() -> Vec<Item> {
+fn default_init_items() -> Vec<InitItem> {
     let money = Item::new(ItemKind::Gold, 0).many();
     let food = Item::new(ItemKind::Food(Food::Ration), 1).many();
-    vec![money, food]
+    let mut res = (money, food).map(|x| InitItem::Noinit(x)).into_vec();
+    weapon::rogue_init_weapons(&mut res);
+    res
 }
 
 impl Config {
