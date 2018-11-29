@@ -132,6 +132,11 @@ impl Coord {
     pub fn is_lefter(self, other: Coord) -> bool {
         self.x < other.x
     }
+    #[cfg(feature = "termion")]
+    pub fn into_cursor(self) -> termion::cursor::Goto {
+        let (x, y) = (self.x.0, self.y.0).map(|i| i as u16).add((1, 1));
+        termion::cursor::Goto(x, y)
+    }
 }
 
 impl FromTuple2<i32> for Coord {
@@ -155,13 +160,6 @@ impl Into<(i32, i32)> for Coord {
 impl From<(i32, i32)> for Coord {
     fn from(t: (i32, i32)) -> Coord {
         Coord::new(t.0, t.1)
-    }
-}
-
-#[cfg(feature = "termion")]
-impl Into<(u16, u16)> for Coord {
-    fn into(self) -> (u16, u16) {
-        (self.x.0, self.y.0).map(|i| i as u16).add((1, 1))
     }
 }
 

@@ -6,6 +6,7 @@ extern crate fern;
 #[macro_use]
 extern crate log;
 extern crate rogue_gym_core;
+extern crate rogue_gym_uilib;
 extern crate termion;
 extern crate tuple_map;
 
@@ -13,29 +14,30 @@ pub mod error;
 #[macro_use]
 pub mod screen;
 use error::*;
-use rogue_gym_core::dungeon::Positioned;
 use rogue_gym_core::input::InputCode;
-use rogue_gym_core::ui::{MordalKind, UiState};
-use rogue_gym_core::{GameConfig, GameMsg, Reaction, RunTime};
-use screen::{RawTerm, Screen};
-use std::collections::VecDeque;
-use std::io::{self, Write};
+use rogue_gym_core::{GameConfig, RunTime};
+use rogue_gym_uilib::{process_reaction, Screen, Transition};
+use screen::{RawTerm, TermScreen};
+use std::io;
 use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 use termion::event::Key;
 use termion::input::TermRead;
 
-fn setup_screen(config: GameConfig, is_default: bool) -> GameResult<(Screen<RawTerm>, RunTime)> {
-    let mut screen = Screen::from_raw(config.width, config.height)?;
+fn setup_screen(
+    config: GameConfig,
+    is_default: bool,
+) -> GameResult<(TermScreen<RawTerm>, RunTime)> {
+    let mut screen = TermScreen::from_raw(config.width, config.height)?;
     screen.welcome()?;
     if is_default {
         screen.default_config()?;
     }
     let mut runtime = config.build()?;
     thread::sleep(Duration::from_secs(1));
-    draw_dungeon(&mut screen, &mut runtime)?;
-    screen.status(runtime.player_status())?;
+    screen.dungeon(&mut runtime)?;
+    screen.status(&runtime.player_status())?;
     Ok((screen, runtime))
 }
 
@@ -52,17 +54,16 @@ pub fn play_game(config: GameConfig, is_default: bool) -> GameResult<()> {
             Ok(r) => r,
             Err(e) => {
                 // STUB
-                notify!(screen, "{}", e)?;
+                screen.message(format!("{}", e))?;
                 continue;
             }
         };
         for reaction in res {
             let result = process_reaction(&mut screen, &mut runtime, reaction)
                 .chain_err(|| "in play_game")?;
-            if let Some(transition) = result {
-                match transition {
-                    Transition::Exit => return Ok(()),
-                }
+            match result {
+                Transition::Exit => return Ok(()),
+                Transition::None => {}
             }
         }
     }
@@ -138,92 +139,19 @@ fn show_replay_(
         let res = match res {
             Ok(r) => r,
             Err(e) => {
-                notify!(screen, "{}", e)?;
+                screen.message(format!("{}", e))?;
                 continue;
             }
         };
-        notify!(screen, "{} turns left", replay.len())?;
+        screen.message(format!("{} turns left", replay.len()))?;
         for reaction in res {
             let result = process_reaction(&mut screen, &mut runtime, reaction)
                 .chain_err(|| "in show_replay")?;
-            if let Some(transition) = result {
-                match transition {
-                    Transition::Exit => return Ok(()),
-                }
+            match result {
+                Transition::Exit => return Ok(()),
+                Transition::None => {}
             }
         }
     }
     screen.clear_screen()
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Transition {
-    Exit,
-}
-
-pub fn process_reaction<W: Write>(
-    screen: &mut Screen<W>,
-    runtime: &mut RunTime,
-    reaction: Reaction,
-) -> GameResult<Option<Transition>> {
-    match reaction {
-        Reaction::Notify(msg) => {
-            match msg {
-                // GameMsg::CantMove(d) => notify!(screen, "your {} way is blocked", d),
-                GameMsg::CantMove(_) => Ok(()),
-                // TODO: Display for ItemKind
-                GameMsg::CantGetItem(kind) => notify!(screen, "You walk onto {:?}", kind),
-                GameMsg::NoDownStair => notify!(screen, "Hmm... there seems to be no downstair"),
-                GameMsg::GotItem { kind, num } => {
-                    notify!(screen, "Now you have {} {:?}", num, kind)
-                }
-                GameMsg::SecretDoor => notify!(screen, "you found a secret door"),
-                GameMsg::HitTo(s) => notify!(screen, "You swings and hit {}", s),
-                GameMsg::HitFrom(s) => notify!(screen, "{} swings and hits you", s),
-                GameMsg::MissTo(s) => notify!(screen, "You swing and miss {}", s),
-                GameMsg::MissFrom(s) => notify!(screen, "{} swings and misses you", s),
-                GameMsg::Quit => {
-                    notify!(screen, "Thank you for playing!")?;
-                    return Ok(Some(Transition::Exit));
-                }
-            }
-            .chain_err(|| "in devui::process_reaction")?;
-            Ok(None)
-        }
-        Reaction::Redraw => {
-            draw_dungeon(screen, runtime)
-                .chain_err(|| "in process_action attempt to draw dungeon")?;
-            Ok(None)
-        }
-        Reaction::StatusUpdated => {
-            let status = runtime.player_status();
-            screen.status(status)?;
-            Ok(None)
-        }
-        Reaction::UiTransition(ui_state) => {
-            if let UiState::Mordal(kind) = ui_state {
-                match kind {
-                    MordalKind::Quit => notify!(screen, "You really quit game?(y/n)").map(|_| None),
-                    MordalKind::Inventory => unimplemented!(),
-                }
-            } else {
-                Ok(None)
-            }
-        }
-    }
-}
-
-pub fn draw_dungeon<W: Write>(screen: &mut Screen<W>, runtime: &mut RunTime) -> GameResult<()> {
-    screen.clear_dungeon()?;
-    let mut player_pos = None;
-    runtime.draw_screen(|Positioned(cd, tile)| {
-        if tile.to_byte() == b'@' {
-            player_pos = Some(cd);
-        }
-        screen.draw_tile(cd, tile)
-    })?;
-    if let Some(pos) = player_pos {
-        screen.cursor(pos)?;
-    }
-    screen.flush()
 }

@@ -1,5 +1,10 @@
 use error::*;
-use rogue_gym_core::{character::player, dungeon::Coord, tile::Tile};
+use rogue_gym_core::{
+    character::player,
+    dungeon::{Coord, X, Y},
+    tile::Tile,
+};
+use rogue_gym_uilib::Screen;
 use std::io::{self, Stdout, Write};
 use termion::raw::{IntoRawMode, RawTerminal};
 use termion::{clear, cursor, terminal_size};
@@ -8,15 +13,15 @@ use tuple_map::TupleMap2;
 pub type RawTerm = RawTerminal<Stdout>;
 
 /// wrapper of stdout as rogue screen
-pub struct Screen<T> {
+pub struct TermScreen<T> {
     /// stdout
-    pub term: T,
-    pub has_notification: bool,
+    term: T,
+    has_notification: bool,
     width: u16,
     height: u16,
 }
 
-impl Screen<RawTerminal<Stdout>> {
+impl TermScreen<RawTerm> {
     /// raw terminal screen(for cli)
     pub fn from_raw(w: i32, h: i32) -> GameResult<Self> {
         let stdout = io::stdout();
@@ -34,7 +39,7 @@ impl Screen<RawTerminal<Stdout>> {
             return Err(ErrorID::InvalidScreenSize(width, height)
                 .into_with(|| format!("Screen height must be larger than {} characters", h)));
         }
-        Ok(Screen {
+        Ok(TermScreen {
             term,
             has_notification: false,
             width: w,
@@ -43,7 +48,7 @@ impl Screen<RawTerminal<Stdout>> {
     }
 }
 
-impl Screen<Stdout> {
+impl TermScreen<Stdout> {
     /// raw terminal screen(for python API)
     pub fn from_stdout(w: i32, h: i32) -> GameResult<Self> {
         let stdout = io::stdout();
@@ -58,7 +63,7 @@ impl Screen<Stdout> {
             return Err(ErrorID::InvalidScreenSize(width, height)
                 .into_with(|| format!("Screen height must be larger than {} characters", h)));
         }
-        Ok(Screen {
+        Ok(TermScreen {
             term: stdout,
             has_notification: false,
             width,
@@ -67,20 +72,19 @@ impl Screen<Stdout> {
     }
 }
 
-impl<T: Write> Screen<T> {
-    pub fn clear_dungeon(&mut self) -> GameResult<()> {
-        (2..self.height)
-            .try_for_each(|row| write!(self.term, "{}{}", cursor::Goto(1, row), clear::CurrentLine))
-            .into_chained(|| "in Screen::clear")
+impl<T: Write> Screen for TermScreen<T> {
+    fn width(&self) -> X {
+        X(i32::from(self.width))
     }
-
-    pub fn clear_screen(&mut self) -> GameResult<()> {
-        (1..self.height)
-            .try_for_each(|row| write!(self.term, "{}{}", cursor::Goto(1, row), clear::CurrentLine))
-            .into_chained(|| "in Screen::clear")
+    fn height(&self) -> Y {
+        Y(i32::from(self.height))
     }
-
-    pub fn clear_notification(&mut self) -> GameResult<()> {
+    fn clear_line(&mut self, row: Y) -> GameResult<()> {
+        let row = row.0 as u16;
+        write!(self.term, "{}{}", cursor::Goto(1, row), clear::CurrentLine)
+            .into_chained(|| "in TermScreen::clear_line")
+    }
+    fn clear_notification(&mut self) -> GameResult<()> {
         if self.has_notification {
             self.has_notification = false;
             write!(
@@ -92,23 +96,31 @@ impl<T: Write> Screen<T> {
         } else {
             Ok(())
         }
-        .into_chained(|| "in Screen::clean_notification")
+        .into_chained(|| "in TermScreen::clear_notification")
     }
+    fn cursor(&mut self, coord: Coord) -> GameResult<()> {
+        write!(self.term, "{}", coord.into_cursor()).into_chained(|| "in TermScreen::cursor")
+    }
+    fn flush(&mut self) -> GameResult<()> {
+        self.term.flush().into_chained(|| "in TermScreen::flush")
+    }
+    fn write_char(&mut self, cd: Coord, c: char) -> GameResult<()> {
+        write!(self.term, "{}{}", cd.into_cursor(), c).into_chained(|| "in TermScreen::write_char")
+    }
+    fn write_str<S: AsRef<str>>(&mut self, start: Coord, s: S) -> GameResult<()> {
+        write!(
+            self.term,
+            "{}{}{}",
+            start.into_cursor(),
+            clear::CurrentLine,
+            s.as_ref()
+        )
+        .into_chained(|| "in TermScreen::write_str")?;
+        self.flush().chain_err(|| "in TermScreen::write_str")
+    }
+}
 
-    pub fn cursor<P: Into<(u16, u16)>>(&mut self, cd: P) -> GameResult<()> {
-        let (col, row) = cd.into();
-        write!(self.term, "{}", cursor::Goto(col, row)).into_chained(|| "in Screen::draw_tile")
-    }
-    pub fn draw_tile(&mut self, cd: Coord, tile: Tile) -> GameResult<()> {
-        let (col, row) = cd.into();
-        write!(self.term, "{}{}", cursor::Goto(col, row), tile.to_char())
-            .into_chained(|| "in Screen::draw_tile")
-    }
-
-    pub fn flush(&mut self) -> GameResult<()> {
-        self.term.flush().into_chained(|| "Screen::flush")
-    }
-
+impl<T: Write> TermScreen<T> {
     pub fn welcome(&mut self) -> GameResult<()> {
         write!(
             self.term,
@@ -120,7 +132,6 @@ impl<T: Write> Screen<T> {
         .into_chained(|| "in Screen::welcome")?;
         self.flush().chain_err(|| "in Screen::welcome")
     }
-
     pub fn default_config(&mut self) -> GameResult<()> {
         write!(
             self.term,
@@ -130,43 +141,4 @@ impl<T: Write> Screen<T> {
         .into_chained(|| "in Screen::default_config")?;
         self.flush().chain_err(|| "in Screen::default_config")
     }
-
-    pub fn status(&mut self, status: player::Status) -> GameResult<()> {
-        write!(
-            self.term,
-            "{}{}{}",
-            cursor::Goto(1, self.height),
-            clear::CurrentLine,
-            status,
-        )
-        .into_chained(|| "in Screen::status")?;
-        self.flush().chain_err(|| "in Screen::status")
-    }
-}
-
-macro_rules! notify {
-    ($screen: ident, $msg: expr) => {{
-        $screen.has_notification = true;
-        if let Err(e) = write!($screen.term, "{}{}", ::termion::cursor::Goto(1, 1), ::termion::clear::CurrentLine) {
-            Err(e).into_chained(||"in notify!")
-        } else {
-            if let Err(e) = write!($screen.term, $msg) {
-                Err(e).into_chained(||"in notify!")
-            } else {
-                $screen.flush()
-            }
-        }
-    }};
-    ($screen: ident, $fmt: expr, $($arg: tt)*) => {{
-        $screen.has_notification = true;
-        if let Err(e) = write!($screen.term, "{}{}", ::termion::cursor::Goto(1, 1), ::termion::clear::CurrentLine) {
-            Err(e).into_chained(||"in notify!")
-        } else {
-            if let Err(e) = write!($screen.term, $fmt, $($arg)*) {
-                Err(e).into_chained(||"in notify!")
-            } else {
-                $screen.flush()
-            }
-        }
-    }};
 }

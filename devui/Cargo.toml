@@ -25,3 +25,8 @@ chrono = "0.4.2"
 features = ["termion"]
 path = "../core/"
 version = "0.1.0"
+
+[dependencies.rogue-gym-uilib]
+path = "../uilib/"
+version = "0.1.0"
+
