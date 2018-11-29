@@ -204,6 +204,7 @@ pub fn process_reaction<W: Write>(
             if let UiState::Mordal(kind) = ui_state {
                 match kind {
                     MordalKind::Quit => notify!(screen, "You really quit game?(y/n)").map(|_| None),
+                    MordalKind::Inventory => unimplemented!(),
                 }
             } else {
                 Ok(None)

@@ -2,6 +2,7 @@ use super::{InitItem, Item, ItemAttr, ItemHandler, ItemToken};
 use crate::character::{Dice, HitPoint, Level};
 use crate::rng::{Parcent, RngHandle};
 use crate::SmallStr;
+use std::fmt;
 use std::ops::Range;
 use tuple_map::TupleMap3;
 
@@ -109,6 +110,23 @@ pub struct Weapon {
     name: SmallStr,
     hit_plus: Level,
     dam_plus: HitPoint,
+}
+
+fn display_plus_types(i: i64, f: &mut fmt::Formatter) -> fmt::Result {
+    if i < 0 {
+        write!(f, "-{}", -i)
+    } else {
+        write!(f, "+{}", i)
+    }
+}
+
+impl fmt::Display for Weapon {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        display_plus_types(self.hit_plus.0, f)?;
+        write!(f, ",")?;
+        display_plus_types(self.dam_plus.0, f)?;
+        write!(f, "{}", self.name)
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]

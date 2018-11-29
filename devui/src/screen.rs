@@ -144,7 +144,6 @@ impl<T: Write> Screen<T> {
     }
 }
 
-#[macro_export]
 macro_rules! notify {
     ($screen: ident, $msg: expr) => {{
         $screen.has_notification = true;

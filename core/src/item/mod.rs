@@ -11,6 +11,7 @@ use error::*;
 use rng::RngHandle;
 use std::cell::UnsafeCell;
 use std::collections::BTreeMap;
+use std::fmt;
 use std::ops::{Deref, DerefMut};
 use std::rc::{Rc, Weak};
 use tile::{Drawable, Tile};
@@ -200,6 +201,28 @@ impl Item {
 impl Drawable for Item {
     fn tile(&self) -> Tile {
         self.kind.tile()
+    }
+}
+
+impl fmt::Display for Item {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if self.is_many() {
+            if self.how_many == ItemNum(1) {
+                write!(f, "A ")?;
+            } else {
+                write!(f, "{} ", self.how_many.0)?;
+            }
+        }
+        match &self.kind {
+            ItemKind::Armor => unimplemented!(),
+            ItemKind::Food(food) => write!(f, "{}", food),
+            ItemKind::Gold => write!(f, "golds"),
+            ItemKind::Potion => write!(f, "potion"), // STUB
+            ItemKind::Ring => write!(f, "ring"),     // STUB
+            ItemKind::Scroll => write!(f, "scroll"), // STUB
+            ItemKind::Wand => write!(f, "wand"),     // STUB
+            ItemKind::Weapon(w) => write!(f, "{}", w),
+        }
     }
 }
 

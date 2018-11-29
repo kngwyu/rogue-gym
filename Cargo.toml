@@ -5,4 +5,4 @@ opt-level = 0
 lto = true
 
 [workspace]
-members = ["act2gif", "core", "devui", "python"]
+members = ["act2gif", "core", "devui", "python", "uilib"]

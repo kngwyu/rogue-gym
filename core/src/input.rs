@@ -62,6 +62,7 @@ impl Default for KeyMap {
             (Key::Esc, InputCode::Sys(System::Cancel)),
             (Key::Char('S'), InputCode::Sys(System::Save)),
             (Key::Char('Q'), InputCode::Sys(System::Quit)),
+            (Key::Char(' '), InputCode::Sys(System::Continue)),
         ];
         let inner: HashMap<_, _> = map.into_iter().collect();
         KeyMap { inner }
@@ -163,7 +164,9 @@ pub enum InputCode {
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, Hash, Eq, PartialEq)]
 pub enum System {
     Cancel,
+    Continue,
     Enter,
+    Inventory,
     No,
     Save,
     Quit,

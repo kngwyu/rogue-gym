@@ -6,6 +6,7 @@ pub use enemies::{Enemy, EnemyHandler};
 use num_traits::PrimInt;
 use rand::distributions::uniform::SampleUniform;
 use rng::RngHandle;
+use std::fmt;
 
 /// values compatible with Hit Point
 #[derive(

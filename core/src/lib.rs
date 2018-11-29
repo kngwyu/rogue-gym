@@ -234,14 +234,19 @@ pub struct RunTime {
 
 impl RunTime {
     fn check_interrupting(&mut self, input: input::System) -> GameResult<Vec<Reaction>> {
-        use input::System::*;
+        use input::System;
         match input {
-            Quit => {
+            System::Quit => {
                 let ui = UiState::Mordal(MordalKind::Quit);
                 self.ui = ui.clone();
                 Ok(vec![Reaction::UiTransition(ui)])
             }
-            Save => Err(ErrorId::Unimplemented.into_with(|| {
+            System::Inventory => {
+                let ui = UiState::Mordal(MordalKind::Inventory);
+                self.ui = ui.clone();
+                Ok(vec![Reaction::UiTransition(ui)])
+            }
+            System::Save => Err(ErrorId::Unimplemented.into_with(|| {
                 "[rogue_gym_core::RunTime::check_interuppting] save command is unimplemented"
             })),
             _ => Err(ErrorId::IgnoredInput(InputCode::Sys(input))
