@@ -21,8 +21,8 @@ impl ItemBox {
             Some(id) => id,
             None => return false,
         };
-        self.empty_chars.insert(ch);
-        self.items.insert(ch, item);
+        debug!("ItemBox::add {}", ch);
+        self.insert(ch, item);
         true
     }
     pub fn entry(&mut self, token: &ItemToken) -> Option<Entry> {
@@ -38,6 +38,9 @@ impl ItemBox {
     }
     pub fn tokens(&self) -> impl Iterator<Item = &ItemToken> {
         self.items.values()
+    }
+    pub fn items(&self) -> impl Iterator<Item = &Item> {
+        self.tokens().map(|t| t.get())
     }
     fn check_merge(&self, got_item: &Item) -> Option<usize> {
         // check if we can merge item or not

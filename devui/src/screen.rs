@@ -1,9 +1,5 @@
 use error::*;
-use rogue_gym_core::{
-    character::player,
-    dungeon::{Coord, X, Y},
-    tile::Tile,
-};
+use rogue_gym_core::dungeon::{Coord, X, Y};
 use rogue_gym_uilib::Screen;
 use std::io::{self, Stdout, Write};
 use termion::raw::{IntoRawMode, RawTerminal};

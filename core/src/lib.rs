@@ -356,6 +356,10 @@ impl RunTime {
     pub fn history(&self, player_stat: &player::Status) -> Option<Array2<bool>> {
         self.dungeon.get_history(&player_stat)
     }
+    pub fn itembox(&self) -> &item::ItemBox {
+        debug!("itembox {:?}", self.player.itembox);
+        &self.player.itembox
+    }
 }
 
 pub fn json_to_inputs(json: &str) -> GameResult<Vec<InputCode>> {

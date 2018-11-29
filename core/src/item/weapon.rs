@@ -125,7 +125,7 @@ impl fmt::Display for Weapon {
         display_plus_types(self.hit_plus.0, f)?;
         write!(f, ",")?;
         display_plus_types(self.dam_plus.0, f)?;
-        write!(f, "{}", self.name)
+        write!(f, " {}", self.name)
     }
 }
 

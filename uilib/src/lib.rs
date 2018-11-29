@@ -57,6 +57,16 @@ pub trait Screen {
         }
         self.flush()
     }
+    fn inventory(&mut self, runtime: &mut RunTime) -> GameResult<()> {
+        for (i, item) in runtime.itembox().items().enumerate() {
+            let num = (b'a' + i as u8) as char;
+            self.write_str(Coord::new(0, i as i32), format!("{}) {}", num, item))?;
+        }
+        self.write_str(
+            Coord::new(0, self.height() - 1.into()),
+            "--Press space to continue--",
+        )
+    }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -89,16 +99,17 @@ pub fn process_reaction<S: Screen>(
             }
         },
         Reaction::Redraw => screen.dungeon(runtime),
-        Reaction::StatusUpdated => {
-            let status = runtime.player_status();
-            screen.status(&status)
-        }
+        Reaction::StatusUpdated => screen.status(&runtime.player_status()),
         Reaction::UiTransition(ui_state) => match ui_state {
             UiState::Mordal(kind) => match kind {
                 MordalKind::Quit => screen.message(format!("You really quit game?(y/n)")),
-                MordalKind::Inventory => unimplemented!(),
+                MordalKind::Inventory => screen.inventory(runtime),
             },
-            UiState::Dungeon => screen.dungeon(runtime),
+            UiState::Dungeon => {
+                screen.dungeon(runtime)?;
+                screen.clear_line(0.into())?;
+                screen.status(&runtime.player_status())
+            }
         },
     }?;
     Ok(Transition::None)

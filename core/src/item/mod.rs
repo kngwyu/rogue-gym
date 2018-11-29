@@ -5,7 +5,7 @@ pub mod itembox;
 pub mod weapon;
 
 use self::food::Food;
-use self::itembox::ItemBox;
+pub use self::itembox::ItemBox;
 use self::weapon::{Weapon, WeaponHandler, WeaponStatus};
 use error::*;
 use rng::RngHandle;
@@ -206,12 +206,10 @@ impl Drawable for Item {
 
 impl fmt::Display for Item {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if self.is_many() {
-            if self.how_many == ItemNum(1) {
-                write!(f, "A ")?;
-            } else {
-                write!(f, "{} ", self.how_many.0)?;
-            }
+        if self.how_many == ItemNum(1) {
+            write!(f, "A ")?;
+        } else {
+            write!(f, "{} ", self.how_many.0)?;
         }
         match &self.kind {
             ItemKind::Armor => unimplemented!(),
@@ -310,17 +308,14 @@ impl ItemHandler {
     }
     /// Sets up player items
     pub fn init_player_items(&mut self, pack: &mut ItemBox, items: &[InitItem]) -> GameResult<()> {
-        items
-            .iter()
-            .try_for_each(|item| {
-                let item = item.clone().equip(self);
-                if pack.add(item) {
-                    Ok(())
-                } else {
-                    Err(ErrorId::InvalidSetting
-                        .into_with(|| format!("You can't add {} items", items.len())))
-                }
-            })
-            .chain_err(|| "in ItemHandler::init_player_items")
+        items.iter().try_for_each(|item| {
+            let item = item.clone().equip(self);
+            if pack.add(item) {
+                Ok(())
+            } else {
+                Err(ErrorId::InvalidSetting
+                    .into_with(|| format!("[init_player_items] Failed to add item")))
+            }
+        })
     }
 }

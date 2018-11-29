@@ -1,9 +1,7 @@
 use super::{Defense, Exp, HitPoint, Level, Maxed, Strength};
 use dungeon::{Direction, DungeonPath};
 use error::GameResult;
-use item::{
-    food::Food, itembox::ItemBox, weapon, InitItem, Item, ItemHandler, ItemKind, ItemToken,
-};
+use item::{food::Food, itembox::ItemBox, weapon, InitItem, Item, ItemHandler, ItemKind};
 use std::fmt;
 use tile::{Drawable, Tile};
 use tuple_map::TupleMap2;
@@ -71,7 +69,6 @@ impl Config {
             status,
             itembox: ItemBox::with_capacity(self.max_items),
             config: self,
-            armer: None,
         }
     }
 }
@@ -83,7 +80,6 @@ pub struct Player {
     pub pos: DungeonPath,
     /// item box
     pub itembox: ItemBox,
-    armer: Option<ItemToken>,
     /// player status(for drawing)
     status: StatusInner,
     /// configuration
