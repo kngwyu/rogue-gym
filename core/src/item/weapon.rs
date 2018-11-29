@@ -112,6 +112,12 @@ pub struct Weapon {
     dam_plus: HitPoint,
 }
 
+impl Weapon {
+    pub fn name(&self) -> &SmallStr {
+        &self.name
+    }
+}
+
 fn display_plus_types(i: i64, f: &mut fmt::Formatter) -> fmt::Result {
     if i < 0 {
         write!(f, "-{}", -i)
@@ -136,9 +142,16 @@ pub struct WeaponStatus {
     name: SmallStr,
     init_num: Range<u32>,
     attr: ItemAttr,
+    is_initial: bool,
 }
 
 impl WeaponStatus {
+    pub(crate) fn name(&self) -> SmallStr {
+        self.name.clone()
+    }
+    pub(crate) fn is_initial(&self) -> bool {
+        self.is_initial
+    }
     pub(super) fn into_item(
         self,
         rng: &mut RngHandle,
@@ -150,6 +163,7 @@ impl WeaponStatus {
             name,
             mut attr,
             init_num,
+            ..
         } = self;
         let num = rng.range(init_num);
         let mut weapon = Weapon {
@@ -197,6 +211,7 @@ struct StaticWeapon {
     attr: ItemAttr,
     min: u32,
     max: u32,
+    is_initial: bool,
 }
 
 impl StaticWeapon {
@@ -208,6 +223,7 @@ impl StaticWeapon {
             attr,
             min,
             max,
+            is_initial,
         } = self;
         WeaponStatus {
             at_weild,
@@ -215,6 +231,7 @@ impl StaticWeapon {
             name: SmallStr::from_str(name),
             init_num: min..max + 1,
             attr,
+            is_initial,
         }
     }
 }
@@ -235,6 +252,7 @@ const ROGUE_WEAPONS: [StaticWeapon; 9] = [
         attr: ItemAttr::empty(),
         min: 1,
         max: 1,
+        is_initial: true,
     },
     StaticWeapon {
         at_weild: hp_dice!(3, 4),
@@ -243,6 +261,7 @@ const ROGUE_WEAPONS: [StaticWeapon; 9] = [
         attr: ItemAttr::empty(),
         min: 1,
         max: 1,
+        is_initial: false,
     },
     StaticWeapon {
         at_weild: hp_dice!(1, 1),
@@ -251,6 +270,7 @@ const ROGUE_WEAPONS: [StaticWeapon; 9] = [
         attr: ItemAttr::empty(),
         min: 1,
         max: 1,
+        is_initial: true,
     },
     StaticWeapon {
         at_weild: hp_dice!(1, 1),
@@ -259,6 +279,7 @@ const ROGUE_WEAPONS: [StaticWeapon; 9] = [
         attr: MANY_AND_THROW,
         min: 8,
         max: 16,
+        is_initial: true,
     },
     StaticWeapon {
         at_weild: hp_dice!(1, 6),
@@ -267,6 +288,7 @@ const ROGUE_WEAPONS: [StaticWeapon; 9] = [
         attr: ItemAttr::CAN_THROW,
         min: 2,
         max: 6,
+        is_initial: false,
     },
     StaticWeapon {
         at_weild: hp_dice!(4, 4),
@@ -275,6 +297,7 @@ const ROGUE_WEAPONS: [StaticWeapon; 9] = [
         attr: ItemAttr::empty(),
         min: 1,
         max: 1,
+        is_initial: false,
     },
     StaticWeapon {
         at_weild: hp_dice!(1, 1),
@@ -283,6 +306,7 @@ const ROGUE_WEAPONS: [StaticWeapon; 9] = [
         attr: MANY_AND_THROW,
         min: 8,
         max: 16,
+        is_initial: false,
     },
     StaticWeapon {
         at_weild: hp_dice!(1, 2),
@@ -291,6 +315,7 @@ const ROGUE_WEAPONS: [StaticWeapon; 9] = [
         attr: MANY_AND_THROW,
         min: 8,
         max: 16,
+        is_initial: false,
     },
     StaticWeapon {
         at_weild: hp_dice!(2, 3),
@@ -299,5 +324,6 @@ const ROGUE_WEAPONS: [StaticWeapon; 9] = [
         attr: ItemAttr::IS_MANY,
         min: 8,
         max: 16,
+        is_initial: false,
     },
 ];

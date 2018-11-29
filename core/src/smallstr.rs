@@ -1,8 +1,10 @@
-use serde::{Serialize, Serializer, Deserialize, Deserializer, de::Visitor, de::Error, de::Unexpected};
-use std::str;
-use std::marker::PhantomData;
-use std::fmt;
+use serde::{
+    de::Error, de::Unexpected, de::Visitor, Deserialize, Deserializer, Serialize, Serializer,
+};
 use std::cmp::Ordering;
+use std::fmt;
+use std::marker::PhantomData;
+use std::str;
 
 #[derive(Clone, Default)]
 pub struct SmallStr(Repr);
@@ -20,7 +22,6 @@ impl Default for Repr {
         Repr::Inline([0u8; MAX_SHORT_LEN], 0)
     }
 }
-
 
 impl SmallStr {
     pub fn from_str(s: &str) -> Self {
@@ -47,7 +48,9 @@ impl SmallStr {
     pub fn into_string(self) -> String {
         match self.0 {
             Repr::Heap(s) => String::from(s),
-            Repr::Inline(s, len) =>  unsafe {String::from_utf8_unchecked(s[..usize::from(len)].to_owned())},
+            Repr::Inline(s, len) => unsafe {
+                String::from_utf8_unchecked(s[..usize::from(len)].to_owned())
+            },
         }
     }
     fn from_bytes(v: Vec<u8>) -> Result<Self, Vec<u8>> {
@@ -57,23 +60,23 @@ impl SmallStr {
                 Ok(_) => {
                     let mut data = [0u8; MAX_SHORT_LEN];
                     data[0..len].clone_from_slice(&v);
-                    Ok(SmallStr(Repr::Inline(data, len as u8)))   
+                    Ok(SmallStr(Repr::Inline(data, len as u8)))
                 }
                 Err(_) => Err(v),
             }
         } else {
             match String::from_utf8(v) {
-                Ok(s) =>Ok(SmallStr(Repr::Heap(s.into_boxed_str()))),
+                Ok(s) => Ok(SmallStr(Repr::Heap(s.into_boxed_str()))),
                 Err(e) => Err(e.into_bytes()),
             }
-        }        
+        }
     }
     pub fn as_str(&self) -> &str {
         match self.0 {
             Repr::Heap(ref s) => s.as_ref(),
             Repr::Inline(ref s, len) => unsafe {
                 &str::from_utf8_unchecked(&s[..usize::from(len)])
-            }
+            },
         }
     }
 }
@@ -110,6 +113,12 @@ impl<'a> PartialEq<&'a str> for SmallStr {
 
 impl PartialEq<SmallStr> for SmallStr {
     fn eq(&self, other: &SmallStr) -> bool {
+        self.as_str() == other.as_str()
+    }
+}
+
+impl PartialEq<&SmallStr> for SmallStr {
+    fn eq(&self, other: &&SmallStr) -> bool {
         self.as_str() == other.as_str()
     }
 }
@@ -158,12 +167,14 @@ struct SmallStrVisitor {
 
 impl SmallStrVisitor {
     fn new() -> Self {
-        SmallStrVisitor { __marker: PhantomData }
+        SmallStrVisitor {
+            __marker: PhantomData,
+        }
     }
 }
 
 impl<'de> Visitor<'de> for SmallStrVisitor {
-type Value = SmallStr;
+    type Value = SmallStr;
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         formatter.write_str("a small string")
     }
@@ -197,10 +208,7 @@ type Value = SmallStr;
     {
         match SmallStr::from_bytes(v) {
             Ok(s) => Ok(s),
-            Err(e) => Err(Error::invalid_value(
-                Unexpected::Bytes(&e),
-                &self,
-            ))
+            Err(e) => Err(Error::invalid_value(Unexpected::Bytes(&e), &self)),
         }
     }
 }
