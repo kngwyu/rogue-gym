@@ -1,16 +1,17 @@
 {
-    "width": 32,
-    "height": 16,
-    "seed": 5,
+    "width": 80,
+    "height": 24,
+    "seed": null,
     "dungeon": {
         "style": "rogue",
-        "room_num_x": 2,
-        "room_num_y": 2,
+        "room_num_x": 3,
+        "room_num_y": 3,
         "min_room_size": {
             "x": 4,
             "y": 4
         },
         "enable_trap": true,
+        "max_empty_rooms": 3,
         "amulet_level": 25,
         "maze_rate_inv": 15,
         "dark_level": 10,
@@ -26,100 +27,30 @@
             "base": 50,
             "per_level": 10,
             "minimum": 2
+        },
+        "weapon": {
+            "Builtin": {
+                "typ": "Rogue",
+                "include": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8
+                ]
+            },
+            "cursed_rate": 10,
+            "powerup_rate": 5
         }
     },
     "keymap": {
-        "L": {
-            "Act": {
-                "MoveUntil": "Right"
-            }
-        },
-        "S": {
-            "Sys": "Save"
-        },
         "Y": {
             "Act": {
                 "MoveUntil": "LeftUp"
-            }
-        },
-        "u": {
-            "Act": {
-                "Move": "RightUp"
-            }
-        },
-        "j": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
-        "K": {
-            "Act": {
-                "MoveUntil": "Up"
-            }
-        },
-        "B": {
-            "Act": {
-                "MoveUntil": "LeftDown"
-            }
-        },
-        "U": {
-            "Act": {
-                "MoveUntil": "RightUp"
-            }
-        },
-        "Left": {
-            "Act": {
-                "Move": "Left"
-            }
-        },
-        "Down": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
-        "J": {
-            "Act": {
-                "MoveUntil": "Down"
-            }
-        },
-        "Esc": {
-            "Sys": "Cancel"
-        },
-        "Q": {
-            "Sys": "Quit"
-        },
-        "y": {
-            "Both": {
-                "act": {
-                    "Move": "LeftUp"
-                },
-                "sys": "Yes"
-            }
-        },
-        "s": {
-            "Act": "Search"
-        },
-        "l": {
-            "Act": {
-                "Move": "Right"
-            }
-        },
-        "Right": {
-            "Act": {
-                "Move": "Right"
-            }
-        },
-        "h": {
-            "Act": {
-                "Move": "Left"
-            }
-        },
-        ">": {
-            "Act": "DownStair"
-        },
-        "Up": {
-            "Act": {
-                "Move": "Up"
             }
         },
         "n": {
@@ -130,9 +61,17 @@
                 "sys": "No"
             }
         },
-        "k": {
+        "s": {
+            "Act": "Search"
+        },
+        "b": {
             "Act": {
-                "Move": "Up"
+                "Move": "LeftDown"
+            }
+        },
+        "Down": {
+            "Act": {
+                "Move": "Down"
             }
         },
         "H": {
@@ -140,14 +79,100 @@
                 "MoveUntil": "Left"
             }
         },
-        "b": {
+        "Left": {
             "Act": {
-                "Move": "LeftDown"
+                "Move": "Left"
+            }
+        },
+        " ": {
+            "Sys": "Continue"
+        },
+        "B": {
+            "Act": {
+                "MoveUntil": "LeftDown"
+            }
+        },
+        "h": {
+            "Act": {
+                "Move": "Left"
+            }
+        },
+        "L": {
+            "Act": {
+                "MoveUntil": "Right"
+            }
+        },
+        "j": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        ">": {
+            "Act": "DownStair"
+        },
+        "Up": {
+            "Act": {
+                "Move": "Up"
+            }
+        },
+        "Q": {
+            "Sys": "Quit"
+        },
+        "l": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "S": {
+            "Sys": "Save"
+        },
+        "K": {
+            "Act": {
+                "MoveUntil": "Up"
+            }
+        },
+        "J": {
+            "Act": {
+                "MoveUntil": "Down"
+            }
+        },
+        "i": {
+            "Sys": "Inventory"
+        },
+        "Right": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "u": {
+            "Act": {
+                "Move": "RightUp"
+            }
+        },
+        "Esc": {
+            "Sys": "Cancel"
+        },
+        "U": {
+            "Act": {
+                "MoveUntil": "RightUp"
             }
         },
         "N": {
             "Act": {
                 "MoveUntil": "RightDown"
+            }
+        },
+        "k": {
+            "Act": {
+                "Move": "Up"
+            }
+        },
+        "y": {
+            "Both": {
+                "act": {
+                    "Move": "LeftUp"
+                },
+                "sys": "Yes"
             }
         }
     },
@@ -181,19 +206,73 @@
         "max_items": 27,
         "init_items": [
             {
-                "kind": "Gold",
-                "how_many": 0,
-                "attr": {
-                    "bits": 4
+                "Noinit": {
+                    "kind": "Gold",
+                    "how_many": 0,
+                    "attr": 4
                 }
             },
             {
-                "kind": {
-                    "Food": "Ration"
-                },
-                "how_many": 1,
-                "attr": {
-                    "bits": 4
+                "Noinit": {
+                    "kind": {
+                        "Food": "Ration"
+                    },
+                    "how_many": 1,
+                    "attr": 4
+                }
+            },
+            {
+                "Weapon": {
+                    "at_weild": {
+                        "times": 2,
+                        "max": 4
+                    },
+                    "at_throw": {
+                        "times": 1,
+                        "max": 3
+                    },
+                    "name": "mace",
+                    "init_num": {
+                        "start": 1,
+                        "end": 2
+                    },
+                    "attr": 0
+                }
+            },
+            {
+                "Weapon": {
+                    "at_weild": {
+                        "times": 1,
+                        "max": 1
+                    },
+                    "at_throw": {
+                        "times": 1,
+                        "max": 1
+                    },
+                    "name": "short-bow",
+                    "init_num": {
+                        "start": 1,
+                        "end": 2
+                    },
+                    "attr": 0
+                }
+            },
+            {
+                "Weapon": {
+                    "at_weild": {
+                        "times": 1,
+                        "max": 1
+                    },
+                    "at_throw": {
+                        "times": 2,
+                        "max": 3
+                    },
+                    "name": "arrow",
+                    "init_num": {
+                        "start": 8,
+                        "end": 17
+                    },
+                    "attr": 6
                 }
             }
         ]
@@ -229,7 +308,9 @@
                 24,
                 25
             ]
-        }
+        },
+        "appear_rate_gold": 80,
+        "appear_rate_nogold": 25
     },
     "hide_dungeon": true
 }

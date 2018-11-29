@@ -62,6 +62,7 @@ impl Default for KeyMap {
             (Key::Esc, InputCode::Sys(System::Cancel)),
             (Key::Char('S'), InputCode::Sys(System::Save)),
             (Key::Char('Q'), InputCode::Sys(System::Quit)),
+            (Key::Char('i'), InputCode::Sys(System::Inventory)),
             (Key::Char(' '), InputCode::Sys(System::Continue)),
         ];
         let inner: HashMap<_, _> = map.into_iter().collect();
