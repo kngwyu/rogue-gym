@@ -13,6 +13,7 @@ use item::{ItemHandler, ItemToken};
 use ndarray::Array2;
 use rect_iter::{Get2D, GetMut2D, RectRange};
 use rng::RngHandle;
+use std::collections::VecDeque;
 use tile::{Drawable, Tile};
 use tuple_map::TupleMap2;
 use {GameInfo, GameMsg, GlobalConfig};
@@ -174,7 +175,7 @@ impl Surface {
     }
 }
 
-const MAX_CACHED_DIST: usize = 6;
+const MAX_CACHED_DIST: usize = 8;
 
 /// representation of rogue dungeon
 #[derive(Clone)]
@@ -193,7 +194,7 @@ pub struct Dungeon {
     pub past_floors: Vec<Floor>,
     /// random number generator
     pub rng: RngHandle,
-    dist_cache: Vec<(Array2<u32>, Coord)>,
+    dist_cache: VecDeque<(Array2<u32>, Coord)>,
 }
 
 impl DungeonTrait for Dungeon {
@@ -342,7 +343,7 @@ impl DungeonTrait for Dungeon {
             return MoveResult::CantMove;
         }
         let mut cand = Vec::new();
-        let dist_map = self.enemy_dist_map(dist.cd);
+        let dist_map = self.make_dist_map(dist.cd, true);
         for d in Direction::into_enum_iter() {
             let next = cur.cd + d.to_cd();
             if skip(&DungeonPath::from(Address::new(cur.level, next))) {
@@ -384,7 +385,7 @@ impl Dungeon {
             config_global: config_global.clone(),
             past_floors: vec![],
             rng,
-            dist_cache: vec![],
+            dist_cache: VecDeque::with_capacity(MAX_CACHED_DIST),
         };
         dungeon
             .new_level_(game_info, item_handle, enemies, true)
@@ -446,19 +447,17 @@ impl Dungeon {
         }
     }
 
-    fn enemy_dist_map(&mut self, cd: Coord) -> &Array2<u32> {
+    fn make_dist_map(&mut self, cd: Coord, is_enemy: bool) -> &Array2<u32> {
         if let Some(pos) = self.dist_cache.iter().position(|t| t.1 == cd) {
             return &self.dist_cache[pos].0;
         }
-        let dist_map = self.current_floor.make_dist_map(cd, true);
+        let dist_map = self.current_floor.make_dist_map(cd, is_enemy);
         let len = self.dist_cache.len();
-        if len >= MAX_CACHED_DIST {
-            self.dist_cache[0] = (dist_map, cd);
-            &self.dist_cache[0].0
-        } else {
-            self.dist_cache.push((dist_map, cd));
-            &self.dist_cache[len].0
+        self.dist_cache.push_back((dist_map, cd));
+        if len > MAX_CACHED_DIST {
+            self.dist_cache.pop_front();
         }
+        &self.dist_cache[len].0
     }
 }
 

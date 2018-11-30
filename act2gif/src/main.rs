@@ -1,9 +1,11 @@
+#[macro_use]
+extern crate failure;
+
 mod draw;
 mod font;
 mod term_image;
 mod theme;
 use self::draw::GifEncoder;
-use self::term_image::TermImage;
 use clap::{self, ArgMatches};
 use rogue_gym_core::{error::*, input::InputCode, json_to_inputs, read_file, GameConfig};
 const DEFAULT_INTERVAL_MS: u32 = 50;
@@ -100,15 +102,11 @@ fn setup<'a>() -> GameResult<(GifEncoder<'a>, Vec<InputCode>)> {
     replay.truncate(max);
     let theme = args.value_of("theme").unwrap_or("solarized-dark");
     let theme = Theme::from_str(theme).expect("Unknown theme was specified");
-    let term = TermImage::new(
-        config.width.into(),
-        config.height.into(),
-        scale,
-        theme.back,
-        theme.font,
-    );
     let font = FontHandle::new(&UBUNTU_MONO[..], scale);
-    Ok((GifEncoder::new(config, font, term, interval), replay))
+    Ok((
+        GifEncoder::new(config, font, scale, theme, interval),
+        replay,
+    ))
 }
 
 fn main() -> GameResult<()> {

@@ -1,12 +1,12 @@
 {
-    "H": {
+    "b": {
         "Act": {
-            "MoveUntil": "Left"
+            "Move": "LeftDown"
         }
     },
-    "L": {
+    "h": {
         "Act": {
-            "MoveUntil": "Right"
+            "Move": "Left"
         }
     },
     "k": {
@@ -14,9 +14,27 @@
             "Move": "Up"
         }
     },
-    "K": {
+    "Y": {
         "Act": {
-            "MoveUntil": "Up"
+            "MoveUntil": "LeftUp"
+        }
+    },
+    "s": {
+        "Act": "Search"
+    },
+    "j": {
+        "Act": {
+            "Move": "Down"
+        }
+    },
+    "B": {
+        "Act": {
+            "MoveUntil": "LeftDown"
+        }
+    },
+    "J": {
+        "Act": {
+            "MoveUntil": "Down"
         }
     },
     "u": {
@@ -24,13 +42,10 @@
             "Move": "RightUp"
         }
     },
-    "N": {
+    "U": {
         "Act": {
-            "MoveUntil": "RightDown"
+            "MoveUntil": "RightUp"
         }
-    },
-    "s": {
-        "Act": "Search"
     },
     ">": {
         "Act": "DownStair"
@@ -40,29 +55,9 @@
             "Move": "RightDown"
         }
     },
-    "b": {
+    "N": {
         "Act": {
-            "Move": "LeftDown"
-        }
-    },
-    "j": {
-        "Act": {
-            "Move": "Down"
-        }
-    },
-    "U": {
-        "Act": {
-            "MoveUntil": "RightUp"
-        }
-    },
-    "B": {
-        "Act": {
-            "MoveUntil": "LeftDown"
-        }
-    },
-    "y": {
-        "Act": {
-            "Move": "LeftUp"
+            "MoveUntil": "RightDown"
         }
     },
     "l": {
@@ -70,19 +65,24 @@
             "Move": "Right"
         }
     },
-    "J": {
+    "H": {
         "Act": {
-            "MoveUntil": "Down"
+            "MoveUntil": "Left"
         }
     },
-    "h": {
+    "K": {
         "Act": {
-            "Move": "Left"
+            "MoveUntil": "Up"
         }
     },
-    "Y": {
+    "y": {
         "Act": {
-            "MoveUntil": "LeftUp"
+            "Move": "LeftUp"
+        }
+    },
+    "L": {
+        "Act": {
+            "MoveUntil": "Right"
         }
     }
 }
