@@ -4,6 +4,7 @@ use error::GameResult;
 use item::{
     food::Food, itembox::ItemBox, weapon, InitItem, Item, ItemHandler, ItemKind, ItemToken,
 };
+use smallstr::SmallStr;
 use std::fmt;
 use tile::{Drawable, Tile};
 use tuple_map::TupleMap2;
@@ -113,26 +114,14 @@ impl Player {
     }
     pub fn init_items(&mut self, items: &mut ItemHandler) -> GameResult<()> {
         items.init_player_items(&mut self.itembox, &self.config.init_items)?;
-        let name = self.config.init_items.iter().find_map(|item| {
-            if let InitItem::Weapon(w) = item {
-                if w.is_initial() {
-                    return Some(w.name());
-                }
-            }
-            None
-        });
-        let name = match name {
+        let name = match self.get_initial_weapon() {
             Some(n) => n,
             None => return Ok(()),
         };
-        self.weapon = self
-            .itembox
-            .find_by(move |item| match &item.kind {
-                ItemKind::Weapon(w) => name == w.name(),
-                _ => false,
-            })
-            .and_then(|id| self.itembox.get(id))
-            .map(|t| t.clone());
+        self.weapon = self.equip_from_box(|item| match &item.kind {
+            ItemKind::Weapon(w) => name == w.name(),
+            _ => false,
+        });
         Ok(())
     }
     pub fn strength(&self) -> Maxed<Strength> {
@@ -140,6 +129,23 @@ impl Player {
     }
     pub fn level(&self) -> Level {
         self.status.level
+    }
+    fn get_initial_weapon(&self) -> Option<SmallStr> {
+        self.config.init_items.iter().find_map(|item| {
+            if let InitItem::Weapon(w) = item {
+                if w.is_initial() {
+                    return Some(w.name());
+                }
+            }
+            None
+        })
+    }
+    fn equip_from_box(&self, query: impl FnMut(&Item) -> bool) -> Option<ItemToken> {
+        self.itembox.find_by(query).map(|item| {
+            let mut item = item.clone();
+            item.get_mut().attr.equip();
+            item
+        })
     }
 }
 

@@ -114,6 +114,7 @@ impl ItemAttr {
     pub const CAN_THROW: ItemAttr = ItemAttr(0b00_000_010);
     /// we can merge 2 sets of the item or not
     pub const IS_MANY: ItemAttr = ItemAttr(0b00_000_100);
+    pub const IS_EQUIPPED: ItemAttr = ItemAttr(0b00_001_000);
 }
 
 impl ItemAttr {
@@ -131,6 +132,12 @@ impl ItemAttr {
     }
     pub fn or(&mut self, other: ItemAttr) {
         self.0 |= other.0;
+    }
+    pub fn equip(&mut self) {
+        self.0 |= ItemAttr::IS_EQUIPPED.0;
+    }
+    fn is_equiped(&self) -> bool {
+        (self.0 & ItemAttr::IS_EQUIPPED.0) != 0
     }
 }
 
@@ -150,7 +157,7 @@ pub enum InitItem {
 }
 
 impl InitItem {
-    pub(crate) fn equip(self, handle: &mut ItemHandler) -> ItemToken {
+    pub(crate) fn initialize(self, handle: &mut ItemHandler) -> ItemToken {
         let item = match self {
             InitItem::Noinit(item) => item,
             InitItem::Weapon(stat) => stat.into_item(&mut handle.rng, |_, _, _| ()),
@@ -220,7 +227,11 @@ impl fmt::Display for Item {
             ItemKind::Scroll => write!(f, "scroll"), // STUB
             ItemKind::Wand => write!(f, "wand"),     // STUB
             ItemKind::Weapon(w) => write!(f, "{}", w),
+        }?;
+        if self.attr.is_equiped() {
+            write!(f, " [equipped]")?;
         }
+        Ok(())
     }
 }
 
@@ -244,12 +255,6 @@ impl DerefMut for ItemToken {
 }
 
 impl ItemToken {
-    pub fn clone(&self) -> ItemToken {
-        ItemToken {
-            inner: Rc::clone(&self.inner),
-            id: self.id,
-        }
-    }
     #[inline(always)]
     pub fn get(&self) -> &Item {
         unsafe { &*UnsafeCell::get(&self.inner) }
@@ -309,7 +314,7 @@ impl ItemHandler {
     /// Sets up player items
     pub fn init_player_items(&mut self, pack: &mut ItemBox, items: &[InitItem]) -> GameResult<()> {
         items.iter().try_for_each(|item| {
-            let item = item.clone().equip(self);
+            let item = item.clone().initialize(self);
             if pack.add(item) {
                 Ok(())
             } else {

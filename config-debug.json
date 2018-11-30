@@ -48,9 +48,81 @@
         }
     },
     "keymap": {
-        "Y": {
+        "Up": {
             "Act": {
-                "MoveUntil": "LeftUp"
+                "Move": "Up"
+            }
+        },
+        "Left": {
+            "Act": {
+                "Move": "Left"
+            }
+        },
+        "u": {
+            "Act": {
+                "Move": "RightUp"
+            }
+        },
+        ">": {
+            "Act": "DownStair"
+        },
+        " ": {
+            "Sys": "Continue"
+        },
+        "Down": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "S": {
+            "Sys": "Save"
+        },
+        "U": {
+            "Act": {
+                "MoveUntil": "RightUp"
+            }
+        },
+        "l": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "h": {
+            "Act": {
+                "Move": "Left"
+            }
+        },
+        "N": {
+            "Act": {
+                "MoveUntil": "RightDown"
+            }
+        },
+        "Right": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "j": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "H": {
+            "Act": {
+                "MoveUntil": "Left"
+            }
+        },
+        "B": {
+            "Act": {
+                "MoveUntil": "LeftDown"
+            }
+        },
+        "s": {
+            "Act": "Search"
+        },
+        "k": {
+            "Act": {
+                "Move": "Up"
             }
         },
         "n": {
@@ -61,40 +133,25 @@
                 "sys": "No"
             }
         },
-        "s": {
-            "Act": "Search"
+        "Q": {
+            "Sys": "Quit"
+        },
+        "y": {
+            "Both": {
+                "act": {
+                    "Move": "LeftUp"
+                },
+                "sys": "Yes"
+            }
+        },
+        "Y": {
+            "Act": {
+                "MoveUntil": "LeftUp"
+            }
         },
         "b": {
             "Act": {
                 "Move": "LeftDown"
-            }
-        },
-        "Down": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
-        "H": {
-            "Act": {
-                "MoveUntil": "Left"
-            }
-        },
-        "Left": {
-            "Act": {
-                "Move": "Left"
-            }
-        },
-        " ": {
-            "Sys": "Continue"
-        },
-        "B": {
-            "Act": {
-                "MoveUntil": "LeftDown"
-            }
-        },
-        "h": {
-            "Act": {
-                "Move": "Left"
             }
         },
         "L": {
@@ -102,29 +159,8 @@
                 "MoveUntil": "Right"
             }
         },
-        "j": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
-        ">": {
-            "Act": "DownStair"
-        },
-        "Up": {
-            "Act": {
-                "Move": "Up"
-            }
-        },
-        "Q": {
-            "Sys": "Quit"
-        },
-        "l": {
-            "Act": {
-                "Move": "Right"
-            }
-        },
-        "S": {
-            "Sys": "Save"
+        "Esc": {
+            "Sys": "Cancel"
         },
         "K": {
             "Act": {
@@ -138,42 +174,6 @@
         },
         "i": {
             "Sys": "Inventory"
-        },
-        "Right": {
-            "Act": {
-                "Move": "Right"
-            }
-        },
-        "u": {
-            "Act": {
-                "Move": "RightUp"
-            }
-        },
-        "Esc": {
-            "Sys": "Cancel"
-        },
-        "U": {
-            "Act": {
-                "MoveUntil": "RightUp"
-            }
-        },
-        "N": {
-            "Act": {
-                "MoveUntil": "RightDown"
-            }
-        },
-        "k": {
-            "Act": {
-                "Move": "Up"
-            }
-        },
-        "y": {
-            "Both": {
-                "act": {
-                    "Move": "LeftUp"
-                },
-                "sys": "Yes"
-            }
         }
     },
     "player": {
@@ -236,7 +236,8 @@
                         "start": 1,
                         "end": 2
                     },
-                    "attr": 0
+                    "attr": 0,
+                    "is_initial": true
                 }
             },
             {
@@ -254,7 +255,8 @@
                         "start": 1,
                         "end": 2
                     },
-                    "attr": 0
+                    "attr": 0,
+                    "is_initial": true
                 }
             },
             {
@@ -272,7 +274,8 @@
                         "start": 8,
                         "end": 17
                     },
-                    "attr": 6
+                    "attr": 6,
+                    "is_initial": true
                 }
             }
         ]

@@ -42,14 +42,11 @@ impl ItemBox {
     pub fn items(&self) -> impl Iterator<Item = &Item> {
         self.tokens().map(|t| t.get())
     }
-    pub fn find_by(&self, mut query: impl FnMut(&Item) -> bool) -> Option<usize> {
+    pub fn find_by(&self, mut query: impl FnMut(&Item) -> bool) -> Option<&ItemToken> {
         self.items
             .iter()
             .find(|(_, item)| query(item.get()))
-            .map(|(&ch, _)| ch)
-    }
-    pub fn get(&self, id: usize) -> Option<&ItemToken> {
-        self.items.get(&id)
+            .map(|(_, i)| i)
     }
     fn check_merge(&self, got_item: &Item) -> Option<usize> {
         // check if we can merge item or not
