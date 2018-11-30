@@ -1,3 +1,4 @@
+//! UI abstraction for rogue-gym
 use rogue_gym_core::dungeon::{Coord, Positioned, X, Y};
 use rogue_gym_core::error::GameResult;
 use rogue_gym_core::ui::{MordalKind, UiState};
