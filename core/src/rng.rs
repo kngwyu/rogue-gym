@@ -136,14 +136,11 @@ impl<'a, T: PrimInt> Iterator for RandomSelecter<'a, T> {
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
-pub struct Parcent(u32);
+pub struct Parcent(pub u32);
 
 impl Parcent {
     fn valid_check(self) {
         debug_assert!(self.0 <= 100, "Invalid parcentage {}", self.0);
-    }
-    pub const fn new(u: u32) -> Self {
-        Parcent(u)
     }
 }
 

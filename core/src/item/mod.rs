@@ -3,13 +3,15 @@ pub mod armor;
 pub mod food;
 mod gold;
 pub mod itembox;
+#[macro_use]
+mod macros;
 pub mod weapon;
 
 use self::food::Food;
 pub use self::itembox::ItemBox;
 use self::weapon::{Weapon, WeaponHandler};
 use error::*;
-use rng::RngHandle;
+use rng::{Parcent, RngHandle};
 use smallstr::SmallStr;
 use std::cell::UnsafeCell;
 use std::collections::BTreeMap;
@@ -335,4 +337,25 @@ impl ItemHandler {
             }
         })
     }
+}
+
+trait ItemStat {
+    fn appear_rate(&self) -> Parcent;
+    fn worth(&self) -> ItemNum;
+}
+
+fn select_item<'i, S, I>(rng: &mut RngHandle, iter: I) -> usize
+where
+    S: 'i + ItemStat,
+    I: Iterator<Item = &'i S>,
+{
+    let rate = rng.range(1..100);
+    let mut sum = 0;
+    for (i, p) in iter.enumerate() {
+        if sum < rate && rate <= sum {
+            return i;
+        }
+        sum += p.appear_rate().0;
+    }
+    0
 }

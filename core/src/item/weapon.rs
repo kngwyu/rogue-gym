@@ -1,4 +1,4 @@
-use super::{InitItem, Item, ItemAttr};
+use super::{select_item, InitItem, Item, ItemAttr, ItemNum};
 use crate::character::{Dice, HitPoint, Level};
 use crate::rng::{Parcent, RngHandle};
 use crate::SmallStr;
@@ -45,11 +45,11 @@ impl Config {
 }
 
 const fn default_cursed_rate() -> Parcent {
-    Parcent::new(10)
+    Parcent(10)
 }
 
 const fn default_powerup_rate() -> Parcent {
-    Parcent::new(5)
+    Parcent(5)
 }
 
 fn is_default_cursed_rate(u: &Parcent) -> bool {
@@ -87,6 +87,7 @@ pub struct Weapon {
     name: SmallStr,
     hit_plus: Level,
     dam_plus: HitPoint,
+    worth: ItemNum,
 }
 
 impl Weapon {
@@ -120,7 +121,11 @@ pub struct WeaponStatus {
     init_num: Range<u32>,
     attr: ItemAttr,
     is_initial: bool,
+    appear_rate: Parcent,
+    worth: ItemNum,
 }
+
+item_stat!(WeaponStatus);
 
 impl WeaponStatus {
     pub(crate) fn name(&self) -> SmallStr {
@@ -137,6 +142,7 @@ impl WeaponStatus {
             name,
             mut attr,
             init_num,
+            worth,
             ..
         } = self;
         let num = rng.range(init_num);
@@ -146,6 +152,7 @@ impl WeaponStatus {
             name,
             hit_plus: 0.into(),
             dam_plus: 0.into(),
+            worth,
         };
         initialize(&mut weapon, &mut attr, rng);
         Item::weapon(weapon, attr, num)
@@ -160,7 +167,7 @@ pub struct WeaponHandler {
 
 impl WeaponHandler {
     pub fn gen_weapon(&self, rng: &mut RngHandle) -> Item {
-        let idx = rng.range(0..self.weapons.len());
+        let idx = select_item(rng, self.weapons.iter());
         let status = self.weapons[idx].clone();
         status.into_item(rng, |weapon, attr, rng| {
             if rng.parcent(self.cursed_rate) {
@@ -197,6 +204,8 @@ struct StaticWeapon {
     min: u32,
     max: u32,
     is_initial: bool,
+    appear_rate: Parcent,
+    worth: ItemNum,
 }
 
 impl StaticWeapon {
@@ -209,6 +218,8 @@ impl StaticWeapon {
             min,
             max,
             is_initial,
+            appear_rate,
+            worth,
         } = self;
         WeaponStatus {
             at_weild,
@@ -217,6 +228,8 @@ impl StaticWeapon {
             init_num: min..max + 1,
             attr,
             is_initial,
+            appear_rate,
+            worth,
         }
     }
 }
@@ -238,6 +251,8 @@ const BUILTIN_WEAPONS: [StaticWeapon; 9] = [
         min: 1,
         max: 1,
         is_initial: true,
+        appear_rate: Parcent(11),
+        worth: ItemNum(8),
     },
     StaticWeapon {
         at_weild: hp_dice!(3, 4),
@@ -247,6 +262,8 @@ const BUILTIN_WEAPONS: [StaticWeapon; 9] = [
         min: 1,
         max: 1,
         is_initial: false,
+        appear_rate: Parcent(11),
+        worth: ItemNum(8),
     },
     StaticWeapon {
         at_weild: hp_dice!(1, 1),
@@ -256,6 +273,8 @@ const BUILTIN_WEAPONS: [StaticWeapon; 9] = [
         min: 1,
         max: 1,
         is_initial: true,
+        appear_rate: Parcent(11),
+        worth: ItemNum(8),
     },
     StaticWeapon {
         at_weild: hp_dice!(1, 1),
@@ -265,6 +284,8 @@ const BUILTIN_WEAPONS: [StaticWeapon; 9] = [
         min: 8,
         max: 16,
         is_initial: true,
+        appear_rate: Parcent(11),
+        worth: ItemNum(8),
     },
     StaticWeapon {
         at_weild: hp_dice!(1, 6),
@@ -274,6 +295,8 @@ const BUILTIN_WEAPONS: [StaticWeapon; 9] = [
         min: 2,
         max: 6,
         is_initial: false,
+        appear_rate: Parcent(11),
+        worth: ItemNum(8),
     },
     StaticWeapon {
         at_weild: hp_dice!(4, 4),
@@ -283,6 +306,8 @@ const BUILTIN_WEAPONS: [StaticWeapon; 9] = [
         min: 1,
         max: 1,
         is_initial: false,
+        appear_rate: Parcent(11),
+        worth: ItemNum(8),
     },
     StaticWeapon {
         at_weild: hp_dice!(1, 1),
@@ -292,6 +317,8 @@ const BUILTIN_WEAPONS: [StaticWeapon; 9] = [
         min: 8,
         max: 16,
         is_initial: false,
+        appear_rate: Parcent(11),
+        worth: ItemNum(8),
     },
     StaticWeapon {
         at_weild: hp_dice!(1, 2),
@@ -301,6 +328,8 @@ const BUILTIN_WEAPONS: [StaticWeapon; 9] = [
         min: 8,
         max: 16,
         is_initial: false,
+        appear_rate: Parcent(11),
+        worth: ItemNum(8),
     },
     StaticWeapon {
         at_weild: hp_dice!(2, 3),
@@ -310,5 +339,7 @@ const BUILTIN_WEAPONS: [StaticWeapon; 9] = [
         min: 8,
         max: 16,
         is_initial: false,
+        appear_rate: Parcent(11),
+        worth: ItemNum(8),
     },
 ];

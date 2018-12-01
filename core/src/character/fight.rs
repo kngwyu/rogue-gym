@@ -32,7 +32,7 @@ fn hit_sub(level: Level, armor: Defense, revision: i64) -> Parcent {
     let mut val = level.0 + armor.0 + revision;
     val = min(val, i64::from(HIT_RATE_MAX));
     val = max(val, 0);
-    Parcent::new((100 / HIT_RATE_MAX) * val as u32)
+    Parcent((100 / HIT_RATE_MAX) * val as u32)
 }
 
 fn hit_prob_plus(strength: Strength) -> i64 {

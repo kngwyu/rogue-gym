@@ -51,11 +51,11 @@ struct ConfigInner {
 }
 
 const fn default_appear_rate_gold() -> Parcent {
-    Parcent::new(80)
+    Parcent(80)
 }
 
 const fn default_appear_rate_nogold() -> Parcent {
-    Parcent::new(25)
+    Parcent(25)
 }
 
 fn is_default_appear_rate_gold(u: &Parcent) -> bool {
