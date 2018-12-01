@@ -65,7 +65,7 @@ fn default_weapons() -> Vec<Preset> {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "lowercase", untagged)]
 pub enum Preset {
     Builtin(usize),
     Custom(WeaponStatus),
