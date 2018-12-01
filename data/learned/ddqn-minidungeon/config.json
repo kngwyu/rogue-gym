@@ -22,9 +22,6 @@
         "passage_unlock_rate_inv": 3
     },
     "enemies": {
-        "builtin": {
-            "typ": "Rogue",
-            "include": []
-        }
+        "enemies": []
     }
 }
