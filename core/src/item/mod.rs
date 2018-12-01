@@ -7,9 +7,10 @@ pub mod weapon;
 
 use self::food::Food;
 pub use self::itembox::ItemBox;
-use self::weapon::{Weapon, WeaponHandler, WeaponStatus};
+use self::weapon::{Weapon, WeaponHandler};
 use error::*;
 use rng::RngHandle;
+use smallstr::SmallStr;
 use std::cell::UnsafeCell;
 use std::collections::BTreeMap;
 use std::fmt;
@@ -154,16 +155,26 @@ impl ItemId {
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub enum InitItem {
     Noinit(Item),
-    Weapon(WeaponStatus),
+    Weapon(SmallStr),
 }
 
 impl InitItem {
-    pub(crate) fn initialize(self, handle: &mut ItemHandler) -> ItemToken {
+    pub(crate) fn initialize(self, handle: &mut ItemHandler) -> GameResult<ItemToken> {
         let item = match self {
             InitItem::Noinit(item) => item,
-            InitItem::Weapon(stat) => stat.into_item(&mut handle.rng, |_, _, _| ()),
+            InitItem::Weapon(name) => handle
+                .weapon_handle
+                .gen_weapon_by(|item| item.name() == name, &mut handle.rng)
+                .ok_or_else(|| {
+                    ErrorId::InvalidSetting.into_with(|| {
+                        format!(
+                            "Specified weapon {} is not registerd to WeaponHandler",
+                            name
+                        )
+                    })
+                })?,
         };
-        handle.gen_item(item)
+        Ok(handle.gen_item(item))
     }
 }
 
@@ -315,7 +326,7 @@ impl ItemHandler {
     /// Sets up player items
     pub fn init_player_items(&mut self, pack: &mut ItemBox, items: &[InitItem]) -> GameResult<()> {
         items.iter().try_for_each(|item| {
-            let item = item.clone().initialize(self);
+            let item = item.clone().initialize(self)?;
             if pack.add(item) {
                 Ok(())
             } else {

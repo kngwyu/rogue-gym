@@ -1,4 +1,4 @@
-use super::{InitItem, Item, ItemAttr, ItemHandler, ItemToken};
+use super::{InitItem, Item, ItemAttr};
 use crate::character::{Dice, HitPoint, Level};
 use crate::rng::{Parcent, RngHandle};
 use crate::SmallStr;
@@ -22,7 +22,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            weapons: Default::default(),
+            weapons: default_weapons(),
             cursed_rate: default_cursed_rate(),
             powerup_rate: default_powerup_rate(),
         }
@@ -126,9 +126,6 @@ impl WeaponStatus {
     pub(crate) fn name(&self) -> SmallStr {
         self.name.clone()
     }
-    pub(crate) fn is_initial(&self) -> bool {
-        self.is_initial
-    }
     pub(super) fn into_item(
         self,
         rng: &mut RngHandle,
@@ -162,23 +159,34 @@ pub struct WeaponHandler {
 }
 
 impl WeaponHandler {
-    pub fn gen_weapon(&self, item_handle: &mut ItemHandler) -> ItemToken {
-        let idx = item_handle.rng.range(0..self.weapons.len());
+    pub fn gen_weapon(&self, rng: &mut RngHandle) -> Item {
+        let idx = rng.range(0..self.weapons.len());
         let status = self.weapons[idx].clone();
-        let item = status.into_item(&mut item_handle.rng, |weapon, attr, rng| {
+        status.into_item(rng, |weapon, attr, rng| {
             if rng.parcent(self.cursed_rate) {
                 attr.or(ItemAttr::IS_CURSED);
                 weapon.hit_plus -= Level(rng.range(1..=4));
             } else if rng.parcent(self.powerup_rate) {
                 weapon.hit_plus += Level(rng.range(1..=4));
             }
-        });
-        item_handle.gen_item(item)
+        })
+    }
+    pub fn gen_weapon_by(
+        &self,
+        mut query: impl FnMut(&WeaponStatus) -> bool,
+        rng: &mut RngHandle,
+    ) -> Option<Item> {
+        let stat = self.weapons.iter().find(|&s| query(s))?;
+        Some(stat.clone().into_item(rng, |_, _, _| ()))
     }
 }
 
 pub(crate) fn rogue_init_weapons(vec: &mut Vec<InitItem>) {
-    (0, 2, 3).for_each(|i| vec.push(InitItem::Weapon(BUILTIN_WEAPONS[i].to_weapon())));
+    (0, 2, 3).for_each(|i| {
+        vec.push(InitItem::Weapon(SmallStr::from_str(
+            BUILTIN_WEAPONS[i].name,
+        )))
+    });
 }
 
 struct StaticWeapon {

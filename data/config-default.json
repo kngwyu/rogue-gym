@@ -29,41 +29,59 @@
             "minimum": 2
         },
         "weapon": {
-            "weapons": [],
+            "weapons": [
+                {
+                    "builtin": 0
+                },
+                {
+                    "builtin": 1
+                },
+                {
+                    "builtin": 2
+                },
+                {
+                    "builtin": 3
+                },
+                {
+                    "builtin": 4
+                },
+                {
+                    "builtin": 5
+                },
+                {
+                    "builtin": 6
+                },
+                {
+                    "builtin": 7
+                },
+                {
+                    "builtin": 8
+                }
+            ],
             "cursed_rate": 10,
             "powerup_rate": 5
         }
     },
     "keymap": {
-        "k": {
+        "u": {
             "Act": {
-                "Move": "Up"
-            }
-        },
-        "L": {
-            "Act": {
-                "MoveUntil": "Right"
+                "Move": "RightUp"
             }
         },
         "S": {
             "Sys": "Save"
         },
-        "y": {
-            "Both": {
-                "act": {
-                    "Move": "LeftUp"
-                },
-                "sys": "Yes"
+        "Q": {
+            "Sys": "Quit"
+        },
+        "U": {
+            "Act": {
+                "MoveUntil": "RightUp"
             }
         },
-        "l": {
+        "Down": {
             "Act": {
-                "Move": "Right"
-            }
-        },
-        "B": {
-            "Act": {
-                "MoveUntil": "LeftDown"
+                "Move": "Down"
             }
         },
         "Up": {
@@ -71,18 +89,32 @@
                 "Move": "Up"
             }
         },
-        "N": {
+        "l": {
             "Act": {
-                "MoveUntil": "RightDown"
+                "Move": "Right"
             }
         },
-        "b": {
-            "Act": {
-                "Move": "LeftDown"
-            }
+        "i": {
+            "Sys": "Inventory"
         },
         "Esc": {
             "Sys": "Cancel"
+        },
+        ">": {
+            "Act": "DownStair"
+        },
+        "j": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        " ": {
+            "Sys": "Continue"
+        },
+        "Left": {
+            "Act": {
+                "Move": "Left"
+            }
         },
         "n": {
             "Both": {
@@ -92,60 +124,9 @@
                 "sys": "No"
             }
         },
-        "Down": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
         "J": {
             "Act": {
                 "MoveUntil": "Down"
-            }
-        },
-        "u": {
-            "Act": {
-                "Move": "RightUp"
-            }
-        },
-        "K": {
-            "Act": {
-                "MoveUntil": "Up"
-            }
-        },
-        "H": {
-            "Act": {
-                "MoveUntil": "Left"
-            }
-        },
-        " ": {
-            "Sys": "Continue"
-        },
-        "j": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
-        "U": {
-            "Act": {
-                "MoveUntil": "RightUp"
-            }
-        },
-        "Left": {
-            "Act": {
-                "Move": "Left"
-            }
-        },
-        "Q": {
-            "Sys": "Quit"
-        },
-        "Y": {
-            "Act": {
-                "MoveUntil": "LeftUp"
-            }
-        },
-        "h": {
-            "Act": {
-                "Move": "Left"
             }
         },
         "Right": {
@@ -153,14 +134,61 @@
                 "Move": "Right"
             }
         },
-        "i": {
-            "Sys": "Inventory"
+        "k": {
+            "Act": {
+                "Move": "Up"
+            }
+        },
+        "B": {
+            "Act": {
+                "MoveUntil": "LeftDown"
+            }
+        },
+        "N": {
+            "Act": {
+                "MoveUntil": "RightDown"
+            }
+        },
+        "H": {
+            "Act": {
+                "MoveUntil": "Left"
+            }
         },
         "s": {
             "Act": "Search"
         },
-        ">": {
-            "Act": "DownStair"
+        "b": {
+            "Act": {
+                "Move": "LeftDown"
+            }
+        },
+        "y": {
+            "Both": {
+                "act": {
+                    "Move": "LeftUp"
+                },
+                "sys": "Yes"
+            }
+        },
+        "Y": {
+            "Act": {
+                "MoveUntil": "LeftUp"
+            }
+        },
+        "L": {
+            "Act": {
+                "MoveUntil": "Right"
+            }
+        },
+        "K": {
+            "Act": {
+                "MoveUntil": "Up"
+            }
+        },
+        "h": {
+            "Act": {
+                "Move": "Left"
+            }
         }
     },
     "player": {
@@ -209,61 +237,13 @@
                 }
             },
             {
-                "Weapon": {
-                    "at_weild": {
-                        "times": 2,
-                        "max": 4
-                    },
-                    "at_throw": {
-                        "times": 1,
-                        "max": 3
-                    },
-                    "name": "mace",
-                    "init_num": {
-                        "start": 1,
-                        "end": 2
-                    },
-                    "attr": 0,
-                    "is_initial": true
-                }
+                "Weapon": "mace"
             },
             {
-                "Weapon": {
-                    "at_weild": {
-                        "times": 1,
-                        "max": 1
-                    },
-                    "at_throw": {
-                        "times": 1,
-                        "max": 1
-                    },
-                    "name": "short-bow",
-                    "init_num": {
-                        "start": 1,
-                        "end": 2
-                    },
-                    "attr": 0,
-                    "is_initial": true
-                }
+                "Weapon": "short-bow"
             },
             {
-                "Weapon": {
-                    "at_weild": {
-                        "times": 1,
-                        "max": 1
-                    },
-                    "at_throw": {
-                        "times": 2,
-                        "max": 3
-                    },
-                    "name": "arrow",
-                    "init_num": {
-                        "start": 8,
-                        "end": 17
-                    },
-                    "attr": 6,
-                    "is_initial": true
-                }
+                "Weapon": "arrow"
             }
         ]
     },

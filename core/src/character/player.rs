@@ -133,9 +133,7 @@ impl Player {
     fn get_initial_weapon(&self) -> Option<SmallStr> {
         self.config.init_items.iter().find_map(|item| {
             if let InitItem::Weapon(w) = item {
-                if w.is_initial() {
-                    return Some(w.name());
-                }
+                return Some(w.to_owned());
             }
             None
         })

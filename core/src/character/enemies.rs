@@ -17,8 +17,10 @@ pub struct Config {
     #[serde(default = "default_enemies")]
     pub enemies: Vec<Preset>,
     #[serde(default = "default_appear_rate_gold")]
+    #[serde(skip_serializing_if = "is_default_appear_rate_gold")]
     pub appear_rate_gold: Parcent,
     #[serde(default = "default_appear_rate_nogold")]
+    #[serde(skip_serializing_if = "is_default_appear_rate_nogold")]
     pub appear_rate_nogold: Parcent,
 }
 
