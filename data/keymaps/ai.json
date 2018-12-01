@@ -4,32 +4,9 @@
             "Move": "LeftDown"
         }
     },
-    "h": {
+    "U": {
         "Act": {
-            "Move": "Left"
-        }
-    },
-    "k": {
-        "Act": {
-            "Move": "Up"
-        }
-    },
-    "Y": {
-        "Act": {
-            "MoveUntil": "LeftUp"
-        }
-    },
-    "s": {
-        "Act": "Search"
-    },
-    "j": {
-        "Act": {
-            "Move": "Down"
-        }
-    },
-    "B": {
-        "Act": {
-            "MoveUntil": "LeftDown"
+            "MoveUntil": "RightUp"
         }
     },
     "J": {
@@ -37,22 +14,55 @@
             "MoveUntil": "Down"
         }
     },
-    "u": {
+    "s": {
+        "Act": "Search"
+    },
+    "k": {
         "Act": {
-            "Move": "RightUp"
+            "Move": "Up"
         }
     },
-    "U": {
+    "h": {
         "Act": {
-            "MoveUntil": "RightUp"
+            "Move": "Left"
         }
     },
     ">": {
         "Act": "DownStair"
     },
+    "K": {
+        "Act": {
+            "MoveUntil": "Up"
+        }
+    },
+    "y": {
+        "Act": {
+            "Move": "LeftUp"
+        }
+    },
+    "Y": {
+        "Act": {
+            "MoveUntil": "LeftUp"
+        }
+    },
     "n": {
         "Act": {
             "Move": "RightDown"
+        }
+    },
+    "B": {
+        "Act": {
+            "MoveUntil": "LeftDown"
+        }
+    },
+    "L": {
+        "Act": {
+            "MoveUntil": "Right"
+        }
+    },
+    "H": {
+        "Act": {
+            "MoveUntil": "Left"
         }
     },
     "N": {
@@ -65,24 +75,14 @@
             "Move": "Right"
         }
     },
-    "H": {
+    "j": {
         "Act": {
-            "MoveUntil": "Left"
+            "Move": "Down"
         }
     },
-    "K": {
+    "u": {
         "Act": {
-            "MoveUntil": "Up"
-        }
-    },
-    "y": {
-        "Act": {
-            "Move": "LeftUp"
-        }
-    },
-    "L": {
-        "Act": {
-            "MoveUntil": "Right"
+            "Move": "RightUp"
         }
     }
 }

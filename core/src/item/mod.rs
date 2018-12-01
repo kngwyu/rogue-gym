@@ -1,4 +1,5 @@
 //! module for item
+pub mod armor;
 pub mod food;
 mod gold;
 pub mod itembox;

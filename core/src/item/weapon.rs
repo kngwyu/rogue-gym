@@ -9,9 +9,8 @@ use tuple_map::TupleMap3;
 /// Weapon configuration
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Config {
-    #[serde(default)]
-    #[serde(flatten)]
-    pub weapons: Weapons,
+    #[serde(default = "default_weapons")]
+    pub weapons: Vec<Preset>,
     #[serde(default = "default_cursed_rate")]
     #[serde(skip_serializing_if = "is_default_cursed_rate")]
     pub cursed_rate: Parcent,
@@ -40,7 +39,7 @@ impl Config {
         WeaponHandler {
             cursed_rate,
             powerup_rate,
-            weapons: weapons.build(),
+            weapons: weapons.into_iter().map(Preset::build).collect(),
         }
     }
 }
@@ -61,46 +60,24 @@ fn is_default_powerup_rate(u: &Parcent) -> bool {
     cfg!(not(test)) && *u == default_powerup_rate()
 }
 
+fn default_weapons() -> Vec<Preset> {
+    (0..BUILTIN_WEAPONS.len()).map(Preset::Builtin).collect()
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
-pub enum Weapons {
-    Builtin {
-        typ: BuiltinKind,
-        include: Vec<usize>,
-    },
-    Custom(Vec<WeaponStatus>),
+#[serde(rename_all = "lowercase")]
+pub enum Preset {
+    Builtin(usize),
+    Custom(WeaponStatus),
 }
 
-impl Default for Weapons {
-    fn default() -> Self {
-        Weapons::Builtin {
-            typ: BuiltinKind::Rogue,
-            include: (0..ROGUE_WEAPONS.len()).collect(),
-        }
-    }
-}
-
-impl Weapons {
-    fn build(self) -> Vec<WeaponStatus> {
+impl Preset {
+    fn build(self) -> WeaponStatus {
         match self {
-            Weapons::Builtin { typ, include } => match typ {
-                BuiltinKind::Rogue => include
-                    .into_iter()
-                    .filter_map(|i| {
-                        if i >= ROGUE_WEAPONS.len() {
-                            return None;
-                        }
-                        Some(ROGUE_WEAPONS[i].to_weapon())
-                    })
-                    .collect(),
-            },
-            Weapons::Custom(v) => v,
+            Preset::Builtin(i) => BUILTIN_WEAPONS[i].to_weapon(),
+            Preset::Custom(v) => v,
         }
     }
-}
-
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq)]
-pub enum BuiltinKind {
-    Rogue,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
@@ -201,7 +178,7 @@ impl WeaponHandler {
 }
 
 pub(crate) fn rogue_init_weapons(vec: &mut Vec<InitItem>) {
-    (0, 2, 3).for_each(|i| vec.push(InitItem::Weapon(ROGUE_WEAPONS[i].to_weapon())));
+    (0, 2, 3).for_each(|i| vec.push(InitItem::Weapon(BUILTIN_WEAPONS[i].to_weapon())));
 }
 
 struct StaticWeapon {
@@ -244,7 +221,7 @@ macro_rules! hp_dice {
     };
 }
 
-const ROGUE_WEAPONS: [StaticWeapon; 9] = [
+const BUILTIN_WEAPONS: [StaticWeapon; 9] = [
     StaticWeapon {
         at_weild: hp_dice!(2, 4),
         at_throw: hp_dice!(1, 3),

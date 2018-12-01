@@ -5,7 +5,7 @@ use item::ItemNum;
 use rng::{Parcent, RngHandle};
 use smallvec::SmallVec;
 use std::cell::Cell;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::BTreeMap;
 use std::ops::Range;
 use std::rc::{Rc, Weak};
 use tile::Tile;
@@ -14,9 +14,8 @@ pub type DiceVec<T> = SmallVec<[Dice<T>; 4]>;
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Config {
-    #[serde(default)]
-    #[serde(flatten)]
-    pub enemies: Enemies,
+    #[serde(default = "default_enemies")]
+    pub enemies: Vec<Preset>,
     #[serde(default = "default_appear_rate_gold")]
     pub appear_rate_gold: Parcent,
     #[serde(default = "default_appear_rate_nogold")]
@@ -25,23 +24,7 @@ pub struct Config {
 
 impl Config {
     pub fn tile_max(&self) -> Option<u8> {
-        match self.enemies {
-            Enemies::Builtin {
-                typ: _,
-                ref include,
-            } => {
-                let len = include.len() as u8;
-                if len == 0 {
-                    return None;
-                }
-                Some(len + b'A' - 1)
-            }
-            Enemies::Custom(ref stats) => {
-                let max = stats.iter().map(|s| s.tile.to_byte()).max()?;
-                assert!(max >= b'A');
-                Some(max)
-            }
-        }
+        self.enemies.iter().map(|p| p.tile().to_byte()).max()
     }
     pub fn build(self, seed: u128) -> EnemyHandler {
         let rng = RngHandle::from_seed(seed);
@@ -54,10 +37,8 @@ impl Config {
             appear_rate_gold,
             appear_rate_nogold,
         };
-        match enemies {
-            Enemies::Builtin { typ, include } => typ.build(rng, include, config_inner),
-            Enemies::Custom(stats) => EnemyHandler::new(stats, rng, config_inner),
-        }
+        let stats = enemies.into_iter().map(Preset::build).collect();
+        EnemyHandler::new(stats, rng, config_inner)
     }
 }
 
@@ -83,10 +64,16 @@ fn is_default_appear_rate_nogold(u: &Parcent) -> bool {
     cfg!(not(test)) && *u == default_appear_rate_nogold()
 }
 
+fn default_enemies() -> Vec<Preset> {
+    (ROGUE_ENEMY_START..=ROGUE_ENEMY_END)
+        .map(Preset::Builtin)
+        .collect()
+}
+
 impl Default for Config {
     fn default() -> Self {
         Config {
-            enemies: Default::default(),
+            enemies: default_enemies(),
             appear_rate_gold: default_appear_rate_gold(),
             appear_rate_nogold: default_appear_rate_nogold(),
         }
@@ -95,36 +82,22 @@ impl Default for Config {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
-pub enum Enemies {
-    Builtin {
-        typ: BuiltinKind,
-        include: Vec<usize>,
-    },
-    Custom(Vec<Status>),
+pub enum Preset {
+    Builtin(usize),
+    Custom(Status),
 }
 
-impl Default for Enemies {
-    fn default() -> Enemies {
-        Enemies::Builtin {
-            typ: BuiltinKind::Rogue,
-            include: (0..26).collect(),
+impl Preset {
+    fn build(self) -> Status {
+        match self {
+            Preset::Builtin(i) => BUILTIN_ENEMIES[i].to_status(),
+            Preset::Custom(s) => s,
         }
     }
-}
-
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq)]
-pub enum BuiltinKind {
-    Rogue,
-}
-
-impl BuiltinKind {
-    fn build(&self, rng: RngHandle, include: Vec<usize>, config: ConfigInner) -> EnemyHandler {
+    fn tile(&self) -> Tile {
         match self {
-            BuiltinKind::Rogue => {
-                let hash: HashSet<_> = include.into_iter().collect();
-                let stats = StaticStatus::get_owned(&ROGUE_ENEMIES, hash);
-                EnemyHandler::new(stats, rng, config)
-            }
+            Preset::Builtin(i) => BUILTIN_ENEMIES[*i].tile.into(),
+            Preset::Custom(s) => s.tile,
         }
     }
 }
@@ -390,26 +363,22 @@ pub struct StaticStatus {
     level: Level,
     rarelity: u8,
     name: &'static str,
+    tile: u8,
 }
 
 impl StaticStatus {
-    fn get_owned(stats: &[Self], include: HashSet<usize>) -> Vec<Status> {
-        stats
-            .iter()
-            .enumerate()
-            .filter(|(i, _)| include.contains(i))
-            .map(|(i, stat)| Status {
-                attack: stat.attack.iter().map(|&x| x).collect(),
-                attr: stat.attr,
-                defense: stat.defense,
-                exp: stat.exp,
-                gold: stat.gold,
-                level: stat.level,
-                name: SmallStr::from_str(stat.name),
-                tile: Tile::from(b'A' + i as u8),
-                rarelity: stat.rarelity,
-            })
-            .collect()
+    fn to_status(&self) -> Status {
+        Status {
+            attack: self.attack.iter().map(|&x| x).collect(),
+            attr: self.attr,
+            defense: self.defense,
+            exp: self.exp,
+            gold: self.gold,
+            level: self.level,
+            name: SmallStr::from_str(self.name),
+            tile: Tile::from(self.tile),
+            rarelity: self.rarelity,
+        }
     }
 }
 
@@ -425,7 +394,10 @@ macro_rules! enem_attr {
     };
 }
 
-pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
+pub const ROGUE_ENEMY_START: usize = 0;
+pub const ROGUE_ENEMY_END: usize = 25;
+
+pub const BUILTIN_ENEMIES: [StaticStatus; 26] = [
     StaticStatus {
         attack: &[hp_dice!(0, 0)],
         attr: enem_attr!(MEAN, RUSTS_ARMOR,),
@@ -435,6 +407,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(5),
         name: "aquator",
         rarelity: 12,
+        tile: b'A',
     },
     StaticStatus {
         attack: &[hp_dice!(1, 2)],
@@ -445,6 +418,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(1),
         name: "bat",
         rarelity: 2,
+        tile: b'B',
     },
     StaticStatus {
         attack: &[hp_dice!(1, 2), hp_dice!(1, 5), hp_dice!(1, 5)],
@@ -455,6 +429,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(4),
         name: "centaur",
         rarelity: 10,
+        tile: b'C',
     },
     StaticStatus {
         attack: &[hp_dice!(1, 8), hp_dice!(1, 8), hp_dice!(3, 10)],
@@ -465,6 +440,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(10),
         name: "dragon",
         rarelity: 25,
+        tile: b'D',
     },
     StaticStatus {
         attack: &[hp_dice!(1, 2)],
@@ -475,6 +451,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(1),
         name: "emu",
         rarelity: 1,
+        tile: b'E',
     },
     StaticStatus {
         attack: &[],
@@ -485,6 +462,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(8),
         name: "venus flytrap",
         rarelity: 15,
+        tile: b'F',
     },
     StaticStatus {
         attack: &[hp_dice!(4, 3), hp_dice!(3, 5)],
@@ -495,6 +473,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(13),
         name: "griffin",
         rarelity: 23,
+        tile: b'G',
     },
     StaticStatus {
         attack: &[hp_dice!(1, 8)],
@@ -505,6 +484,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(1),
         name: "hobgoblin",
         rarelity: 4,
+        tile: b'H',
     },
     StaticStatus {
         attack: &[hp_dice!(0, 0)],
@@ -515,6 +495,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(1),
         name: "icemonster",
         rarelity: 5,
+        tile: b'I',
     },
     StaticStatus {
         attack: &[hp_dice!(2, 12), hp_dice!(2, 4)],
@@ -525,6 +506,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(15),
         name: "jabberwock",
         rarelity: 24,
+        tile: b'J',
     },
     StaticStatus {
         attack: &[hp_dice!(1, 4)],
@@ -535,6 +517,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(1),
         name: "kestrel",
         rarelity: 0,
+        tile: b'K',
     },
     StaticStatus {
         attack: &[hp_dice!(1, 1)],
@@ -545,6 +528,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(3),
         name: "leperachaun",
         rarelity: 9,
+        tile: b'L',
     },
     StaticStatus {
         attack: &[hp_dice!(3, 4), hp_dice!(3, 4), hp_dice!(2, 5)],
@@ -555,6 +539,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(8),
         name: "medusa",
         rarelity: 21,
+        tile: b'M',
     },
     StaticStatus {
         attack: &[hp_dice!(0, 0)],
@@ -565,6 +550,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(3),
         name: "nymph",
         rarelity: 13,
+        tile: b'N',
     },
     StaticStatus {
         attack: &[hp_dice!(1, 8)],
@@ -575,6 +561,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(1),
         name: "orc",
         rarelity: 7,
+        tile: b'O',
     },
     StaticStatus {
         attack: &[hp_dice!(4, 4)],
@@ -585,6 +572,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(8),
         name: "phantom",
         rarelity: 18,
+        tile: b'P',
     },
     StaticStatus {
         attack: &[hp_dice!(1, 5), hp_dice!(1, 5)],
@@ -595,6 +583,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(3),
         name: "quagga",
         rarelity: 11,
+        tile: b'Q',
     },
     StaticStatus {
         attack: &[hp_dice!(1, 6)],
@@ -605,6 +594,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(2),
         name: "rattlesnake",
         rarelity: 6,
+        tile: b'R',
     },
     StaticStatus {
         attack: &[hp_dice!(1, 3)],
@@ -615,6 +605,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(1),
         name: "snake",
         rarelity: 3,
+        tile: b'S',
     },
     StaticStatus {
         attack: &[hp_dice!(1, 8), hp_dice!(1, 8), hp_dice!(2, 6)],
@@ -625,6 +616,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(6),
         name: "troll",
         rarelity: 16,
+        tile: b'T',
     },
     StaticStatus {
         attack: &[hp_dice!(1, 9), hp_dice!(1, 9), hp_dice!(2, 9)],
@@ -635,6 +627,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(7),
         name: "urvile",
         rarelity: 20,
+        tile: b'U',
     },
     StaticStatus {
         attack: &[hp_dice!(1, 19)],
@@ -645,6 +638,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(8),
         name: "vampire",
         rarelity: 22,
+        tile: b'V',
     },
     StaticStatus {
         attack: &[hp_dice!(1, 6)],
@@ -655,6 +649,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(5),
         name: "wraith",
         rarelity: 17,
+        tile: b'W',
     },
     StaticStatus {
         attack: &[hp_dice!(4, 4)],
@@ -665,6 +660,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(7),
         name: "xeroc",
         rarelity: 19,
+        tile: b'X',
     },
     StaticStatus {
         attack: &[hp_dice!(1, 6), hp_dice!(1, 6)],
@@ -675,6 +671,7 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(4),
         name: "yeti",
         rarelity: 14,
+        tile: b'Y',
     },
     StaticStatus {
         attack: &[hp_dice!(1, 8)],
@@ -685,5 +682,6 @@ pub const ROGUE_ENEMIES: [StaticStatus; 26] = [
         level: Level(2),
         name: "zombie",
         rarelity: 8,
+        tile: b'Z',
     },
 ];
