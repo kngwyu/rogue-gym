@@ -2,7 +2,7 @@ use super::{Defense, Exp, HitPoint, Level, Maxed, Strength};
 use dungeon::{Direction, DungeonPath};
 use error::GameResult;
 use item::{
-    food::Food, itembox::ItemBox, weapon, InitItem, Item, ItemHandler, ItemKind, ItemToken,
+    armor, food::Food, itembox::ItemBox, weapon, InitItem, Item, ItemHandler, ItemKind, ItemToken,
 };
 use smallstr::SmallStr;
 use std::fmt;

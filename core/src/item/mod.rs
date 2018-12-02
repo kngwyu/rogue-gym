@@ -1,10 +1,10 @@
 //! module for item
-pub mod armor;
 pub mod food;
 mod gold;
 pub mod itembox;
 #[macro_use]
 mod macros;
+pub mod armor;
 pub mod weapon;
 
 use self::food::Food;
@@ -23,6 +23,7 @@ use tile::{Drawable, Tile};
 /// Item configuration
 #[derive(Clone, Debug, Default, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Config {
+    armor: armor::Config,
     gold: gold::Config,
     weapon: weapon::Config,
 }
@@ -301,7 +302,11 @@ impl ItemHandler {
     /// generate new ItemHandler
     pub fn new(config_: Config, seed: u128) -> Self {
         let config = config_.clone();
-        let Config { gold: _, weapon } = config_;
+        let Config {
+            armor,
+            gold: _,
+            weapon,
+        } = config_;
         ItemHandler {
             items: BTreeMap::new(),
             config,

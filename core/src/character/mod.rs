@@ -118,12 +118,6 @@ pub struct Strength(pub i64);
 )]
 pub struct Defense(pub i64);
 
-impl Defense {
-    fn max() -> Self {
-        Defense(10)
-    }
-}
-
 /// values compatible with exp
 #[derive(
     Clone,

@@ -5,6 +5,7 @@ use rand::{
     distributions::uniform::SampleUniform, thread_rng, Error as RndError, RngCore, SeedableRng,
     XorShiftRng,
 };
+use std::cmp;
 use std::mem;
 use std::ops::{Bound, Range, RangeBounds};
 
@@ -141,6 +142,9 @@ pub struct Parcent(pub u32);
 impl Parcent {
     fn valid_check(self) {
         debug_assert!(self.0 <= 100, "Invalid parcentage {}", self.0);
+    }
+    pub fn truncate(i: i64) -> Parcent {
+        Parcent(cmp::min(100, cmp::max(0, i) as u32))
     }
 }
 
