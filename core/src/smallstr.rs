@@ -15,6 +15,7 @@ const MAX_SHORT_LEN: usize = 15;
 enum Repr {
     Inline([u8; MAX_SHORT_LEN], u8),
     Heap(Box<str>),
+    Static(&'static str),
 }
 
 impl Default for Repr {
@@ -24,6 +25,9 @@ impl Default for Repr {
 }
 
 impl SmallStr {
+    pub const fn from_static(s: &'static str) -> Self {
+        SmallStr(Repr::Static(s))
+    }
     pub fn from_str(s: &str) -> Self {
         let bytes = s.as_bytes();
         let len = bytes.len();
@@ -51,6 +55,7 @@ impl SmallStr {
             Repr::Inline(s, len) => unsafe {
                 String::from_utf8_unchecked(s[..usize::from(len)].to_owned())
             },
+            Repr::Static(s) => s.to_owned(),
         }
     }
     fn from_bytes(v: Vec<u8>) -> Result<Self, Vec<u8>> {
@@ -77,6 +82,7 @@ impl SmallStr {
             Repr::Inline(ref s, len) => unsafe {
                 &str::from_utf8_unchecked(&s[..usize::from(len)])
             },
+            Repr::Static(s) => s,
         }
     }
 }

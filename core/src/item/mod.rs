@@ -1,17 +1,19 @@
 //! module for item
+pub mod armor;
 pub mod food;
 mod gold;
+mod handler;
 pub mod itembox;
-#[macro_use]
-mod macros;
-pub mod armor;
 pub mod weapon;
 
+use self::armor::{Armor, ArmorStatus};
 use self::food::Food;
+use self::handler::Handler;
+use self::handler::ItemStat;
 pub use self::itembox::ItemBox;
-use self::weapon::{Weapon, WeaponHandler};
+use self::weapon::{Weapon, WeaponStatus};
 use error::*;
-use rng::{Parcent, RngHandle};
+use rng::RngHandle;
 use smallstr::SmallStr;
 use std::cell::UnsafeCell;
 use std::collections::BTreeMap;
@@ -31,7 +33,7 @@ pub struct Config {
 /// item tag
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub enum ItemKind {
-    Armor,
+    Armor(Armor),
     Food(Food),
     Gold,
     Potion,
@@ -59,7 +61,7 @@ impl ItemKind {
 impl Drawable for ItemKind {
     fn tile(&self) -> Tile {
         match *self {
-            ItemKind::Armor => b']',
+            ItemKind::Armor(_) => b']',
             ItemKind::Food(_) => b':',
             ItemKind::Gold => b'*',
             ItemKind::Potion => b'!',
@@ -158,26 +160,58 @@ impl ItemId {
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub enum InitItem {
     Noinit(Item),
-    Weapon(SmallStr),
+    Armor {
+        name: SmallStr,
+        def_plus: i32,
+    },
+    Weapon {
+        name: SmallStr,
+        num_plus: u32,
+        hit_plus: i32,
+        dam_plus: i32,
+    },
 }
 
 impl InitItem {
     pub(crate) fn initialize(self, handle: &mut ItemHandler) -> GameResult<ItemToken> {
-        let item = match self {
-            InitItem::Noinit(item) => item,
-            InitItem::Weapon(name) => handle
+        match self {
+            InitItem::Noinit(item) => Ok(item),
+            InitItem::Weapon {
+                name,
+                num_plus,
+                hit_plus,
+                dam_plus,
+            } => handle
                 .weapon_handle
-                .gen_weapon_by(|item| item.name() == name, &mut handle.rng)
-                .ok_or_else(|| {
-                    ErrorId::InvalidSetting.into_with(|| {
-                        format!(
-                            "Specified weapon {} is not registerd to WeaponHandler",
-                            name
-                        )
-                    })
-                })?,
-        };
-        Ok(handle.gen_item(item))
+                .gen_item_by(|item| name == item.name(), &mut handle.rng)
+                .map(|(mut weapon, attr, num)| {
+                    weapon.hit_plus += hit_plus.into();
+                    weapon.dam_plus += dam_plus.into();
+                    Item {
+                        kind: ItemKind::Weapon(weapon),
+                        attr,
+                        how_many: num + num_plus.into(),
+                    }
+                })
+                .ok_or(name),
+            InitItem::Armor { name, def_plus } => handle
+                .armor_handle
+                .gen_item_by(|item| name == item.name(), &mut handle.rng)
+                .map(|(mut armor, attr, num)| {
+                    armor.def_plus += def_plus.into();
+                    Item {
+                        kind: ItemKind::Armor(armor),
+                        attr,
+                        how_many: num,
+                    }
+                })
+                .ok_or(name),
+        }
+        .map(|item| handle.gen_item(item))
+        .map_err(|name| {
+            ErrorId::InvalidSetting
+                .into_with(|| format!("Specified item {} is not registerd to WeaponHandler", name))
+        })
     }
 }
 
@@ -190,13 +224,6 @@ pub struct Item {
 }
 
 impl Item {
-    fn weapon(weapon: Weapon, attr: ItemAttr, num: impl Into<ItemNum>) -> Self {
-        Item {
-            kind: ItemKind::Weapon(weapon),
-            how_many: num.into(),
-            attr,
-        }
-    }
     pub fn new<N: Into<ItemNum>>(kind: ItemKind, num: N) -> Self {
         Item {
             kind,
@@ -234,7 +261,7 @@ impl fmt::Display for Item {
             write!(f, "{} ", self.how_many.0)?;
         }
         match &self.kind {
-            ItemKind::Armor => unimplemented!(),
+            ItemKind::Armor(armor) => write!(f, "{}", armor),
             ItemKind::Food(food) => write!(f, "{}", food),
             ItemKind::Gold => write!(f, "golds"),
             ItemKind::Potion => write!(f, "potion"), // STUB
@@ -294,7 +321,8 @@ pub struct ItemHandler {
     items: BTreeMap<ItemId, Weak<UnsafeCell<Item>>>,
     config: Config,
     rng: RngHandle,
-    weapon_handle: WeaponHandler,
+    armor_handle: Handler<ArmorStatus>,
+    weapon_handle: Handler<WeaponStatus>,
     next_id: ItemId,
 }
 
@@ -311,6 +339,7 @@ impl ItemHandler {
             items: BTreeMap::new(),
             config,
             rng: RngHandle::from_seed(seed),
+            armor_handle: armor.build(),
             weapon_handle: weapon.build(),
             next_id: ItemId(0),
         }
@@ -344,23 +373,10 @@ impl ItemHandler {
     }
 }
 
-trait ItemStat {
-    fn appear_rate(&self) -> Parcent;
-    fn worth(&self) -> ItemNum;
-}
-
-fn select_item<'i, S, I>(rng: &mut RngHandle, iter: I) -> usize
-where
-    S: 'i + ItemStat,
-    I: Iterator<Item = &'i S>,
-{
-    let rate = rng.range(1..100);
-    let mut sum = 0;
-    for (i, p) in iter.enumerate() {
-        if sum < rate && rate <= sum {
-            return i;
-        }
-        sum += p.appear_rate().0;
+fn display_plus_types(i: i64, f: &mut fmt::Formatter) -> fmt::Result {
+    if i < 0 {
+        write!(f, "-{}", -i)
+    } else {
+        write!(f, "+{}", i)
     }
-    0
 }

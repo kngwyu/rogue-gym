@@ -1,4 +1,5 @@
-use super::{select_item, InitItem, Item, ItemAttr, ItemNum};
+use super::handler::{Handler, ItemInner, ItemStat};
+use super::{InitItem, Item, ItemAttr, ItemKind, ItemNum};
 use crate::character::{Dice, HitPoint, Level};
 use crate::rng::{Parcent, RngHandle};
 use crate::SmallStr;
@@ -30,16 +31,16 @@ impl Default for Config {
 }
 
 impl Config {
-    pub(super) fn build(self) -> WeaponHandler {
+    pub(super) fn build(self) -> Handler<WeaponStatus> {
         let Config {
             weapons,
             cursed_rate,
             powerup_rate,
         } = self;
-        WeaponHandler {
+        Handler {
             cursed_rate,
             powerup_rate,
-            weapons: weapons.into_iter().map(Preset::build).collect(),
+            stats: weapons.into_iter().map(Preset::build).collect(),
         }
     }
 }
@@ -74,7 +75,7 @@ pub enum Preset {
 impl Preset {
     fn build(self) -> WeaponStatus {
         match self {
-            Preset::Builtin(i) => BUILTIN_WEAPONS[i].to_weapon(),
+            Preset::Builtin(i) => BUILTIN_WEAPONS[i].clone(),
             Preset::Custom(v) => v,
         }
     }
@@ -85,8 +86,8 @@ pub struct Weapon {
     at_weild: Dice<HitPoint>,
     at_throw: Dice<HitPoint>,
     name: SmallStr,
-    hit_plus: Level,
-    dam_plus: HitPoint,
+    pub(super) hit_plus: Level,
+    pub(super) dam_plus: HitPoint,
     worth: ItemNum,
 }
 
@@ -96,19 +97,27 @@ impl Weapon {
     }
 }
 
-fn display_plus_types(i: i64, f: &mut fmt::Formatter) -> fmt::Result {
-    if i < 0 {
-        write!(f, "-{}", -i)
-    } else {
-        write!(f, "+{}", i)
+impl ItemInner for Weapon {
+    fn get_cursed(&mut self, rng: &mut RngHandle) {
+        self.hit_plus -= Level(rng.range(1..=4));
+    }
+    fn get_powerup(&mut self, rng: &mut RngHandle) {
+        self.hit_plus += Level(rng.range(1..=4));
+    }
+    fn into_item(self, attr: ItemAttr, how_many: ItemNum) -> Item {
+        Item {
+            kind: ItemKind::Weapon(self),
+            attr,
+            how_many,
+        }
     }
 }
 
 impl fmt::Display for Weapon {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        display_plus_types(self.hit_plus.0, f)?;
+        super::display_plus_types(self.hit_plus.0, f)?;
         write!(f, ",")?;
-        display_plus_types(self.dam_plus.0, f)?;
+        super::display_plus_types(self.dam_plus.0, f)?;
         write!(f, " {}", self.name)
     }
 }
@@ -125,28 +134,23 @@ pub struct WeaponStatus {
     worth: ItemNum,
 }
 
-item_stat!(WeaponStatus);
-
-impl WeaponStatus {
-    pub(crate) fn name(&self) -> SmallStr {
-        self.name.clone()
+impl ItemStat for WeaponStatus {
+    type Item = Weapon;
+    fn appear_rate(&self) -> Parcent {
+        self.appear_rate
     }
-    pub(super) fn into_item(
-        self,
-        rng: &mut RngHandle,
-        initialize: impl FnOnce(&mut Weapon, &mut ItemAttr, &mut RngHandle),
-    ) -> Item {
+    fn build(self, rng: &mut RngHandle) -> (Weapon, ItemAttr, ItemNum) {
         let WeaponStatus {
             at_weild,
             at_throw,
             name,
-            mut attr,
+            attr,
             init_num,
             worth,
             ..
         } = self;
         let num = rng.range(init_num);
-        let mut weapon = Weapon {
+        let weapon = Weapon {
             at_weild,
             at_throw,
             name,
@@ -154,84 +158,25 @@ impl WeaponStatus {
             dam_plus: 0.into(),
             worth,
         };
-        initialize(&mut weapon, &mut attr, rng);
-        Item::weapon(weapon, attr, num)
+        (weapon, attr, num.into())
     }
-}
-
-pub struct WeaponHandler {
-    weapons: Vec<WeaponStatus>,
-    cursed_rate: Parcent,
-    powerup_rate: Parcent,
-}
-
-impl WeaponHandler {
-    pub fn gen_weapon(&self, rng: &mut RngHandle) -> Item {
-        let idx = select_item(rng, self.weapons.iter());
-        let status = self.weapons[idx].clone();
-        status.into_item(rng, |weapon, attr, rng| {
-            if rng.parcent(self.cursed_rate) {
-                attr.or(ItemAttr::IS_CURSED);
-                weapon.hit_plus -= Level(rng.range(1..=4));
-            } else if rng.parcent(self.powerup_rate) {
-                weapon.hit_plus += Level(rng.range(1..=4));
-            }
-        })
+    fn name(&self) -> &str {
+        self.name.as_ref()
     }
-    pub fn gen_weapon_by(
-        &self,
-        mut query: impl FnMut(&WeaponStatus) -> bool,
-        rng: &mut RngHandle,
-    ) -> Option<Item> {
-        let stat = self.weapons.iter().find(|&s| query(s))?;
-        Some(stat.clone().into_item(rng, |_, _, _| ()))
+    fn worth(&self) -> crate::item::ItemNum {
+        self.worth
     }
 }
 
 pub(crate) fn rogue_init_weapons(vec: &mut Vec<InitItem>) {
-    (0, 2, 3).for_each(|i| {
-        vec.push(InitItem::Weapon(SmallStr::from_str(
-            BUILTIN_WEAPONS[i].name,
-        )))
+    ((0, 0, 1, 1), (2, 0, 1, 0), (3, 25, 0, 0)).for_each(|(idx, num_plus, hit_plus, dam_plus)| {
+        vec.push(InitItem::Weapon {
+            name: BUILTIN_WEAPONS[idx].name.clone(),
+            num_plus,
+            hit_plus,
+            dam_plus,
+        })
     });
-}
-
-struct StaticWeapon {
-    at_weild: Dice<HitPoint>,
-    at_throw: Dice<HitPoint>,
-    name: &'static str,
-    attr: ItemAttr,
-    min: u32,
-    max: u32,
-    is_initial: bool,
-    appear_rate: Parcent,
-    worth: ItemNum,
-}
-
-impl StaticWeapon {
-    fn to_weapon(&self) -> WeaponStatus {
-        let &StaticWeapon {
-            at_weild,
-            at_throw,
-            name,
-            attr,
-            min,
-            max,
-            is_initial,
-            appear_rate,
-            worth,
-        } = self;
-        WeaponStatus {
-            at_weild,
-            at_throw,
-            name: SmallStr::from_str(name),
-            init_num: min..max + 1,
-            attr,
-            is_initial,
-            appear_rate,
-            worth,
-        }
-    }
 }
 
 const MANY_AND_THROW: ItemAttr = ItemAttr::IS_MANY.merge(ItemAttr::CAN_THROW);
@@ -242,102 +187,93 @@ macro_rules! hp_dice {
     };
 }
 
-const BUILTIN_WEAPONS: [StaticWeapon; 9] = [
-    StaticWeapon {
+const BUILTIN_WEAPONS: [WeaponStatus; 9] = [
+    WeaponStatus {
         at_weild: hp_dice!(2, 4),
         at_throw: hp_dice!(1, 3),
-        name: "mace",
+        name: SmallStr::from_static("mace"),
         attr: ItemAttr::empty(),
-        min: 1,
-        max: 1,
+        init_num: 1..2,
         is_initial: true,
         appear_rate: Parcent(11),
         worth: ItemNum(8),
     },
-    StaticWeapon {
+    WeaponStatus {
         at_weild: hp_dice!(3, 4),
         at_throw: hp_dice!(1, 2),
-        name: "long-sword",
+        name: SmallStr::from_static("long-sword"),
         attr: ItemAttr::empty(),
-        min: 1,
-        max: 1,
+        init_num: 1..2,
         is_initial: false,
         appear_rate: Parcent(11),
         worth: ItemNum(8),
     },
-    StaticWeapon {
+    WeaponStatus {
         at_weild: hp_dice!(1, 1),
         at_throw: hp_dice!(1, 1),
-        name: "short-bow",
+        name: SmallStr::from_static("short-bow"),
         attr: ItemAttr::empty(),
-        min: 1,
-        max: 1,
+        init_num: 1..2,
         is_initial: true,
         appear_rate: Parcent(11),
         worth: ItemNum(8),
     },
-    StaticWeapon {
+    WeaponStatus {
         at_weild: hp_dice!(1, 1),
         at_throw: hp_dice!(2, 3),
-        name: "arrow",
+        name: SmallStr::from_static("arrow"),
         attr: MANY_AND_THROW,
-        min: 8,
-        max: 16,
+        init_num: 8..17,
         is_initial: true,
         appear_rate: Parcent(11),
         worth: ItemNum(8),
     },
-    StaticWeapon {
+    WeaponStatus {
         at_weild: hp_dice!(1, 6),
         at_throw: hp_dice!(1, 4),
-        name: "dagger",
+        name: SmallStr::from_static("dagger"),
         attr: ItemAttr::CAN_THROW,
-        min: 2,
-        max: 6,
+        init_num: 2..7,
         is_initial: false,
         appear_rate: Parcent(11),
         worth: ItemNum(8),
     },
-    StaticWeapon {
+    WeaponStatus {
         at_weild: hp_dice!(4, 4),
         at_throw: hp_dice!(1, 2),
-        name: "two-handed-sword",
+        name: SmallStr::from_static("two-handed-sword"),
         attr: ItemAttr::empty(),
-        min: 1,
-        max: 1,
+        init_num: 1..2,
         is_initial: false,
         appear_rate: Parcent(11),
         worth: ItemNum(8),
     },
-    StaticWeapon {
+    WeaponStatus {
         at_weild: hp_dice!(1, 1),
         at_throw: hp_dice!(1, 3),
-        name: "dart",
+        name: SmallStr::from_static("dart"),
         attr: MANY_AND_THROW,
-        min: 8,
-        max: 16,
+        init_num: 8..17,
         is_initial: false,
         appear_rate: Parcent(11),
         worth: ItemNum(8),
     },
-    StaticWeapon {
+    WeaponStatus {
         at_weild: hp_dice!(1, 2),
         at_throw: hp_dice!(2, 4),
-        name: "shuriken",
+        name: SmallStr::from_static("shuriken"),
         attr: MANY_AND_THROW,
-        min: 8,
-        max: 16,
+        init_num: 8..17,
         is_initial: false,
         appear_rate: Parcent(11),
         worth: ItemNum(8),
     },
-    StaticWeapon {
+    WeaponStatus {
         at_weild: hp_dice!(2, 3),
         at_throw: hp_dice!(1, 6),
-        name: "spear",
+        name: SmallStr::from_static("spear"),
         attr: ItemAttr::IS_MANY,
-        min: 8,
-        max: 16,
+        init_num: 8..17,
         is_initial: false,
         appear_rate: Parcent(11),
         worth: ItemNum(8),

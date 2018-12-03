@@ -26,7 +26,7 @@ fn attack_rate_enemy(player: &Player, enemy: &Enemy) -> Parcent {
 }
 
 fn attack_rate(level: Level, armor: Defense, revision: i64) -> Parcent {
-    let val = level.0 + armor.0 + revision;
+    let val = level.0 + i64::from(armor.0) + revision;
     Parcent::truncate(val * 5)
 }
 

@@ -116,7 +116,7 @@ pub struct Strength(pub i64);
     Serialize,
     Deserialize,
 )]
-pub struct Defense(pub i64);
+pub struct Defense(pub i32);
 
 /// values compatible with exp
 #[derive(
@@ -157,7 +157,8 @@ macro_rules! from_impls {
 
 from_impls!(HitPoint, i8 u8 i16 u16 i32 u32);
 from_impls!(Strength, i8 u8 i16 u16 i32 u32);
-from_impls!(Defense, i8 u8 i16 u16 i32 u32);
+from_impls!(Level, i8 u8 i16 u16 i32 u32);
+from_impls!(Defense, i8 u8 i16 u16);
 from_impls!(Exp, u8 u16);
 
 #[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]

@@ -2,7 +2,7 @@ use super::{Defense, Exp, HitPoint, Level, Maxed, Strength};
 use dungeon::{Direction, DungeonPath};
 use error::GameResult;
 use item::{
-    armor, food::Food, itembox::ItemBox, weapon, InitItem, Item, ItemHandler, ItemKind, ItemToken,
+    food::Food, itembox::ItemBox, weapon, InitItem, Item, ItemHandler, ItemKind, ItemToken,
 };
 use smallstr::SmallStr;
 use std::fmt;
@@ -122,6 +122,14 @@ impl Player {
             ItemKind::Weapon(w) => name == w.name(),
             _ => false,
         });
+        let name = match self.get_initial_armor() {
+            Some(n) => n,
+            None => return Ok(()),
+        };
+        self.armor = self.equip_from_box(|item| match &item.kind {
+            ItemKind::Armor(a) => name == a.name(),
+            _ => false,
+        });
         Ok(())
     }
     pub fn strength(&self) -> Maxed<Strength> {
@@ -132,8 +140,16 @@ impl Player {
     }
     fn get_initial_weapon(&self) -> Option<SmallStr> {
         self.config.init_items.iter().find_map(|item| {
-            if let InitItem::Weapon(w) = item {
-                return Some(w.to_owned());
+            if let InitItem::Weapon { name, .. } = item {
+                return Some(name.to_owned());
+            }
+            None
+        })
+    }
+    fn get_initial_armor(&self) -> Option<SmallStr> {
+        self.config.init_items.iter().find_map(|item| {
+            if let InitItem::Armor { name, .. } = item {
+                return Some(name.to_owned());
             }
             None
         })

@@ -260,7 +260,7 @@ impl EnemyHandler {
         let enem = Enemy {
             attr: stat.attr,
             attack: stat.attack.clone(),
-            defense: stat.defense - lev_add.into(),
+            defense: stat.defense - (lev_add as i32).into(),
             exp: stat.exp + Exp::from((lev_add * 10) as u32) + self.exp_add(level, hp),
             hp: Cell::new(hp),
             id: self.next_id.increment(),
