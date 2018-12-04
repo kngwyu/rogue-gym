@@ -39,6 +39,9 @@ pub trait Screen {
     fn message<S: AsRef<str>>(&mut self, msg: S) -> GameResult<()> {
         self.write_str(Coord::new(0, 0), msg.as_ref())
     }
+    fn pend_message<S: AsRef<str>>(&mut self, msg: S) -> GameResult<()> {
+        self.message(msg)
+    }
     fn status(&mut self, status: &Status) -> GameResult<()> {
         self.write_str(
             Coord::new(0, self.height() - 1.into()),
@@ -111,18 +114,21 @@ pub fn process_reaction<S: Screen>(
     match reaction {
         Reaction::Notify(msg) => match msg {
             GameMsg::CantMove(_) => Ok(()),
-            GameMsg::CantGetItem(kind) => screen.message(format!("You walk onto {:?}", kind)),
+            GameMsg::CantGetItem(kind) => screen.pend_message(format!("You walk onto {:?}", kind)),
             GameMsg::NoDownStair => {
-                screen.message(format!("Hmm... there seems to be no downstair"))
+                screen.pend_message(format!("Hmm... there seems to be no downstair"))
             }
-            GameMsg::GotItem { kind, num } => screen.message(format!("You got {} {:?}", num, kind)),
-            GameMsg::SecretDoor => screen.message(format!("You found a secret door")),
-            GameMsg::HitTo(s) => screen.message(format!("You swings and hit {}", s)),
-            GameMsg::HitFrom(s) => screen.message(format!("{} swings and hits you", s)),
-            GameMsg::MissTo(s) => screen.message(format!("You swing and miss {}", s)),
-            GameMsg::MissFrom(s) => screen.message(format!("{} swings and misses you", s)),
+            GameMsg::GotItem { kind, num } => {
+                screen.pend_message(format!("You got {} {:?}", num, kind))
+            }
+            GameMsg::SecretDoor => screen.pend_message(format!("You found a secret door")),
+            GameMsg::HitTo(s) => screen.pend_message(format!("You swings and hit {}", s)),
+            GameMsg::HitFrom(s) => screen.pend_message(format!("{} swings and hits you", s)),
+            GameMsg::MissTo(s) => screen.pend_message(format!("You swing and miss {}", s)),
+            GameMsg::MissFrom(s) => screen.pend_message(format!("{} swings and misses you", s)),
+            GameMsg::Killed(s) => screen.pend_message(format!("You defeated the {}", s)),
             GameMsg::Quit => {
-                screen.message(format!("Thank you for playing!"))?;
+                screen.pend_message(format!("Thank you for playing!"))?;
                 return Ok(Transition::Exit);
             }
         },

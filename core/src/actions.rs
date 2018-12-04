@@ -1,9 +1,10 @@
 //! module for handling actions and do some operations related to multiple modules
 use character::{fight, Action, DamageReaction, Enemy, EnemyHandler, Player};
-use dungeon::{Direction, Dungeon};
+use dungeon::{Direction, Dungeon, DungeonPath};
 use error::*;
 use item::{itembox::Entry as ItemEntry, ItemHandler, ItemToken};
 use std::iter;
+use std::rc::Rc;
 use ui::UiState;
 use {GameInfo, GameMsg, Reaction};
 
@@ -107,10 +108,24 @@ pub(crate) fn new_level(
 
 fn player_attack(
     player: &mut Player,
-    enemy: &Enemy,
+    enemy: Rc<Enemy>,
+    place: DungeonPath,
     enemies: &mut EnemyHandler,
 ) -> GameResult<Vec<Reaction>> {
-    unimplemented!()
+    let mut res = Vec::new();
+    if let Some(hp) = fight::player_attack(player, None, &*enemy, enemies.rng()) {
+        res.push(Reaction::Notify(GameMsg::HitTo(enemy.name().to_owned())));
+        match enemy.get_damage(hp) {
+            DamageReaction::Death => {
+                enemies.remove(place);
+                res.push(Reaction::Notify(GameMsg::Killed(enemy.name().to_owned())));
+            }
+            DamageReaction::None => {}
+        }
+    } else {
+        res.push(Reaction::Notify(GameMsg::MissTo(enemy.name().to_owned())));
+    }
+    Ok(res)
 }
 
 fn move_player(
@@ -124,8 +139,8 @@ fn move_player(
     } else {
         return Ok((vec![Reaction::Notify(GameMsg::CantMove(direction))], true));
     };
-    if let Some(enemy) = enemies.get_enemy(&new_pos) {
-        return player_attack(player, enemy, enemies).map(|r| (r, true));
+    if let Some(enemy) = enemies.get_cloned(&new_pos) {
+        return player_attack(player, enemy, new_pos, enemies).map(|r| (r, true));
     }
     let new_pos = dungeon
         .move_player(&player.pos, direction, enemies)

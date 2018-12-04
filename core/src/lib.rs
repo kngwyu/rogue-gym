@@ -327,6 +327,20 @@ impl RunTime {
             None => Err(ErrorId::InvalidInput(key).into()),
         }
     }
+    pub fn is_cancel(&self, key: Key) -> GameResult<bool> {
+        match self.keymap.get(key) {
+            Some(i) => match i {
+                InputCode::Both { sys, .. } | InputCode::Sys(sys) => match sys {
+                    input::System::Cancel | input::System::Enter | input::System::Continue => {
+                        Ok(true)
+                    }
+                    _ => Ok(false),
+                },
+                _ => Ok(false),
+            },
+            None => Err(ErrorId::InvalidInput(key).into()),
+        }
+    }
     pub fn screen_size(&self) -> (X, Y) {
         (self.config.width, self.config.height)
     }
@@ -384,6 +398,7 @@ pub enum GameMsg {
     HitFrom(SmallStr),
     MissTo(SmallStr),
     MissFrom(SmallStr),
+    Killed(SmallStr),
     NoDownStair,
     SecretDoor,
     Quit,

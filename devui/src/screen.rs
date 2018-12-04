@@ -1,6 +1,7 @@
 use error::*;
 use rogue_gym_core::dungeon::{Coord, X, Y};
 use rogue_gym_uilib::Screen;
+use std::collections::VecDeque;
 use std::io::{self, Stdout, Write};
 use termion::raw::{IntoRawMode, RawTerminal};
 use termion::{clear, cursor, terminal_size};
@@ -15,6 +16,7 @@ pub struct TermScreen<T> {
     has_notification: bool,
     width: u16,
     height: u16,
+    pub(crate) pending_messages: VecDeque<String>,
 }
 
 impl TermScreen<RawTerm> {
@@ -40,6 +42,7 @@ impl TermScreen<RawTerm> {
             has_notification: false,
             width: w,
             height: h,
+            pending_messages: VecDeque::new(),
         })
     }
 }
@@ -64,6 +67,7 @@ impl TermScreen<Stdout> {
             has_notification: false,
             width,
             height,
+            pending_messages: VecDeque::new(),
         })
     }
 }
@@ -114,6 +118,10 @@ impl<T: Write> Screen for TermScreen<T> {
         .into_chained(|| "in TermScreen::write_str")?;
         self.flush().chain_err(|| "in TermScreen::write_str")
     }
+    fn pend_message<S: AsRef<str>>(&mut self, msg: S) -> GameResult<()> {
+        self.pending_messages.push_back(msg.as_ref().to_owned());
+        Ok(())
+    }
 }
 
 impl<T: Write> TermScreen<T> {
@@ -136,5 +144,18 @@ impl<T: Write> TermScreen<T> {
         )
         .into_chained(|| "in Screen::default_config")?;
         self.flush().chain_err(|| "in Screen::default_config")
+    }
+    pub fn display_msg(&mut self) -> GameResult<bool> {
+        if let Some(msg) = self.pending_messages.pop_front() {
+            if self.pending_messages.is_empty() {
+                self.message(msg)?;
+                Ok(false)
+            } else {
+                self.message(msg + "--More--")?;
+                Ok(true)
+            }
+        } else {
+            Ok(false)
+        }
     }
 }

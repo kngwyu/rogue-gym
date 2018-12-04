@@ -1,4 +1,4 @@
-use super::{Defense, Dice, Exp, HitPoint, Level, Strength};
+use super::{DamageReaction, Defense, Dice, Exp, HitPoint, Level, Strength};
 use crate::{Drawable, SmallStr};
 use dungeon::{Dungeon, DungeonPath, MoveResult};
 use item::ItemNum;
@@ -186,6 +186,15 @@ impl Enemy {
     pub fn name(&self) -> &SmallStr {
         &self.name
     }
+    pub fn get_damage(&self, damage: HitPoint) -> DamageReaction {
+        let cur = self.hp.get();
+        if cur <= damage {
+            DamageReaction::Death
+        } else {
+            self.hp.replace(damage - cur);
+            DamageReaction::None
+        }
+    }
     fn run(&self) {
         self.running.replace(true);
     }
@@ -292,11 +301,21 @@ impl EnemyHandler {
             debug!("EnemyHandler::place path is already used by {:?}", enem);
         }
     }
+    pub fn remove(&mut self, path: DungeonPath) {
+        self.placed_enemies.remove(&path);
+        self.active_enemies.remove(&path);
+    }
     pub fn get_enemy(&self, path: &DungeonPath) -> Option<&Enemy> {
         self.placed_enemies
             .get(&path)
             .or_else(|| self.active_enemies.get(&path))
             .map(AsRef::as_ref)
+    }
+    pub fn get_cloned(&self, path: &DungeonPath) -> Option<Rc<Enemy>> {
+        self.placed_enemies
+            .get(&path)
+            .or_else(|| self.active_enemies.get(&path))
+            .map(Rc::clone)
     }
     pub fn activate<'a, F>(&mut self, is_in_activation_area: F)
     where
