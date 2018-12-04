@@ -7,7 +7,7 @@ use tuple_map::TupleMap2;
 pub fn player_attack(
     player: &Player,
     throw_weapon: Option<ItemToken>,
-    enemy: &mut Enemy,
+    enemy: &Enemy,
     rng: &mut RngHandle,
 ) -> Option<HitPoint> {
     let (attack_rate, dam_plus) = if let Some(ref item) = throw_weapon {
@@ -39,7 +39,7 @@ pub fn player_attack(
     )
 }
 
-pub fn enemy_attack(enemy: &Enemy, player: &mut Player, rng: &mut RngHandle) -> Option<HitPoint> {
+pub fn enemy_attack(enemy: &Enemy, player: &Player, rng: &mut RngHandle) -> Option<HitPoint> {
     let attack_rate = attack_rate_enemy(player, enemy);
     let dam_plus = damage_plus(Enemy::STRENGTH);
     roll(
@@ -104,7 +104,7 @@ fn damage_plus(strength: Strength) -> HitPoint {
         5, 5, 5, 6,
     ];
     if strength.0 <= 0 || strength.0 > DATA.len() as i64 {
-        return 0;
+        return HitPoint(0);
     }
     DATA[strength.0 as usize - 1].into()
 }

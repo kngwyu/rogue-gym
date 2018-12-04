@@ -277,11 +277,10 @@ impl RunTime {
     pub fn react_to_input(&mut self, input: InputCode) -> GameResult<Vec<Reaction>> {
         trace!("[react_to_input] input: {:?} ui: {:?}", input, self.ui);
         self.saved_inputs.push(input);
-        let (next_ui, res) = match self.ui {
-            UiState::Dungeon => (
-                None,
-                match input {
-                    InputCode::Sys(sys) => self.check_interrupting(sys),
+        let (next_ui, res) =
+            match self.ui {
+                UiState::Dungeon => match input {
+                    InputCode::Sys(sys) => (None, self.check_interrupting(sys)?),
                     InputCode::Act(act) | InputCode::Both { act, .. } => {
                         let mut res = actions::process_action(
                             act,
@@ -291,39 +290,36 @@ impl RunTime {
                             &mut self.player,
                             &mut self.enemies,
                         )?;
-                        res.extend(actions::move_active_enemies(
+                        let (ext, ui) = actions::move_active_enemies(
                             &mut self.enemies,
                             &mut *self.dungeon,
                             &mut self.player,
-                        )?);
-                        Ok(res)
+                        )?;
+                        res.extend(ext);
+                        (ui, res)
                     }
                 },
-            ),
-            UiState::Mordal(ref mut kind) => match input {
-                InputCode::Sys(sys) | InputCode::Both { sys, .. } => {
-                    let res = kind.process(sys);
-                    match res {
-                        MordalMsg::Cancel => (
-                            Some(UiState::Dungeon),
-                            Ok(vec![Reaction::UiTransition(UiState::Dungeon)]),
-                        ),
-                        MordalMsg::Save => (
-                            Some(UiState::Dungeon),
-                            Err(ErrorId::Unimplemented
+                UiState::Mordal(ref mut kind) => match input {
+                    InputCode::Sys(sys) | InputCode::Both { sys, .. } => {
+                        let res = kind.process(sys);
+                        match res {
+                            MordalMsg::Cancel => (
+                                Some(UiState::Dungeon),
+                                vec![Reaction::UiTransition(UiState::Dungeon)],
+                            ),
+                            MordalMsg::Save => bail!(ErrorId::Unimplemented
                                 .into_with(|| "Save command is unimplemented")),
-                        ),
-                        MordalMsg::Quit => (None, Ok(vec![Reaction::Notify(GameMsg::Quit)])),
-                        MordalMsg::None => (None, Ok(vec![])),
+                            MordalMsg::Quit => (None, vec![Reaction::Notify(GameMsg::Quit)]),
+                            MordalMsg::None => (None, vec![]),
+                        }
                     }
-                }
-                InputCode::Act(_) => (None, Err(ErrorId::IgnoredInput(input).into())),
-            },
-        };
+                    InputCode::Act(_) => bail!(ErrorId::IgnoredInput(input)),
+                },
+            };
         if let Some(next_ui) = next_ui {
             self.ui = next_ui;
         }
-        res
+        Ok(res)
     }
     pub fn react_to_key(&mut self, key: Key) -> GameResult<Vec<Reaction>> {
         match self.keymap.get(key) {

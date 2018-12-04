@@ -76,7 +76,7 @@ pub trait Dungeon {
         item: &mut ItemHandler,
         enemies: &mut EnemyHandler,
     ) -> GameResult<()>;
-    fn can_move_player(&self, path: &DungeonPath, direction: Direction) -> bool;
+    fn can_move_player(&self, path: &DungeonPath, direction: Direction) -> Option<DungeonPath>;
     fn move_player(
         &mut self,
         path: &DungeonPath,

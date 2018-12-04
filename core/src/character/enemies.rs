@@ -183,6 +183,9 @@ impl Enemy {
     pub fn attack(&self) -> &DiceVec<HitPoint> {
         &self.attack
     }
+    pub fn name(&self) -> &SmallStr {
+        &self.name
+    }
     fn run(&self) {
         self.running.replace(true);
     }
@@ -194,7 +197,13 @@ impl Drawable for Enemy {
     }
 }
 
-pub struct Attack(Rc<Enemy>);
+pub(crate) struct Attack(Rc<Enemy>);
+
+impl Attack {
+    pub fn enemy(&self) -> &Enemy {
+        self.0.as_ref()
+    }
+}
 
 pub struct EnemyHandler {
     enemy_stats: Vec<Status>,
@@ -311,7 +320,7 @@ impl EnemyHandler {
             }
         }
     }
-    pub fn move_actives(
+    pub(crate) fn move_actives(
         &mut self,
         player_pos: &DungeonPath,
         gold_pos: Option<&DungeonPath>,
@@ -356,6 +365,9 @@ impl EnemyHandler {
             self.active_enemies
         );
         out
+    }
+    pub(crate) fn rng(&mut self) -> &mut RngHandle {
+        &mut self.rng
     }
 }
 

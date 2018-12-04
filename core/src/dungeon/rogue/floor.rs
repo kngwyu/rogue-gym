@@ -203,8 +203,12 @@ impl Floor {
         Some(res)
     }
     /// judge if the player can move from `cd` in `direction`
-    pub(super) fn can_move_player(&self, cd: Coord, direction: Direction) -> bool {
-        self.can_move_impl(cd, direction, false).unwrap_or(false)
+    pub(super) fn can_move_player(&self, cd: Coord, direction: Direction) -> Option<Coord> {
+        if self.can_move_impl(cd, direction, false).unwrap_or(false) {
+            Some(cd + direction.to_cd())
+        } else {
+            None
+        }
     }
     /// judge if the enemy can move from `cd` in `direction`
     pub(super) fn can_move_enemy(&self, cd: Coord, direction: Direction) -> bool {

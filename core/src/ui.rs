@@ -7,9 +7,16 @@ pub enum UiState {
     Mordal(MordalKind),
 }
 
+impl UiState {
+    pub(crate) fn die(message: String) -> Self {
+        UiState::Mordal(MordalKind::Grave(message.into_boxed_str()))
+    }
+}
+
 /// mordals
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum MordalKind {
+    Grave(Box<str>),
     Inventory,
     Quit,
 }
@@ -24,6 +31,10 @@ impl MordalKind {
             },
             MordalKind::Inventory => match input {
                 System::Cancel | System::Continue => MordalMsg::Cancel,
+                _ => MordalMsg::None,
+            },
+            MordalKind::Grave(_) => match input {
+                System::Cancel | System::Continue => MordalMsg::Quit,
                 _ => MordalMsg::None,
             },
         }

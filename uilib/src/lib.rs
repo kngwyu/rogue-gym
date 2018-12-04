@@ -68,6 +68,33 @@ pub trait Screen {
             "--Press space to continue--",
         )
     }
+    fn dying_msg(&mut self, sig: &str) -> GameResult<()> {
+        const MESSAGES: [&'static str; 9] = [
+            r"                __________",
+            r"               /          \",
+            r"              /    REST    \",
+            r"             /      IN      \",
+            r"            /     PEACE      \",
+            r"           /                  \",
+            r"           |                  |",
+            r"          *|     *  *  *      | *",
+            r" ________)/\\_//(\/(/\)/\//\/|_)_______",
+        ];
+        let sig = if sig.len() > 18 { &sig[..18] } else { sig };
+        for (i, msg) in MESSAGES.iter().enumerate() {
+            if i == 6 {
+                let mut s = format!("           |{}", sig);
+                for _ in 0..18 - sig.len() {
+                    s.push_str(" ")
+                }
+                s.push_str("|");
+                let _ = self.write_str(Coord::new(0, i as i32 + 2), s);
+            } else {
+                let _ = self.write_str(Coord::new(0, i as i32 + 2), msg);
+            }
+        }
+        Ok(())
+    }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -105,6 +132,7 @@ pub fn process_reaction<S: Screen>(
             UiState::Mordal(kind) => match kind {
                 MordalKind::Quit => screen.message(format!("You really quit game?(y/n)")),
                 MordalKind::Inventory => screen.inventory(runtime),
+                MordalKind::Grave(msg) => screen.dying_msg(&*msg),
             },
             UiState::Dungeon => {
                 screen.dungeon(runtime)?;

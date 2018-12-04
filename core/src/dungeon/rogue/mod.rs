@@ -220,12 +220,14 @@ impl DungeonTrait for Dungeon {
     ) -> GameResult<()> {
         self.new_level_(game_info, item, enemies, false)
     }
-    fn can_move_player(&self, path: &DungeonPath, direction: Direction) -> bool {
+    fn can_move_player(&self, path: &DungeonPath, direction: Direction) -> Option<DungeonPath> {
         let address = Address::from_path(path);
         if address.level != self.level {
-            return false;
+            return None;
         }
-        self.current_floor.can_move_player(address.cd, direction)
+        self.current_floor
+            .can_move_player(address.cd, direction)
+            .map(|cd| DungeonPath::from(Address::new(address.level, cd)))
     }
     fn move_player(
         &mut self,
@@ -456,8 +458,10 @@ impl Dungeon {
         self.dist_cache.push_back((dist_map, cd));
         if len > MAX_CACHED_DIST {
             self.dist_cache.pop_front();
+            &self.dist_cache[len - 1].0
+        } else {
+            &self.dist_cache[len].0
         }
-        &self.dist_cache[len].0
     }
 }
 

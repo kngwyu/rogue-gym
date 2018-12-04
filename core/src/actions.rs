@@ -1,9 +1,10 @@
 //! module for handling actions and do some operations related to multiple modules
-use character::{Action, EnemyHandler, Player};
+use character::{fight, Action, DamageReaction, Enemy, EnemyHandler, Player};
 use dungeon::{Direction, Dungeon};
 use error::*;
 use item::{itembox::Entry as ItemEntry, ItemHandler, ItemToken};
 use std::iter;
+use ui::UiState;
 use {GameInfo, GameMsg, Reaction};
 
 pub(crate) fn process_action(
@@ -53,9 +54,36 @@ pub(crate) fn move_active_enemies(
     enemies: &mut EnemyHandler,
     dungeon: &mut dyn Dungeon,
     player: &mut Player,
-) -> GameResult<Vec<Reaction>> {
-    let _stub = enemies.move_actives(&player.pos, None, dungeon);
-    Ok(vec![])
+) -> GameResult<(Vec<Reaction>, Option<UiState>)> {
+    let attacks = enemies.move_actives(&player.pos, None, dungeon);
+    let mut res = Vec::new();
+    let mut did_hit = false;
+    for at in attacks {
+        match fight::enemy_attack(at.enemy(), player, enemies.rng()) {
+            Some(hp) => {
+                let name = at.enemy().name();
+                res.push(Reaction::Notify(GameMsg::HitFrom(name.to_owned())));
+                did_hit = true;
+                match player.get_damage(hp) {
+                    DamageReaction::Death => {
+                        let mordal = UiState::die(format!("Killed by {}", name));
+                        res.push(Reaction::UiTransition(mordal.clone()));
+                        return Ok((res, Some(mordal)));
+                    }
+                    DamageReaction::None => {}
+                }
+            }
+            None => {
+                res.push(Reaction::Notify(GameMsg::MissFrom(
+                    at.enemy().name().to_owned(),
+                )));
+            }
+        }
+    }
+    if did_hit {
+        res.push(Reaction::StatusUpdated);
+    }
+    Ok((res, None))
 }
 
 pub(crate) fn new_level(
@@ -77,14 +105,27 @@ pub(crate) fn new_level(
     dungeon.enter_room(&player.pos, enemies)
 }
 
+fn player_attack(
+    player: &mut Player,
+    enemy: &Enemy,
+    enemies: &mut EnemyHandler,
+) -> GameResult<Vec<Reaction>> {
+    unimplemented!()
+}
+
 fn move_player(
     direction: Direction,
     dungeon: &mut dyn Dungeon,
     player: &mut Player,
     enemies: &mut EnemyHandler,
 ) -> GameResult<(Vec<Reaction>, bool)> {
-    if !dungeon.can_move_player(&player.pos, direction) {
+    let new_pos = if let Some(next) = dungeon.can_move_player(&player.pos, direction) {
+        next
+    } else {
         return Ok((vec![Reaction::Notify(GameMsg::CantMove(direction))], true));
+    };
+    if let Some(enemy) = enemies.get_enemy(&new_pos) {
+        return player_attack(player, enemy, enemies).map(|r| (r, true));
     }
     let new_pos = dungeon
         .move_player(&player.pos, direction, enemies)

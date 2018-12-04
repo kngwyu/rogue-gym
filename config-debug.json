@@ -59,62 +59,33 @@
         }
     },
     "keymap": {
-        " ": {
-            "Sys": "Continue"
-        },
-        "s": {
-            "Act": "Search"
-        },
-        "Q": {
-            "Sys": "Quit"
-        },
-        "Down": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
-        "Esc": {
-            "Sys": "Cancel"
-        },
-        "Right": {
-            "Act": {
-                "Move": "Right"
-            }
-        },
-        "K": {
-            "Act": {
-                "MoveUntil": "Up"
-            }
-        },
-        "B": {
-            "Act": {
-                "MoveUntil": "LeftDown"
-            }
-        },
-        "k": {
-            "Act": {
-                "Move": "Up"
-            }
-        },
-        "y": {
-            "Both": {
-                "act": {
-                    "Move": "LeftUp"
-                },
-                "sys": "Yes"
-            }
-        },
-        "i": {
-            "Sys": "Inventory"
+        ">": {
+            "Act": "DownStair"
         },
         "H": {
             "Act": {
                 "MoveUntil": "Left"
             }
         },
-        "J": {
+        "u": {
             "Act": {
-                "MoveUntil": "Down"
+                "Move": "RightUp"
+            }
+        },
+        "s": {
+            "Act": "Search"
+        },
+        "Y": {
+            "Act": {
+                "MoveUntil": "LeftUp"
+            }
+        },
+        "S": {
+            "Sys": "Save"
+        },
+        "B": {
+            "Act": {
+                "MoveUntil": "LeftDown"
             }
         },
         "n": {
@@ -125,42 +96,45 @@
                 "sys": "No"
             }
         },
-        ">": {
-            "Act": "DownStair"
+        "U": {
+            "Act": {
+                "MoveUntil": "RightUp"
+            }
         },
         "l": {
             "Act": {
                 "Move": "Right"
             }
         },
-        "N": {
-            "Act": {
-                "MoveUntil": "RightDown"
-            }
+        "i": {
+            "Sys": "Inventory"
         },
-        "h": {
+        "Left": {
             "Act": {
                 "Move": "Left"
             }
         },
-        "Y": {
+        "L": {
             "Act": {
-                "MoveUntil": "LeftUp"
+                "MoveUntil": "Right"
             }
         },
-        "u": {
-            "Act": {
-                "Move": "RightUp"
+        "y": {
+            "Both": {
+                "act": {
+                    "Move": "LeftUp"
+                },
+                "sys": "Yes"
             }
         },
-        "j": {
+        "K": {
             "Act": {
-                "Move": "Down"
+                "MoveUntil": "Up"
             }
         },
-        "Up": {
+        "Right": {
             "Act": {
-                "Move": "Up"
+                "Move": "Right"
             }
         },
         "b": {
@@ -168,23 +142,49 @@
                 "Move": "LeftDown"
             }
         },
-        "U": {
+        "N": {
             "Act": {
-                "MoveUntil": "RightUp"
+                "MoveUntil": "RightDown"
             }
         },
-        "Left": {
+        "Up": {
+            "Act": {
+                "Move": "Up"
+            }
+        },
+        "j": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "Down": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "J": {
+            "Act": {
+                "MoveUntil": "Down"
+            }
+        },
+        "Q": {
+            "Sys": "Quit"
+        },
+        "k": {
+            "Act": {
+                "Move": "Up"
+            }
+        },
+        "h": {
             "Act": {
                 "Move": "Left"
             }
         },
-        "S": {
-            "Sys": "Save"
+        "Esc": {
+            "Sys": "Cancel"
         },
-        "L": {
-            "Act": {
-                "MoveUntil": "Right"
-            }
+        " ": {
+            "Sys": "Continue"
         }
     },
     "player": {
@@ -248,7 +248,7 @@
             },
             {
                 "Weapon": {
-                    "name": "short-bow",
+                    "name": "bow",
                     "num_plus": 0,
                     "hit_plus": 1,
                     "dam_plus": 0

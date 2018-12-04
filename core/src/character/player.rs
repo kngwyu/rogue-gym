@@ -1,11 +1,11 @@
-use super::{Defense, Exp, HitPoint, Level, Maxed, Strength};
+use super::{DamageReaction, Defense, Exp, HitPoint, Level, Maxed, Strength};
 use dungeon::{Direction, DungeonPath};
 use error::GameResult;
 use item::{
     armor, food::Food, itembox::ItemBox, weapon, InitItem, Item, ItemHandler, ItemKind, ItemToken,
 };
 use smallstr::SmallStr;
-use std::fmt;
+use std::{cmp, fmt};
 use tile::{Drawable, Tile};
 use tuple_map::TupleMap2;
 
@@ -146,6 +146,14 @@ impl Player {
     }
     pub fn level(&self) -> Level {
         self.status.level
+    }
+    pub(crate) fn get_damage(&mut self, damage: HitPoint) -> DamageReaction {
+        self.status.hp.current = cmp::max(self.status.hp.current - damage, HitPoint(0));
+        if self.status.hp.current == HitPoint(0) {
+            DamageReaction::Death
+        } else {
+            DamageReaction::None
+        }
     }
     fn get_initial_weapon(&self) -> Option<SmallStr> {
         self.config.init_items.iter().find_map(|item| {

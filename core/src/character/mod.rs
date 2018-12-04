@@ -1,5 +1,5 @@
 pub mod enemies;
-mod fight;
+pub mod fight;
 pub mod player;
 pub use self::player::{Action, Hunger, Leveling, Player};
 pub use enemies::{Enemy, EnemyHandler};
@@ -238,6 +238,12 @@ where
         self.into_iter()
             .fold(HitPoint::default(), |acc, d| acc + d.min())
     }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum DamageReaction {
+    Death,
+    None,
 }
 
 #[cfg(test)]
