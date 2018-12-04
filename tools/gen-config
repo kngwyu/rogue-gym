@@ -1,0 +1,7 @@
+#!/bin/bash
+cd ../core &&
+    cargo test print -- --ignored &&
+    cd .. &&
+    node tools/format-json.js ./data/ &&
+    cp data/config-default.json ./config-debug.json
+

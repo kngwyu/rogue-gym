@@ -64,13 +64,10 @@ impl Config {
 }
 
 pub(crate) fn rogue_default_armor() -> InitItem {
-    let (mut armor, attr, num) = BUILTIN_ARMORS[1].clone().build_inner();
-    armor.def_plus = Defense(1);
-    InitItem::Noinit(Item {
-        kind: ItemKind::Armor(armor),
-        how_many: num,
-        attr,
-    })
+    InitItem::Armor {
+        name: BUILTIN_ARMORS[1].name.clone(),
+        def_plus: 1,
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]

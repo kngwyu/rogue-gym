@@ -2,7 +2,7 @@ use super::{Defense, Exp, HitPoint, Level, Maxed, Strength};
 use dungeon::{Direction, DungeonPath};
 use error::GameResult;
 use item::{
-    food::Food, itembox::ItemBox, weapon, InitItem, Item, ItemHandler, ItemKind, ItemToken,
+    armor, food::Food, itembox::ItemBox, weapon, InitItem, Item, ItemHandler, ItemKind, ItemToken,
 };
 use smallstr::SmallStr;
 use std::fmt;
@@ -55,11 +55,11 @@ const fn default_max_items() -> usize {
     27
 }
 
-#[inline]
 fn default_init_items() -> Vec<InitItem> {
     let money = Item::new(ItemKind::Gold, 0).many();
     let food = Item::new(ItemKind::Food(Food::Ration), 1).many();
     let mut res = (money, food).map(|x| InitItem::Noinit(x)).into_vec();
+    res.push(armor::rogue_default_armor());
     weapon::rogue_init_weapons(&mut res);
     res
 }
@@ -114,22 +114,20 @@ impl Player {
     }
     pub fn init_items(&mut self, items: &mut ItemHandler) -> GameResult<()> {
         items.init_player_items(&mut self.itembox, &self.config.init_items)?;
-        let name = match self.get_initial_weapon() {
-            Some(n) => n,
-            None => return Ok(()),
-        };
-        self.weapon = self.equip_from_box(|item| match &item.kind {
-            ItemKind::Weapon(w) => name == w.name(),
-            _ => false,
-        });
-        let name = match self.get_initial_armor() {
-            Some(n) => n,
-            None => return Ok(()),
-        };
-        self.armor = self.equip_from_box(|item| match &item.kind {
-            ItemKind::Armor(a) => name == a.name(),
-            _ => false,
-        });
+        if let Some(name) = self.get_initial_weapon() {
+            debug!("Initial weapon: {}", name);
+            self.weapon = self.equip_from_box(|item| match &item.kind {
+                ItemKind::Weapon(w) => name == w.name(),
+                _ => false,
+            })
+        }
+        if let Some(name) = self.get_initial_armor() {
+            debug!("Initial armor: {}", name);
+            self.armor = self.equip_from_box(|item| match &item.kind {
+                ItemKind::Armor(a) => name == a.name(),
+                _ => false,
+            })
+        }
         Ok(())
     }
     pub fn strength(&self) -> Maxed<Strength> {

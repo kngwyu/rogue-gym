@@ -2,8 +2,8 @@ use super::{Item, ItemAttr, ItemNum};
 use rng::{Parcent, RngHandle};
 
 pub(super) trait ItemInner {
-    fn get_cursed(&mut self, rng: &mut RngHandle) {}
-    fn get_powerup(&mut self, rng: &mut RngHandle) {}
+    fn get_cursed(&mut self, _rng: &mut RngHandle) {}
+    fn get_powerup(&mut self, _rng: &mut RngHandle) {}
     fn into_item(self, attr: ItemAttr, num: ItemNum) -> Item;
 }
 
@@ -15,7 +15,7 @@ pub(super) trait ItemStat {
     fn worth(&self) -> ItemNum;
 }
 
-pub(super) fn select_item<'i, S, I>(rng: &mut RngHandle, iter: I) -> usize
+fn select_item<'i, S, I>(rng: &mut RngHandle, iter: I) -> usize
 where
     S: 'i + ItemStat,
     I: Iterator<Item = &'i S>,

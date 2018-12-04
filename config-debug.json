@@ -22,6 +22,20 @@
         "passage_unlock_rate_inv": 3
     },
     "item": {
+        "armor": {
+            "armors": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+            ],
+            "cursed_rate": 20,
+            "powerup_rate": 8
+        },
         "gold": {
             "rate_inv": 2,
             "base": 50,
@@ -45,19 +59,31 @@
         }
     },
     "keymap": {
-        "L": {
-            "Act": {
-                "MoveUntil": "Right"
-            }
+        " ": {
+            "Sys": "Continue"
         },
-        "U": {
-            "Act": {
-                "MoveUntil": "RightUp"
-            }
+        "s": {
+            "Act": "Search"
+        },
+        "Q": {
+            "Sys": "Quit"
         },
         "Down": {
             "Act": {
                 "Move": "Down"
+            }
+        },
+        "Esc": {
+            "Sys": "Cancel"
+        },
+        "Right": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "K": {
+            "Act": {
+                "MoveUntil": "Up"
             }
         },
         "B": {
@@ -65,9 +91,9 @@
                 "MoveUntil": "LeftDown"
             }
         },
-        "u": {
+        "k": {
             "Act": {
-                "Move": "RightUp"
+                "Move": "Up"
             }
         },
         "y": {
@@ -78,37 +104,18 @@
                 "sys": "Yes"
             }
         },
+        "i": {
+            "Sys": "Inventory"
+        },
         "H": {
             "Act": {
                 "MoveUntil": "Left"
             }
         },
-        "Y": {
+        "J": {
             "Act": {
-                "MoveUntil": "LeftUp"
+                "MoveUntil": "Down"
             }
-        },
-        "Up": {
-            "Act": {
-                "Move": "Up"
-            }
-        },
-        "h": {
-            "Act": {
-                "Move": "Left"
-            }
-        },
-        "S": {
-            "Sys": "Save"
-        },
-        "Q": {
-            "Sys": "Quit"
-        },
-        "Esc": {
-            "Sys": "Cancel"
-        },
-        ">": {
-            "Act": "DownStair"
         },
         "n": {
             "Both": {
@@ -118,47 +125,12 @@
                 "sys": "No"
             }
         },
-        "j": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
-        "Left": {
-            "Act": {
-                "Move": "Left"
-            }
-        },
-        "Right": {
-            "Act": {
-                "Move": "Right"
-            }
-        },
-        "i": {
-            "Sys": "Inventory"
-        },
-        "k": {
-            "Act": {
-                "Move": "Up"
-            }
+        ">": {
+            "Act": "DownStair"
         },
         "l": {
             "Act": {
                 "Move": "Right"
-            }
-        },
-        "J": {
-            "Act": {
-                "MoveUntil": "Down"
-            }
-        },
-        "b": {
-            "Act": {
-                "Move": "LeftDown"
-            }
-        },
-        "K": {
-            "Act": {
-                "MoveUntil": "Up"
             }
         },
         "N": {
@@ -166,11 +138,53 @@
                 "MoveUntil": "RightDown"
             }
         },
-        "s": {
-            "Act": "Search"
+        "h": {
+            "Act": {
+                "Move": "Left"
+            }
         },
-        " ": {
-            "Sys": "Continue"
+        "Y": {
+            "Act": {
+                "MoveUntil": "LeftUp"
+            }
+        },
+        "u": {
+            "Act": {
+                "Move": "RightUp"
+            }
+        },
+        "j": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "Up": {
+            "Act": {
+                "Move": "Up"
+            }
+        },
+        "b": {
+            "Act": {
+                "Move": "LeftDown"
+            }
+        },
+        "U": {
+            "Act": {
+                "MoveUntil": "RightUp"
+            }
+        },
+        "Left": {
+            "Act": {
+                "Move": "Left"
+            }
+        },
+        "S": {
+            "Sys": "Save"
+        },
+        "L": {
+            "Act": {
+                "MoveUntil": "Right"
+            }
         }
     },
     "player": {
@@ -219,13 +233,34 @@
                 }
             },
             {
-                "Weapon": "mace"
+                "Armor": {
+                    "name": "ring mail",
+                    "def_plus": 1
+                }
             },
             {
-                "Weapon": "short-bow"
+                "Weapon": {
+                    "name": "mace",
+                    "num_plus": 0,
+                    "hit_plus": 1,
+                    "dam_plus": 1
+                }
             },
             {
-                "Weapon": "arrow"
+                "Weapon": {
+                    "name": "short-bow",
+                    "num_plus": 0,
+                    "hit_plus": 1,
+                    "dam_plus": 0
+                }
+            },
+            {
+                "Weapon": {
+                    "name": "arrow",
+                    "num_plus": 25,
+                    "hit_plus": 0,
+                    "dam_plus": 0
+                }
             }
         ]
     },

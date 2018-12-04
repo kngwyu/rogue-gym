@@ -1,55 +1,12 @@
 {
-    "l": {
-        "Act": {
-            "Move": "Right"
-        }
-    },
-    "j": {
-        "Act": {
-            "Move": "Down"
-        }
-    },
-    "J": {
-        "Act": {
-            "MoveUntil": "Down"
-        }
-    },
-    ">": {
-        "Act": "DownStair"
-    },
-    "U": {
-        "Act": {
-            "MoveUntil": "RightUp"
-        }
-    },
     "y": {
         "Act": {
             "Move": "LeftUp"
         }
     },
-    "B": {
+    "U": {
         "Act": {
-            "MoveUntil": "LeftDown"
-        }
-    },
-    "k": {
-        "Act": {
-            "Move": "Up"
-        }
-    },
-    "K": {
-        "Act": {
-            "MoveUntil": "Up"
-        }
-    },
-    "u": {
-        "Act": {
-            "Move": "RightUp"
-        }
-    },
-    "h": {
-        "Act": {
-            "Move": "Left"
+            "MoveUntil": "RightUp"
         }
     },
     "N": {
@@ -57,12 +14,32 @@
             "MoveUntil": "RightDown"
         }
     },
-    "s": {
-        "Act": "Search"
-    },
-    "Y": {
+    "n": {
         "Act": {
-            "MoveUntil": "LeftUp"
+            "Move": "RightDown"
+        }
+    },
+    "h": {
+        "Act": {
+            "Move": "Left"
+        }
+    },
+    "J": {
+        "Act": {
+            "MoveUntil": "Down"
+        }
+    },
+    "j": {
+        "Act": {
+            "Move": "Down"
+        }
+    },
+    ">": {
+        "Act": "DownStair"
+    },
+    "k": {
+        "Act": {
+            "Move": "Up"
         }
     },
     "H": {
@@ -70,9 +47,32 @@
             "MoveUntil": "Left"
         }
     },
+    "B": {
+        "Act": {
+            "MoveUntil": "LeftDown"
+        }
+    },
+    "u": {
+        "Act": {
+            "Move": "RightUp"
+        }
+    },
+    "s": {
+        "Act": "Search"
+    },
     "b": {
         "Act": {
             "Move": "LeftDown"
+        }
+    },
+    "l": {
+        "Act": {
+            "Move": "Right"
+        }
+    },
+    "Y": {
+        "Act": {
+            "MoveUntil": "LeftUp"
         }
     },
     "L": {
@@ -80,9 +80,9 @@
             "MoveUntil": "Right"
         }
     },
-    "n": {
+    "K": {
         "Act": {
-            "Move": "RightDown"
+            "MoveUntil": "Up"
         }
     }
 }
