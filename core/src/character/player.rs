@@ -178,6 +178,9 @@ impl Player {
             item
         })
     }
+    pub fn turn_passed(&mut self) {
+        self.status.food_left -= 1;
+    }
 }
 
 impl Drawable for Player {

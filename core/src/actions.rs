@@ -18,6 +18,7 @@ pub(crate) fn process_action(
 ) -> GameResult<Vec<Reaction>> {
     match action {
         Action::DownStair => {
+            player.turn_passed();
             if dungeon.is_downstair(&player.pos) {
                 new_level(info, dungeon, item, player, enemies, false)
                     .chain_err(|| "action::process_action")?;
@@ -29,11 +30,15 @@ pub(crate) fn process_action(
         Action::UpStair => {
             Err(ErrorId::Unimplemented.into_with(|| "UpStair Command is unimplemented"))
         }
-        Action::Move(d) => Ok(move_player(d, dungeon, player, enemies)?.0),
+        Action::Move(d) => {
+            player.turn_passed();
+            Ok(move_player(d, dungeon, player, enemies)?.0)
+        }
         Action::MoveUntil(d) => {
             let mut out = Vec::new();
             loop {
                 let res = move_player(d, dungeon, player, enemies)?;
+                player.turn_passed();
                 let tile = dungeon
                     .tile(&player.pos)
                     .map(|t| t.to_char())
@@ -47,7 +52,10 @@ pub(crate) fn process_action(
             }
             Ok(out)
         }
-        Action::Search => search(dungeon, player),
+        Action::Search => {
+            player.turn_passed();
+            search(dungeon, player)
+        }
     }
 }
 
