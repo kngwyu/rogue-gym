@@ -30,11 +30,11 @@ impl MordalKind {
                 _ => MordalMsg::None,
             },
             MordalKind::Inventory => match input {
-                System::Cancel | System::Continue => MordalMsg::Cancel,
+                System::Cancel | System::Continue | System::Enter => MordalMsg::Cancel,
                 _ => MordalMsg::None,
             },
             MordalKind::Grave(_) => match input {
-                System::Cancel | System::Continue => MordalMsg::Quit,
+                System::Cancel | System::Continue | System::Enter => MordalMsg::Quit,
                 _ => MordalMsg::None,
             },
         }
