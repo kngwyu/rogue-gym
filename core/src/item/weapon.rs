@@ -83,17 +83,21 @@ impl Preset {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Weapon {
-    at_weild: Dice<HitPoint>,
-    at_throw: Dice<HitPoint>,
+    pub(super) at_weild: Dice<HitPoint>,
+    pub(super) at_throw: Dice<HitPoint>,
     name: SmallStr,
     pub(super) hit_plus: Level,
     pub(super) dam_plus: HitPoint,
     worth: ItemNum,
+    launcher: Option<SmallStr>,
 }
 
 impl Weapon {
-    pub fn name(&self) -> &SmallStr {
-        &self.name
+    pub fn name(&self) -> &str {
+        self.name.as_str()
+    }
+    pub fn launcher(&self) -> Option<&str> {
+        self.launcher.as_ref().map(SmallStr::as_str)
     }
 }
 
@@ -132,6 +136,7 @@ pub struct WeaponStatus {
     is_initial: bool,
     appear_rate: Parcent,
     worth: ItemNum,
+    launcher: Option<SmallStr>,
 }
 
 impl ItemStat for WeaponStatus {
@@ -147,6 +152,7 @@ impl ItemStat for WeaponStatus {
             attr,
             init_num,
             worth,
+            launcher,
             ..
         } = self;
         let num = rng.range(init_num);
@@ -157,6 +163,7 @@ impl ItemStat for WeaponStatus {
             hit_plus: 0.into(),
             dam_plus: 0.into(),
             worth,
+            launcher,
         };
         (weapon, attr, num.into())
     }
@@ -197,6 +204,7 @@ const BUILTIN_WEAPONS: [WeaponStatus; 9] = [
         is_initial: true,
         appear_rate: Parcent(11),
         worth: ItemNum(8),
+        launcher: None,
     },
     WeaponStatus {
         at_weild: hp_dice!(3, 4),
@@ -207,16 +215,18 @@ const BUILTIN_WEAPONS: [WeaponStatus; 9] = [
         is_initial: false,
         appear_rate: Parcent(11),
         worth: ItemNum(8),
+        launcher: None,
     },
     WeaponStatus {
         at_weild: hp_dice!(1, 1),
         at_throw: hp_dice!(1, 1),
-        name: SmallStr::from_static("short-bow"),
+        name: SmallStr::from_static("bow"),
         attr: ItemAttr::empty(),
         init_num: 1..2,
         is_initial: true,
         appear_rate: Parcent(11),
         worth: ItemNum(8),
+        launcher: None,
     },
     WeaponStatus {
         at_weild: hp_dice!(1, 1),
@@ -227,6 +237,7 @@ const BUILTIN_WEAPONS: [WeaponStatus; 9] = [
         is_initial: true,
         appear_rate: Parcent(11),
         worth: ItemNum(8),
+        launcher: Some(SmallStr::from_static("bow")),
     },
     WeaponStatus {
         at_weild: hp_dice!(1, 6),
@@ -237,6 +248,7 @@ const BUILTIN_WEAPONS: [WeaponStatus; 9] = [
         is_initial: false,
         appear_rate: Parcent(11),
         worth: ItemNum(8),
+        launcher: None,
     },
     WeaponStatus {
         at_weild: hp_dice!(4, 4),
@@ -247,6 +259,7 @@ const BUILTIN_WEAPONS: [WeaponStatus; 9] = [
         is_initial: false,
         appear_rate: Parcent(11),
         worth: ItemNum(8),
+        launcher: None,
     },
     WeaponStatus {
         at_weild: hp_dice!(1, 1),
@@ -257,6 +270,7 @@ const BUILTIN_WEAPONS: [WeaponStatus; 9] = [
         is_initial: false,
         appear_rate: Parcent(11),
         worth: ItemNum(8),
+        launcher: None,
     },
     WeaponStatus {
         at_weild: hp_dice!(1, 2),
@@ -267,6 +281,7 @@ const BUILTIN_WEAPONS: [WeaponStatus; 9] = [
         is_initial: false,
         appear_rate: Parcent(11),
         worth: ItemNum(8),
+        launcher: None,
     },
     WeaponStatus {
         at_weild: hp_dice!(2, 3),
@@ -277,5 +292,6 @@ const BUILTIN_WEAPONS: [WeaponStatus; 9] = [
         is_initial: false,
         appear_rate: Parcent(11),
         worth: ItemNum(8),
+        launcher: None,
     },
 ];

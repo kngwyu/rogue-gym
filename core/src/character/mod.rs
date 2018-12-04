@@ -178,8 +178,8 @@ impl<T: Copy> Maxed<T> {
 
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Dice<T> {
-    times: usize,
-    max: T,
+    pub times: usize,
+    pub max: T,
 }
 
 impl<T> Dice<T> {
@@ -188,7 +188,7 @@ impl<T> Dice<T> {
     }
 }
 
-impl<T: Clone> Dice<T> {
+impl<T: Clone + Default> Dice<T> {
     pub fn exec<I>(&self, rng: &mut RngHandle) -> T
     where
         T: Into<I>,
@@ -237,5 +237,19 @@ where
     fn min(self) -> HitPoint {
         self.into_iter()
             .fold(HitPoint::default(), |acc, d| acc + d.min())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn test_dice() {
+        let dice = Dice::new(2, HitPoint(4));
+        let mut rng = RngHandle::new();
+        for _ in 0..100 {
+            let hp = dice.random(&mut rng);
+            assert!(2 <= hp.0 && hp.0 <= 8);
+        }
     }
 }

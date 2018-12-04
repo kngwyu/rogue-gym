@@ -12,6 +12,7 @@ use self::handler::Handler;
 use self::handler::ItemStat;
 pub use self::itembox::ItemBox;
 use self::weapon::{Weapon, WeaponStatus};
+use character::{Dice, HitPoint, Level};
 use error::*;
 use rng::RngHandle;
 use smallstr::SmallStr;
@@ -244,6 +245,43 @@ impl Item {
     }
     pub fn is_many(&self) -> bool {
         self.attr.contains(ItemAttr::IS_MANY)
+    }
+    pub fn hit_plus(&self) -> Level {
+        match &self.kind {
+            ItemKind::Weapon(w) => w.hit_plus,
+            _ => Level(0),
+        }
+    }
+    pub fn dam_plus(&self) -> HitPoint {
+        match &self.kind {
+            ItemKind::Weapon(w) => w.dam_plus,
+            _ => HitPoint(0),
+        }
+    }
+    pub fn name(&self) -> Option<&str> {
+        match &self.kind {
+            ItemKind::Armor(a) => Some(a.name()),
+            ItemKind::Weapon(w) => Some(w.name()),
+            _ => None,
+        }
+    }
+    pub fn launcher(&self) -> Option<&str> {
+        match &self.kind {
+            ItemKind::Weapon(w) => w.launcher(),
+            _ => None,
+        }
+    }
+    pub fn at_throw(&self) -> Option<Dice<HitPoint>> {
+        match &self.kind {
+            ItemKind::Weapon(w) => Some(w.at_throw.clone()),
+            _ => None,
+        }
+    }
+    pub fn at_weild(&self) -> Option<Dice<HitPoint>> {
+        match &self.kind {
+            ItemKind::Weapon(w) => Some(w.at_weild.clone()),
+            _ => None,
+        }
     }
 }
 

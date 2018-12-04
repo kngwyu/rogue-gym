@@ -1,4 +1,4 @@
-use super::{Defense, Dice, Exp, HitPoint, Level};
+use super::{Defense, Dice, Exp, HitPoint, Level, Strength};
 use crate::{Drawable, SmallStr};
 use dungeon::{Dungeon, DungeonPath, MoveResult};
 use item::ItemNum;
@@ -164,6 +164,7 @@ pub struct Enemy {
 }
 
 impl Enemy {
+    pub(crate) const STRENGTH: Strength = Strength(10);
     pub fn is_mean(&self) -> bool {
         self.attr.contains(EnemyAttr::MEAN)
     }
@@ -178,6 +179,9 @@ impl Enemy {
     }
     pub fn defense(&self) -> Defense {
         self.defense
+    }
+    pub fn attack(&self) -> &DiceVec<HitPoint> {
+        &self.attack
     }
     fn run(&self) {
         self.running.replace(true);

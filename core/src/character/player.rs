@@ -109,8 +109,19 @@ impl Player {
     pub fn run(&mut self, b: bool) {
         self.status.running = b;
     }
+    pub fn armor(&self) -> Option<&ItemToken> {
+        self.armor.as_ref()
+    }
     pub fn arm(&self) -> Defense {
-        unimplemented!()
+        self.armor()
+            .and_then(|item| match &item.kind {
+                ItemKind::Armor(a) => Some(a.def()),
+                _ => return None,
+            })
+            .unwrap_or(Defense(0))
+    }
+    pub fn weapon(&self) -> Option<&ItemToken> {
+        self.weapon.as_ref()
     }
     pub fn init_items(&mut self, items: &mut ItemHandler) -> GameResult<()> {
         items.init_player_items(&mut self.itembox, &self.config.init_items)?;

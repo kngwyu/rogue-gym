@@ -98,6 +98,9 @@ impl Armor {
     pub fn name(&self) -> &str {
         self.name.as_ref()
     }
+    pub fn def(&self) -> Defense {
+        self.def + self.def_plus
+    }
 }
 
 impl fmt::Display for Armor {

@@ -1,7 +1,8 @@
 from rogue_gym.envs import RogueEnv
-import sys
+
+
 def seed1():
-    env = RogueEnv(seed = 1, console = False)
+    env = RogueEnv(seed=1)
     scr = env.get_screen()
     with open("../python/tests/data.py", "w") as data:
         data.write("SEED1_DUNGEON = [\n")
@@ -25,7 +26,6 @@ def seed1():
             else:
                 data.write(",")
             data.write("\n")
-            
 
 if __name__ == "__main__":
     seed1()
