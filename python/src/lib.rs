@@ -5,7 +5,7 @@ extern crate pyo3;
 extern crate rect_iter;
 extern crate rogue_gym_core;
 
-use ndarray::{Array2, ArrayViewMut, Axis, Ix2, Zip};
+use ndarray::{Array2, ArrayViewMut, Axis, Ix3, Zip};
 use numpy::PyArray3;
 use pyo3::{
     basic::{PyObjectProtocol, PyObjectReprProtocol, PyObjectStrProtocol},
@@ -24,23 +24,75 @@ use rogue_gym_core::{
 use std::collections::HashMap;
 use std::str::from_utf8_unchecked;
 
-/// Memory efficient representation of State.
+#[derive(Copy, Clone, Debug)]
+struct StatusFlagInner(u32);
+
+#[rustfmt::skip]
+impl StatusFlagInner {
+    const DUNGEON_LEVEL: u32 = 0b000_000_001;
+    const HP_CURRENT: u32    = 0b000_000_010;
+    const HP_MAX: u32        = 0b000_000_100;
+    const STR_CURRENT: u32   = 0b000_001_000;
+    const STR_MAX: u32       = 0b000_010_000;
+    const DEFENSE: u32       = 0b000_100_000;
+    const PLAYER_LEVEL: u32  = 0b001_000_000;
+    const EXP: u32           = 0b010_000_000;
+    const HUNGER: u32        = 0b100_000_000;
+}
+
+impl StatusFlagInner {
+    fn len(self) -> usize {
+        self.0.count_ones() as usize
+    }
+}
+
+impl StatusFlagInner {
+    fn copy_status(
+        self,
+        status: &Status,
+        start: usize,
+        array: &mut ArrayViewMut<f32, Ix3>,
+    ) -> usize {
+        let mut offset = start;
+        {
+            let mut copy = |flag: u32, value| {
+                if (self.0 & flag) != 0 {
+                    let mut array = array.index_axis_mut(Axis(0), offset);
+                    array.iter_mut().for_each(|elem| {
+                        *elem = value as f32;
+                    });
+                    offset += 1;
+                }
+            };
+            copy(Self::DUNGEON_LEVEL, status.dungeon_level as i32);
+            copy(Self::HP_CURRENT, status.hp.current.0 as i32);
+            copy(Self::HP_MAX, status.hp.max.0 as i32);
+            copy(Self::STR_CURRENT, status.strength.current.0 as i32);
+            copy(Self::STR_MAX, status.strength.max.0 as i32);
+            copy(Self::DEFENSE, status.defense.0 as i32);
+            copy(Self::PLAYER_LEVEL, status.player_level as i32);
+            copy(Self::EXP, status.exp.0 as i32);
+            copy(Self::HUNGER, status.hunger_level.to_u32() as i32);
+        }
+        offset
+    }
+}
+
+/// A memory efficient representation of State.
 #[pyclass]
 #[derive(Clone, Debug)]
 struct PlayerState {
     map: Vec<Vec<u8>>,
     history: Array2<bool>,
-    channels: u8,
     status: Status,
 }
 
 impl PlayerState {
-    fn new(w: X, h: Y, channels: u8) -> Self {
+    fn new(w: X, h: Y) -> Self {
         let (w, h) = (w.0 as usize, h.0 as usize);
         PlayerState {
             map: vec![vec![b' '; w]; h],
             history: Array2::from_elem([h, w], false),
-            channels,
             status: Status::default(),
         }
     }
@@ -62,21 +114,10 @@ impl PlayerState {
     fn dungeon_str(&self) -> impl Iterator<Item = &str> {
         self.map.iter().map(|v| unsafe { from_utf8_unchecked(v) })
     }
-    fn symbol_image_common<'py>(
-        &self,
-        array: &'py PyArray3<f32>,
-        h: usize,
-        w: usize,
-    ) -> PyResult<()> {
-        symbol::construct_symbol_map(&self.map, h, w, self.channels - 1, |idx| unsafe {
-            array.uget_mut(idx)
-        })
-        .map_err(|e| PyErr::new::<RuntimeError, _>(format!("{}", e)))?;
-        Ok(())
-    }
     fn gray_image_with_offset<'py>(
         &self,
         py: Python<'py>,
+        dungeon_symobols: u8,
         offset: usize,
     ) -> PyResult<&'py PyArray3<f32>> {
         let (h, w) = (self.map.len(), self.map[0].len());
@@ -86,38 +127,31 @@ impl PlayerState {
             .into_iter()
             .for_each(|(x, y)| unsafe {
                 let symbol = symbol::tile_to_sym(*self.map.get_xy(x, y)).unwrap();
-                *py_array.uget_mut([0, y, x]) = symbol as f32 / self.channels as f32;
+                *py_array.uget_mut([0, y, x]) = f32::from(symbol) / f32::from(dungeon_symobols);
             });
         Ok(py_array)
     }
     fn symbol_image_with_offset<'py>(
         &self,
         py: Python<'py>,
+        dungeon_symobols: u8,
         offset: usize,
     ) -> PyResult<&'py PyArray3<f32>> {
         let (h, w) = (self.map.len(), self.map[0].len());
-        let channels = usize::from(self.channels);
+        let channels = usize::from(dungeon_symobols);
         let py_array = PyArray3::zeros(py, [channels + offset, h, w], false);
-        self.symbol_image_common(py_array, h, w)?;
+        symbol::construct_symbol_map(&self.map, h, w, dungeon_symobols - 1, |idx| unsafe {
+            py_array.uget_mut(idx)
+        })
+        .map_err(|e| PyErr::new::<RuntimeError, _>(format!("{}", e)))?;
         Ok(py_array)
     }
-    fn copy_hist<'py>(&self, pyarray: &mut ArrayViewMut<f32, Ix2>) {
-        Zip::from(pyarray).and(&self.history).apply(|p, &r| {
+    fn copy_hist(&self, py_array: &PyArray3<f32>, offset: usize) {
+        let mut array = py_array.as_array_mut();
+        let hist_array = array.index_axis_mut(Axis(0), usize::from(offset));
+        Zip::from(hist_array).and(&self.history).apply(|p, &r| {
             *p = if r { 1.0 } else { 0.0 };
         });
-    }
-    fn copy_dungeon_level<'py>(&self, pyarray: &mut ArrayViewMut<f32, Ix2>) {
-        let val = self.status.dungeon_level as f32;
-        pyarray.iter_mut().for_each(|elem| {
-            *elem = val;
-        })
-    }
-    fn symbol_image_with_hist<'py>(&self, py: Python<'py>) -> PyResult<&'py PyArray3<f32>> {
-        let py_array = self.symbol_image_with_offset(py, 1)?;
-        let mut array = py_array.as_array_mut();
-        let mut hist_array = array.index_axis_mut(Axis(0), usize::from(self.channels));
-        self.copy_hist(&mut hist_array);
-        Ok(py_array)
     }
 }
 
@@ -177,6 +211,7 @@ struct GameState {
     state: PlayerState,
     config: GameConfig,
     prev_actions: Vec<Reaction>,
+    dungeon_symbols: u8,
     token: PyToken,
 }
 
@@ -197,23 +232,21 @@ impl GameState {
         let mut runtime = config.clone().build().unwrap();
         let (w, h) = runtime.screen_size();
         runtime.keymap = KeyMap::ai();
-        let channels = config
+        let symbols = config
             .symbol_max()
             .expect("Failed to get symbol max")
             .to_byte()
             + 1;
-        let mut state = PlayerState::new(w, h, channels);
+        let mut state = PlayerState::new(w, h);
         state.update(&mut runtime).unwrap();
         obj.init(|token| GameState {
             runtime,
             state,
             config,
             prev_actions: vec![Reaction::Redraw],
+            dungeon_symbols: symbols,
             token,
         })
-    }
-    fn channels(&self) -> i32 {
-        i32::from(self.state.channels)
     }
     fn screen_size(&self) -> (i32, i32) {
         (self.config.height, self.config.width)
@@ -253,43 +286,57 @@ impl GameState {
         self.prev_actions = res;
         Ok(self.state.clone())
     }
-    fn get_gray_image(&self, state: &PlayerState) -> PyResult<&PyArray3<f32>> {
-        state.gray_image_with_offset(self.token.py(), 0)
+    fn gray_image(&self, state: &PlayerState, flag: Option<u32>) -> PyResult<&PyArray3<f32>> {
+        let (py, flag) = (self.token.py(), StatusFlagInner(flag.unwrap_or(0)));
+        let array = state.gray_image_with_offset(py, self.dungeon_symbols, flag.len())?;
+        flag.copy_status(
+            &state.status,
+            usize::from(self.dungeon_symbols),
+            &mut array.as_array_mut(),
+        );
+        Ok(array)
     }
-    fn get_gray_image_with_hist(&self, state: &PlayerState) -> PyResult<&PyArray3<f32>> {
-        let py_array = state.gray_image_with_offset(self.token.py(), 1)?;
-        let mut array = py_array.as_array_mut();
-        let mut hist_array = array.index_axis_mut(Axis(0), 1);
-        state.copy_hist(&mut hist_array);
-        Ok(py_array)
-    }
-    /// Convert PlayerState to 3D symbol image(like AlphaGo's inputs)
-    fn get_symbol_image(&self, state: &PlayerState) -> PyResult<&PyArray3<f32>> {
-        let py = self.token.py();
-        state.symbol_image_with_offset(py, 0)
-    }
-    /// Convert PlayerState to 3D symbol image, with player history
-    fn get_symbol_image_with_hist(&self, state: &PlayerState) -> PyResult<&PyArray3<f32>> {
-        let py = self.token.py();
-        state.symbol_image_with_hist(py)
-    }
-    // TODO: remove this function
-    fn get_symbol_image_with_hist_and_level(
+    fn gray_image_with_hist(
         &self,
         state: &PlayerState,
+        flag: Option<u32>,
     ) -> PyResult<&PyArray3<f32>> {
-        let py_array = state.symbol_image_with_offset(self.token.py(), 2)?;
-        let mut array = py_array.as_array_mut();
-        let offset = usize::from(state.channels);
-        {
-            let mut hist_array = array.index_axis_mut(Axis(0), offset);
-            state.copy_hist(&mut hist_array);
-        }
-        {
-            let mut level_array = array.index_axis_mut(Axis(0), offset + 1);
-            state.copy_dungeon_level(&mut level_array);
-        }
-        Ok(py_array)
+        let (py, flag) = (self.token.py(), StatusFlagInner(flag.unwrap_or(0)));
+        let array = state.gray_image_with_offset(py, self.dungeon_symbols, flag.len() + 1)?;
+        let offset = flag.copy_status(
+            &state.status,
+            usize::from(self.dungeon_symbols),
+            &mut array.as_array_mut(),
+        );
+        state.copy_hist(&array, offset);
+        Ok(array)
+    }
+    /// Convert PlayerState to 3D symbol image(like AlphaGo's inputs)
+    fn symbol_image(&self, state: &PlayerState, flag: Option<u32>) -> PyResult<&PyArray3<f32>> {
+        let (py, flag) = (self.token.py(), StatusFlagInner(flag.unwrap_or(0)));
+        let array = state.symbol_image_with_offset(py, self.dungeon_symbols, flag.len())?;
+        flag.copy_status(
+            &state.status,
+            usize::from(self.dungeon_symbols),
+            &mut array.as_array_mut(),
+        );
+        Ok(array)
+    }
+    /// Convert PlayerState to 3D symbol image, with player history
+    fn symbol_image_with_hist(
+        &self,
+        state: &PlayerState,
+        flag: Option<u32>,
+    ) -> PyResult<&PyArray3<f32>> {
+        let (py, flag) = (self.token.py(), StatusFlagInner(flag.unwrap_or(0)));
+        let array = state.symbol_image_with_offset(py, self.dungeon_symbols, flag.len() + 1)?;
+        let offset = flag.copy_status(
+            &state.status,
+            usize::from(self.dungeon_symbols),
+            &mut array.as_array_mut(),
+        );
+        state.copy_hist(&array, offset);
+        Ok(array)
     }
     /// Returns action history as Json
     fn dump_history(&self) -> PyResult<String> {

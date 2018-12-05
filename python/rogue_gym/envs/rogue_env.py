@@ -1,4 +1,5 @@
 """module for wrapper of rogue_gym_core::Runtime as gym environment"""
+from enum import Flag
 import gym
 from gym import spaces
 import json
@@ -6,6 +7,17 @@ import numpy as np
 from numpy import ndarray
 from typing import Dict, List, Tuple, Union
 from rogue_gym_python._rogue_gym import GameState, PlayerState
+
+class StatusFlag(Flag):
+    DUNGEON_LEVEL = 0b000_000_001
+    HP_CURRENT    = 0b000_000_010
+    HP_MAX        = 0b000_000_100
+    STR_CURRENT   = 0b000_001_000
+    STR_MAX       = 0b000_010_000
+    DEFENSE       = 0b000_100_000
+    PLAYER_LEVEL  = 0b001_000_000
+    EXP           = 0b010_000_000
+    HUNGER        = 0b100_000_000
 
 
 class RogueEnv(gym.Env):
@@ -123,31 +135,25 @@ class RogueEnv(gym.Env):
         with open(fname, 'w') as f:
             f.write(self.game.dump_history())
 
-    def symbol_image(self, state: PlayerState) -> ndarray:
+    def symbol_image(self, state: PlayerState, flag: StatusFlag) -> ndarray:
         if not isinstance(state, PlayerState):
             raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
-        return self.game.get_symbol_image(state)
+        return self.game.get_symbol_image(state, flag=flag.value)
 
-    def symbol_image_with_hist(self, state: PlayerState) -> ndarray:
+    def symbol_image_with_hist(self, state: PlayerState, flag: StatusFlag) -> ndarray:
         if not isinstance(state, PlayerState):
             raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
-        return self.game.get_symbol_image_with_hist(state)
+        return self.game.get_symbol_image_with_hist(state, flag=flag.value)
 
-    # TODO: remove this function
-    def symbol_image_with_hist_and_level(self, state: PlayerState) -> ndarray:
+    def gray_image(self, state: PlayerState, flag: StatusFlag) -> ndarray:
         if not isinstance(state, PlayerState):
             raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
-        return self.game.get_symbol_image_with_hist_and_level(state)
+        return self.game.get_gray_image(state, flag=flag.value)
 
-    def gray_image(self, state: PlayerState) -> ndarray:
+    def gray_image_with_hist(self, state: PlayerState, flag: StatusFlag) -> ndarray:
         if not isinstance(state, PlayerState):
             raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
-        return self.game.get_gray_image(state)
-
-    def gray_image_with_hist(self, state: PlayerState) -> ndarray:
-        if not isinstance(state, PlayerState):
-            raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
-        return self.game.get_gray_image_with_hist(state)
+        return self.game.get_gray_image_with_hist(state, flag=flag.value)
 
     def __step_str(self, actions: str) -> int:
         for act in actions:
