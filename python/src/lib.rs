@@ -248,6 +248,9 @@ impl GameState {
             token,
         })
     }
+    fn dungeon_channels(&self) -> usize {
+        usize::from(self.dungeon_symbols)
+    }
     fn screen_size(&self) -> (i32, i32) {
         (self.config.height, self.config.width)
     }
@@ -289,11 +292,7 @@ impl GameState {
     fn gray_image(&self, state: &PlayerState, flag: Option<u32>) -> PyResult<&PyArray3<f32>> {
         let (py, flag) = (self.token.py(), StatusFlagInner(flag.unwrap_or(0)));
         let array = state.gray_image_with_offset(py, self.dungeon_symbols, flag.len())?;
-        flag.copy_status(
-            &state.status,
-            usize::from(self.dungeon_symbols),
-            &mut array.as_array_mut(),
-        );
+        flag.copy_status(&state.status, 1, &mut array.as_array_mut());
         Ok(array)
     }
     fn gray_image_with_hist(
@@ -303,11 +302,7 @@ impl GameState {
     ) -> PyResult<&PyArray3<f32>> {
         let (py, flag) = (self.token.py(), StatusFlagInner(flag.unwrap_or(0)));
         let array = state.gray_image_with_offset(py, self.dungeon_symbols, flag.len() + 1)?;
-        let offset = flag.copy_status(
-            &state.status,
-            usize::from(self.dungeon_symbols),
-            &mut array.as_array_mut(),
-        );
+        let offset = flag.copy_status(&state.status, 1, &mut array.as_array_mut());
         state.copy_hist(&array, offset);
         Ok(array)
     }
@@ -317,7 +312,7 @@ impl GameState {
         let array = state.symbol_image_with_offset(py, self.dungeon_symbols, flag.len())?;
         flag.copy_status(
             &state.status,
-            usize::from(self.dungeon_symbols),
+            self.dungeon_channels(),
             &mut array.as_array_mut(),
         );
         Ok(array)
@@ -332,7 +327,7 @@ impl GameState {
         let array = state.symbol_image_with_offset(py, self.dungeon_symbols, flag.len() + 1)?;
         let offset = flag.copy_status(
             &state.status,
-            usize::from(self.dungeon_symbols),
+            self.dungeon_channels(),
             &mut array.as_array_mut(),
         );
         state.copy_hist(&array, offset);

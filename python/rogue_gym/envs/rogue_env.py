@@ -1,14 +1,16 @@
 """module for wrapper of rogue_gym_core::Runtime as gym environment"""
-from enum import Flag
+from enum import Enum, Flag
 import gym
 from gym import spaces
 import json
 import numpy as np
 from numpy import ndarray
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, NamedTuple, Optional, Tuple, Union
 from rogue_gym_python._rogue_gym import GameState, PlayerState
 
+
 class StatusFlag(Flag):
+    EMPTY         = 0b000_000_000
     DUNGEON_LEVEL = 0b000_000_001
     HP_CURRENT    = 0b000_000_010
     HP_MAX        = 0b000_000_100
@@ -18,6 +20,31 @@ class StatusFlag(Flag):
     PLAYER_LEVEL  = 0b001_000_000
     EXP           = 0b010_000_000
     HUNGER        = 0b100_000_000
+    FULL          = 0b111_111_111
+
+    def count_one(self) -> int:
+        s, val = 0, self.value
+        for _ in range(9):
+            s += val & 1
+            val >>= 1
+        return s
+
+
+class DungeonType(Enum):
+    GRAY   = 1
+    SYMBOL = 2
+
+
+class ExpandSetting(NamedTuple):
+    dungeon: DungeonType = DungeonType.SYMBOL
+    status: StatusFlag = StatusFlag.FULL
+    includes_hist: bool = False
+
+    def _dim(self, channels: int) -> int:
+        s = channels if self.dungeon == DungeonType.SYMBOL else 1
+        s += self.status.count_one()
+        s += 1 if self.includes_hist else 0
+        return s
 
 
 class RogueEnv(gym.Env):
@@ -59,11 +86,11 @@ class RogueEnv(gym.Env):
 
     def __init__(
             self,
-            seed: int = None,
-            config_path: str = None,
-            config_dict: dict = None,
+            seed: Optional[int] = None,
+            config_path: Optional[str] = None,
+            config_dict: Optional[dict] = None,
             max_steps: int = 1000,
-            input_channels: int = None,
+            expand_setting: ExpandSetting = ExpandSetting(),
     ) -> None:
         """
         @param config_path(string): path to config file
@@ -81,22 +108,14 @@ class RogueEnv(gym.Env):
         self.steps = 0
         self.action_space = spaces.discrete.Discrete(self.ACTION_LEN)
         h, w = self.game.screen_size()
-        if input_channels:
-            self.observation_space = spaces.box.Box(
-                low=0,
-                high=1,
-                shape=(input_channels, h, w),
-                dtype=np.float32,
-            )
-        else:
-            # By default, symbol image channels is used
-            ipc = self.game.channels()
-            self.observation_space = spaces.box.Box(
-                low=0,
-                high=1,
-                shape=(ipc, h, w),
-                dtype=np.float32,
-            )
+        channels = expand_setting._dim(self.game.dungeon_channels())
+        self.observation_space = spaces.box.Box(
+            low=0,
+            high=1,
+            shape=(channels, h, w),
+            dtype=np.float32,
+        )
+        self.expand_setting = expand_setting
         self.__cache()
 
     def __cache(self) -> None:
@@ -107,15 +126,6 @@ class RogueEnv(gym.Env):
         returns (height, width)
         """
         return self.game.screen_size()
-
-    def channels(self) -> int:
-        """
-        returns the dimension of feature map
-        """
-        return self.game.channels()
-
-    def feature_dims(self) -> Tuple[int, int, int]:
-        return (self.channels(), *self.screen_size())
 
     def get_key_to_action(self) -> Dict[str, str]:
         return self.ACION_MEANINGS
@@ -135,25 +145,40 @@ class RogueEnv(gym.Env):
         with open(fname, 'w') as f:
             f.write(self.game.dump_history())
 
+    def expand_state(self, state: PlayerState) -> ndarray:
+        if not isinstance(state, PlayerState):
+            raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
+        exs = self.expand_setting
+        if exs.dungeon == DungeonType.SYMBOL:
+            if exs.includes_hist:
+                return self.game.symbol_image_with_hist(state, flag=exs.status.value)
+            else:
+                return self.game.symbol_image(state, flag=exs.status.value)
+        else:
+            if exs.includes_hist:
+                return self.game.gray_image_with_hist(state, flag=exs.status.value)
+            else:
+                return self.game.gray_image(state, flag=exs.status.value)
+        
     def symbol_image(self, state: PlayerState, flag: StatusFlag) -> ndarray:
         if not isinstance(state, PlayerState):
             raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
-        return self.game.get_symbol_image(state, flag=flag.value)
+        return self.game.symbol_image(state, flag=flag.value)
 
     def symbol_image_with_hist(self, state: PlayerState, flag: StatusFlag) -> ndarray:
         if not isinstance(state, PlayerState):
             raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
-        return self.game.get_symbol_image_with_hist(state, flag=flag.value)
+        return self.game.symbol_image_with_hist(state, flag=flag.value)
 
     def gray_image(self, state: PlayerState, flag: StatusFlag) -> ndarray:
         if not isinstance(state, PlayerState):
             raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
-        return self.game.get_gray_image(state, flag=flag.value)
+        return self.game.gray_image(state, flag=flag.value)
 
     def gray_image_with_hist(self, state: PlayerState, flag: StatusFlag) -> ndarray:
         if not isinstance(state, PlayerState):
             raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
-        return self.game.get_gray_image_with_hist(state, flag=flag.value)
+        return self.game.gray_image_with_hist(state, flag=flag.value)
 
     def __step_str(self, actions: str) -> int:
         for act in actions:

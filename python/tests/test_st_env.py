@@ -1,5 +1,5 @@
 """test for StairRewardEnv"""
-from rogue_gym.envs import StairRewardEnv
+from rogue_gym.envs import StairRewardEnv, ExpandSetting, StatusFlag, DungeonType
 from data import CMD_STR3, CMD_STR4
 import unittest
 
@@ -14,27 +14,23 @@ CONFIG = {
         "room_num_y": 2,
     },
     "enemies": {
-        "builtin": {
-            "typ": "Rogue",
-            "include": []
-        }
-    }
+        "enemies": [],
+    },
 }
 
+EXPAND = ExpandSetting(
+    DungeonType.SYMBOL,
+    StatusFlag.DUNGEON_LEVEL | StatusFlag.HP_CURRENT | StatusFlag.EXP,
+    True,
+)
 
-class TestSeed1(unittest.TestCase):
-    """ test class for fixed seed
-    """
-    def test_configs(self):
-        env = StairRewardEnv(config_dict=CONFIG, stair_reward=100.0)
-        state, rewards, done, _ = env.step(CMD_STR3)
-        self.assertEqual(rewards, 104.0)
-        state, rewards, _, _ = env.step(CMD_STR4)
-        self.assertEqual(rewards, 100.0)
-        img = env.symbol_image_with_hist_and_level(state)
-        self.assertEqual(img.shape, (19, 16, 32))
-        self.assertEqual(img[18][0][0], 3.0)
-
-
-if __name__ == "__main__":
-    unittest.main()
+def test_configs():
+    env = StairRewardEnv(config_dict=CONFIG, stair_reward=100.0, expand_setting=EXPAND)
+    state, rewards, done, _ = env.step(CMD_STR3)
+    assert rewards == 104.0
+    state, rewards, _, _ = env.step(CMD_STR4)
+    assert rewards == 100.0
+    img = env.expand_state(state)
+    assert img.shape == (21, 16, 32)
+    assert img[17][0][0] == 3.0
+    assert img[18][0][0] == 12.0

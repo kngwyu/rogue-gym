@@ -1,36 +1,13 @@
-""" setup.py for rogue_gym """
-import os
-import subprocess
 import sys
-from setuptools import setup
-from setuptools import find_packages
-from setuptools.command.test import test as TestCommand
+from setuptools import find_packages, setup
+from setuptools_rust import RustExtension
 
 
-try:
-    from setuptools_rust import RustExtension
-except ImportError:
-    errno = subprocess.call([sys.executable, '-m', 'pip', 'install', 'setuptools-rust'])
-    if errno:
-        print("Please install setuptools-rust package")
-        raise SystemExit(errno)
-    else:
-        from setuptools_rust import RustExtension
-
-
-class CmdTest(TestCommand):
-    def run(self):
-        self.run_command("test_rust")
-        test_files = os.listdir('./tests')
-        for f in test_files:
-            _, ext = os.path.splitext(f)
-            if ext == '.py':
-                subprocess.check_call([sys.executable, f], cwd='./tests')
-
+PYTHON_MAJOR_VERSION = sys.version_info[0]
 
 setup_requires = ['setuptools-rust>=0.6.0']
 install_requires = ['numpy', 'gym']
-test_requires = install_requires
+test_requires = install_requires + ['pytest']
 
 setup(
     name='rouge-gym',
@@ -55,5 +32,4 @@ setup(
     setup_requires=setup_requires,
     include_package_data=True,
     zip_safe=False,
-    cmdclass=dict(test=CmdTest)
 )
