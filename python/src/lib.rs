@@ -115,7 +115,7 @@ impl PlayerState {
     fn symbol_image_with_hist<'py>(&self, py: Python<'py>) -> PyResult<&'py PyArray3<f32>> {
         let py_array = self.symbol_image_with_offset(py, 1)?;
         let mut array = py_array.as_array_mut();
-        let mut hist_array = array.subview_mut(Axis(0), usize::from(self.channels));
+        let mut hist_array = array.index_axis_mut(Axis(0), usize::from(self.channels));
         self.copy_hist(&mut hist_array);
         Ok(py_array)
     }
@@ -259,7 +259,7 @@ impl GameState {
     fn get_gray_image_with_hist(&self, state: &PlayerState) -> PyResult<&PyArray3<f32>> {
         let py_array = state.gray_image_with_offset(self.token.py(), 1)?;
         let mut array = py_array.as_array_mut();
-        let mut hist_array = array.subview_mut(Axis(0), 1);
+        let mut hist_array = array.index_axis_mut(Axis(0), 1);
         state.copy_hist(&mut hist_array);
         Ok(py_array)
     }
@@ -282,11 +282,11 @@ impl GameState {
         let mut array = py_array.as_array_mut();
         let offset = usize::from(state.channels);
         {
-            let mut hist_array = array.subview_mut(Axis(0), offset);
+            let mut hist_array = array.index_axis_mut(Axis(0), offset);
             state.copy_hist(&mut hist_array);
         }
         {
-            let mut level_array = array.subview_mut(Axis(0), offset + 1);
+            let mut level_array = array.index_axis_mut(Axis(0), offset + 1);
             state.copy_dungeon_level(&mut level_array);
         }
         Ok(py_array)
