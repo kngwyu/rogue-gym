@@ -249,7 +249,7 @@ impl DungeonTrait for Dungeon {
             cd,
         };
         self.current_floor
-            .player_in(cd, false, self.level, enemies)
+            .player_in(cd, false, enemies)
             .chain_err(|| ERR_STR)?;
         Ok(address.into())
     }
@@ -270,8 +270,7 @@ impl DungeonTrait for Dungeon {
     }
     fn enter_room(&mut self, path: &DungeonPath, enemies: &mut EnemyHandler) -> GameResult<()> {
         let address = Address::from_path(path);
-        let lev = self.level;
-        self.current_floor.player_in(address.cd, true, lev, enemies)
+        self.current_floor.player_in(address.cd, true, enemies)
     }
     fn draw(&self, drawer: &mut dyn FnMut(Positioned<Tile>) -> GameResult<()>) -> GameResult<()> {
         const ERR_STR: &str = "in rogue::Dungeon::move_player";

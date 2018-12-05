@@ -13,6 +13,7 @@ extern crate num_traits;
 #[macro_use]
 extern crate log;
 extern crate rand;
+extern crate rand_xorshift;
 extern crate rect_iter;
 extern crate regex;
 #[macro_use]

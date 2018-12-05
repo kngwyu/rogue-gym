@@ -16,26 +16,30 @@ regex = "1.0"
 serde_json = "1.0"
 tuple-map = "0.4"
 
-[dependencies.serde]
-version = "1.0"
-features = ["derive"]
-
-[dependencies.smallvec]
-version = "0.6"
-features = ["serde"]
-
-[dependencies.termion]
-version = "1.5.1"
-optional = true
-
 [dependencies.rand]
-version = "0.5.0"
 features = ["serde1", "i128_support"]
+version = "0.6"
+
+[dependencies.rand_xorshift]
+features = ["serde"]
+version = "0.1"
 
 [dependencies.rect-iter]
-version = "0.2.2"
 default-features = false
 features = ["ndarray", "serde"]
+version = "0.2.3"
+
+[dependencies.serde]
+features = ["derive"]
+version = "1.0"
+
+[dependencies.smallvec]
+features = ["serde"]
+version = "0.6"
+
+[dependencies.termion]
+optional = true
+version = "1.5.1"
 
 [features]
 default = []

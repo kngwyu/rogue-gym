@@ -210,10 +210,6 @@ impl Floor {
             None
         }
     }
-    /// judge if the enemy can move from `cd` in `direction`
-    pub(super) fn can_move_enemy(&self, cd: Coord, direction: Direction) -> bool {
-        self.can_move_impl(cd, direction, true).unwrap_or(false)
-    }
     fn cd_to_room_id(&self, cd: Coord) -> Option<usize> {
         self.rooms
             .iter()
@@ -287,7 +283,6 @@ impl Floor {
         &mut self,
         cd: Coord,
         init: bool,
-        level: u32,
         enemies: &mut EnemyHandler,
     ) -> GameResult<()> {
         debug!("[Floor::player_in] cd: {:?}", cd);

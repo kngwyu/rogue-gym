@@ -1,10 +1,10 @@
 use fenwick::FenwickSet;
 use num_traits::PrimInt;
-pub(crate) use rand::Rng;
 use rand::{
     distributions::uniform::SampleUniform, thread_rng, Error as RndError, RngCore, SeedableRng,
-    XorShiftRng,
 };
+pub(crate) use rand::{seq::SliceRandom, Rng};
+use rand_xorshift::XorShiftRng;
 use std::cmp;
 use std::mem;
 use std::ops::{Bound, Range, RangeBounds};

@@ -5,7 +5,7 @@ use error::*;
 use fenwick::FenwickSet;
 use fixedbitset::FixedBitSet;
 use rect_iter::{IntoTuple2, RectRange};
-use rng::{Rng, RngHandle};
+use rng::{RngHandle, SliceRandom};
 use std::collections::HashMap;
 use tuple_map::TupleMap2;
 
@@ -139,10 +139,10 @@ fn door_kind(room: &Room) -> Surface {
 
 fn select_start_or_end(room: &Room, direction: Direction, rng: &mut RngHandle) -> Coord {
     match room.kind {
-        RoomKind::Normal { ref range } => {
-            let candidates = edges(range, direction, true);
-            *rng.choose(&candidates).unwrap()
-        }
+        RoomKind::Normal { ref range } => edges(range, direction, true)
+            .choose(rng)
+            .unwrap()
+            .to_owned(),
         RoomKind::Maze(ref maze) => {
             let mut range = maze.range.clone();
             while range.is_valid() {
@@ -150,7 +150,7 @@ fn select_start_or_end(room: &Room, direction: Direction, rng: &mut RngHandle) -
                     .into_iter()
                     .filter(|&cd| maze.has_cd(cd))
                     .collect();
-                if let Some(&cd) = rng.choose(&candidates) {
+                if let Some(&cd) = candidates.choose(rng) {
                     return cd;
                 }
                 match direction {

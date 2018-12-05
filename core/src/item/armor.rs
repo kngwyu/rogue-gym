@@ -154,7 +154,7 @@ impl ItemStat for ArmorStatus {
     fn appear_rate(&self) -> Parcent {
         self.appear_rate
     }
-    fn build(self, rng: &mut RngHandle) -> (Armor, ItemAttr, ItemNum) {
+    fn build(self, _rng: &mut RngHandle) -> (Armor, ItemAttr, ItemNum) {
         self.build_inner()
     }
     fn name(&self) -> &str {

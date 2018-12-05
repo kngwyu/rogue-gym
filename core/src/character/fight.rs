@@ -2,7 +2,6 @@ use super::{Damage, Defense, Dice, Enemy, HitPoint, Level, Player, Strength};
 use crate::rng::{Parcent, RngHandle};
 use item::ItemToken;
 use std::iter;
-use tuple_map::TupleMap2;
 
 pub fn player_attack(
     player: &Player,
@@ -63,7 +62,7 @@ fn roll<'a>(
             continue;
         }
         did_hit = true;
-        sum += dice.random(rng);
+        sum += dice.random(rng) + dam_plus;
     }
     if did_hit {
         Some(sum)
