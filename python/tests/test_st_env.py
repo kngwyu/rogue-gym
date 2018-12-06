@@ -1,7 +1,6 @@
 """test for StairRewardEnv"""
 from rogue_gym.envs import StairRewardEnv, ExpandSetting, StatusFlag, DungeonType
 from data import CMD_STR3, CMD_STR4
-import unittest
 
 CONFIG = {
     "width": 32,

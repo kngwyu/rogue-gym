@@ -120,18 +120,23 @@ pub struct Status {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize, BitOr)]
 pub struct EnemyAttr(u16);
 
+#[rustfmt::skip]
 impl EnemyAttr {
-    pub const MEAN: EnemyAttr = EnemyAttr(0b0_000_000_001);
-    pub const FLYING: EnemyAttr = EnemyAttr(0b0_000_000_010);
-    pub const REGENERATE: EnemyAttr = EnemyAttr(0b0_000_000_100);
-    pub const GREEDY: EnemyAttr = EnemyAttr(0b0_000_001_000);
-    pub const INVISIBLE: EnemyAttr = EnemyAttr(0b0_000_010_000);
-    pub const RUSTS_ARMOR: EnemyAttr = EnemyAttr(0b0_000_100_000);
-    pub const STEAL_GOLD: EnemyAttr = EnemyAttr(0b0_001_000_000);
-    pub const REDUCE_STR: EnemyAttr = EnemyAttr(0b0_010_000_000);
-    pub const FREEZES: EnemyAttr = EnemyAttr(0b0_100_000_000);
-    pub const RANDOM: EnemyAttr = EnemyAttr(0b1_000_000_000);
-    pub const NONE: EnemyAttr = EnemyAttr(0);
+    pub const MEAN: EnemyAttr        = EnemyAttr(0b000_000_000_001);
+    pub const FLYING: EnemyAttr      = EnemyAttr(0b000_000_000_010);
+    pub const REGENERATE: EnemyAttr  = EnemyAttr(0b000_000_000_100);
+    pub const GREEDY: EnemyAttr      = EnemyAttr(0b000_000_001_000);
+    pub const INVISIBLE: EnemyAttr   = EnemyAttr(0b000_000_010_000);
+    pub const RUSTS_ARMOR: EnemyAttr = EnemyAttr(0b000_000_100_000);
+    pub const STEAL_GOLD: EnemyAttr  = EnemyAttr(0b000_001_000_000);
+    pub const REDUCE_STR: EnemyAttr  = EnemyAttr(0b000_010_000_000);
+    pub const FREEZES: EnemyAttr     = EnemyAttr(0b000_100_000_000);
+    pub const RANDOM: EnemyAttr      = EnemyAttr(0b001_000_000_000);
+    pub const CONFUSED: EnemyAttr    = EnemyAttr(0b010_000_000_000);
+    pub const NONE: EnemyAttr        = EnemyAttr(0b000_000_000_000);
+}
+
+impl EnemyAttr {
     pub fn contains(self, r: Self) -> bool {
         (self.0 & r.0) != 0
     }
@@ -151,7 +156,7 @@ impl EnemyId {
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Enemy {
     attack: DiceVec<HitPoint>,
-    attr: EnemyAttr,
+    attr: Cell<EnemyAttr>,
     defense: Defense,
     exp: Exp,
     hp: Cell<HitPoint>,
@@ -166,10 +171,16 @@ pub struct Enemy {
 impl Enemy {
     pub(crate) const STRENGTH: Strength = Strength(10);
     pub fn is_mean(&self) -> bool {
-        self.attr.contains(EnemyAttr::MEAN)
+        self.attr.get().contains(EnemyAttr::MEAN)
     }
     pub fn is_greedy(&self) -> bool {
-        self.attr.contains(EnemyAttr::GREEDY)
+        self.attr.get().contains(EnemyAttr::GREEDY)
+    }
+    pub fn is_random(&self) -> bool {
+        self.attr.get().contains(EnemyAttr::RANDOM)
+    }
+    pub fn is_confused(&self) -> bool {
+        self.attr.get().contains(EnemyAttr::CONFUSED)
     }
     pub fn is_running(&self) -> bool {
         self.running.get()
@@ -280,7 +291,7 @@ impl EnemyHandler {
         let level = stat.level + lev_add.into();
         let hp = Dice::new(8, level).exec::<i64>(&mut self.rng).0.into();
         let enem = Enemy {
-            attr: stat.attr,
+            attr: Cell::new(stat.attr),
             attack: stat.attack.clone(),
             defense: stat.defense - (lev_add as i32).into(),
             exp: stat.exp + Exp::from((lev_add * 10) as u32) + self.exp_add(level, hp),
@@ -357,8 +368,14 @@ impl EnemyHandler {
         };
         for (path, enemy) in active_enemies {
             let next = (|| {
+                let EnemyHandler {
+                    ref mut rng,
+                    ref active_enemies,
+                    ref placed_enemies,
+                    ..
+                } = self;
                 let skip: &dyn Fn(&DungeonPath) -> bool =
-                    &|p| self.active_enemies.contains_key(p) || self.placed_enemies.contains_key(p);
+                    &|p| active_enemies.contains_key(p) || placed_enemies.contains_key(p);
                 if let Some(gold_pos) = gold_pos {
                     if enemy.is_greedy() {
                         match dungeon.move_enemy(&path, gold_pos, skip) {
@@ -368,7 +385,14 @@ impl EnemyHandler {
                         }
                     }
                 }
-                match dungeon.move_enemy(&path, player_pos, skip) {
+                let res = if (rng.does_happen(2) && enemy.is_random())
+                    || (!rng.does_happen(5) && enemy.is_confused())
+                {
+                    dungeon.move_enemy_randomly(&path, player_pos, skip)
+                } else {
+                    dungeon.move_enemy(&path, player_pos, skip)
+                };
+                match res {
                     MoveResult::Reach => {
                         out.push(Attack(Rc::clone(&enemy)));
                         path

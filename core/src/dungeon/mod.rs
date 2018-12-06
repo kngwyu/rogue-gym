@@ -99,6 +99,12 @@ pub trait Dungeon {
         dist: &DungeonPath,
         skip: &dyn Fn(&DungeonPath) -> bool,
     ) -> MoveResult;
+    fn move_enemy_randomly(
+        &mut self,
+        enemy_pos: &DungeonPath,
+        player_pos: &DungeonPath,
+        skip: &dyn Fn(&DungeonPath) -> bool,
+    ) -> MoveResult;
 }
 
 type PathVec = SmallVec<[i32; 4]>;

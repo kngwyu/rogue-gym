@@ -365,6 +365,28 @@ impl DungeonTrait for Dungeon {
         let res = cand[0].1;
         MoveResult::CanMove(Address::new(cur.level, res).into())
     }
+    fn move_enemy_randomly(
+        &mut self,
+        enemy_pos: &DungeonPath,
+        player_pos: &DungeonPath,
+        skip: &dyn Fn(&DungeonPath) -> bool,
+    ) -> MoveResult {
+        let cur = Address::from_path(enemy_pos);
+        let idx = self.rng.range(0..8);
+        let d = Direction::into_enum_iter().nth(idx).unwrap();
+        let next = cur.cd + d.to_cd();
+        if skip(&DungeonPath::from(Address::new(cur.level, next)))
+            || !self.current_floor.can_move_enemy(cur.cd, d)
+        {
+            return MoveResult::CantMove;
+        }
+        let res = Address::new(cur.level, next).into();
+        if res == *player_pos {
+            MoveResult::Reach
+        } else {
+            MoveResult::CanMove(res)
+        }
+    }
 }
 
 impl Dungeon {

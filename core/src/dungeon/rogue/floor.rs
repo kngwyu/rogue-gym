@@ -210,6 +210,9 @@ impl Floor {
             None
         }
     }
+    pub(super) fn can_move_enemy(&self, cd: Coord, direction: Direction) -> bool {
+        self.can_move_impl(cd, direction, false).unwrap_or(false)
+    }
     fn cd_to_room_id(&self, cd: Coord) -> Option<usize> {
         self.rooms
             .iter()
