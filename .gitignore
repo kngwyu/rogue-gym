@@ -17,6 +17,5 @@ python/rogue_gym_python
 # backup/debug files
 **/#*
 **/~*
-*.txt
 *.out
 *.scr
