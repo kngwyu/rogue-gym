@@ -1,4 +1,6 @@
 #![feature(specialization)]
+#[macro_use]
+extern crate failure;
 extern crate ndarray;
 extern crate numpy;
 extern crate pyo3;
@@ -8,7 +10,7 @@ extern crate rogue_gym_core;
 mod state_impls;
 mod thread_impls;
 
-use ndarray::{Array2, ArrayViewMut, Axis, Ix3, Zip};
+use ndarray::{Array2, Axis, Zip};
 use numpy::PyArray3;
 use pyo3::{
     basic::{PyObjectProtocol, PyObjectReprProtocol, PyObjectStrProtocol},
@@ -18,66 +20,10 @@ use pyo3::{
 use rect_iter::{Get2D, GetMut2D, RectRange};
 use rogue_gym_core::character::player::Status;
 use rogue_gym_core::dungeon::{Positioned, X, Y};
-use rogue_gym_core::error::*;
-use rogue_gym_core::symbol;
-use rogue_gym_core::{GameConfig, RunTime};
-use state_impls::GameStateImpl;
+use rogue_gym_core::{error::*, symbol, GameConfig, GameMsg, RunTime};
+use state_impls::{GameStateImpl, StatusFlagInner};
 use std::collections::HashMap;
 use std::str::from_utf8_unchecked;
-
-#[derive(Copy, Clone, Debug)]
-struct StatusFlagInner(u32);
-
-#[rustfmt::skip]
-impl StatusFlagInner {
-    const DUNGEON_LEVEL: u32 = 0b000_000_001;
-    const HP_CURRENT: u32    = 0b000_000_010;
-    const HP_MAX: u32        = 0b000_000_100;
-    const STR_CURRENT: u32   = 0b000_001_000;
-    const STR_MAX: u32       = 0b000_010_000;
-    const DEFENSE: u32       = 0b000_100_000;
-    const PLAYER_LEVEL: u32  = 0b001_000_000;
-    const EXP: u32           = 0b010_000_000;
-    const HUNGER: u32        = 0b100_000_000;
-}
-
-impl StatusFlagInner {
-    fn len(self) -> usize {
-        self.0.count_ones() as usize
-    }
-}
-
-impl StatusFlagInner {
-    fn copy_status(
-        self,
-        status: &Status,
-        start: usize,
-        array: &mut ArrayViewMut<f32, Ix3>,
-    ) -> usize {
-        let mut offset = start;
-        {
-            let mut copy = |flag: u32, value| {
-                if (self.0 & flag) != 0 {
-                    let mut array = array.index_axis_mut(Axis(0), offset);
-                    array.iter_mut().for_each(|elem| {
-                        *elem = value as f32;
-                    });
-                    offset += 1;
-                }
-            };
-            copy(Self::DUNGEON_LEVEL, status.dungeon_level as i32);
-            copy(Self::HP_CURRENT, status.hp.current.0 as i32);
-            copy(Self::HP_MAX, status.hp.max.0 as i32);
-            copy(Self::STR_CURRENT, status.strength.current.0 as i32);
-            copy(Self::STR_MAX, status.strength.max.0 as i32);
-            copy(Self::DEFENSE, status.defense.0 as i32);
-            copy(Self::PLAYER_LEVEL, status.player_level as i32);
-            copy(Self::EXP, status.exp.0 as i32);
-            copy(Self::HUNGER, status.hunger_level.to_u32() as i32);
-        }
-        offset
-    }
-}
 
 fn pyresult<T>(result: GameResult<T>) -> PyResult<T> {
     pyresult_with(result, "Error in rogue-gym")

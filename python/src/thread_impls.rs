@@ -11,4 +11,5 @@ unsafe impl Send for Instruction {}
 
 struct ThreadWorker {
     runtime: RunTime,
+    receiver: Receiver<Instruction>,
 }
