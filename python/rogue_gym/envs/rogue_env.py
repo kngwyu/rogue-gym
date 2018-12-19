@@ -40,7 +40,7 @@ class ExpandSetting(NamedTuple):
     status: StatusFlag = StatusFlag.FULL
     includes_hist: bool = False
 
-    def _dim(self, channels: int) -> int:
+    def dim(self, channels: int) -> int:
         s = channels if self.dungeon == DungeonType.SYMBOL else 1
         s += self.status.count_one()
         s += 1 if self.includes_hist else 0
@@ -108,7 +108,7 @@ class RogueEnv(gym.Env):
         self.steps = 0
         self.action_space = spaces.discrete.Discrete(self.ACTION_LEN)
         h, w = self.game.screen_size()
-        channels = expand_setting._dim(self.game.dungeon_channels())
+        channels = expand_setting.dim(self.game.dungeon_channels())
         self.observation_space = spaces.box.Box(
             low=0,
             high=1,
@@ -159,7 +159,7 @@ class RogueEnv(gym.Env):
                 return self.game.gray_image_with_hist(state, flag=exs.status.value)
             else:
                 return self.game.gray_image(state, flag=exs.status.value)
-        
+
     def symbol_image(self, state: PlayerState, flag: StatusFlag) -> ndarray:
         if not isinstance(state, PlayerState):
             raise TypeError("Needs PlayerState, but {} was given".format(type(state)))

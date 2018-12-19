@@ -5,9 +5,10 @@ from setuptools_rust import RustExtension
 
 PYTHON_MAJOR_VERSION = sys.version_info[0]
 
-setup_requires = ['setuptools-rust>=0.6.0']
-install_requires = ['numpy', 'gym']
-test_requires = install_requires + ['pytest']
+setup_requirements = ['setuptools-rust>=0.6.0']
+install_requirements = ['numpy', 'gym']
+test_requirements = install_requirements + ['pytest']
+extra_requirements = {'rainy': 'git+https://github.com/kngwyu/Rainy'}
 
 setup(
     name='rouge-gym',
@@ -27,9 +28,10 @@ setup(
     ],
     packages=find_packages(),
     rust_extensions=[RustExtension('rogue_gym_python._rogue_gym', 'Cargo.toml')],
-    install_requires=install_requires,
-    test_requires=test_requires,
-    setup_requires=setup_requires,
+    install_requires=install_requirements,
+    test_requires=test_requirements,
+    setup_requires=setup_requirements,
+    extra_requires=extra_requirements,
     include_package_data=True,
     zip_safe=False,
 )

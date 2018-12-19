@@ -4,7 +4,7 @@ from typing import Tuple, Union
 
 class StairRewardEnv(RogueEnv):
     def __init__(self, *args, **kwargs) -> None:
-        self.stair_reward = 100.0  # default reward
+        self.stair_reward = 50.0  # default reward
         if 'stair_reward' in kwargs:
             self.stair_reward = kwargs['stair_reward']
             del kwargs['stair_reward']
