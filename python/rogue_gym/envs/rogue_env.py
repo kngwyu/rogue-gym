@@ -180,10 +180,12 @@ class RogueEnv(gym.Env):
             raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
         return self.game.gray_image_with_hist(state, flag=flag.value)
 
-    def __step_str(self, actions: str) -> int:
-        for act in actions:
-            self.game.react(ord(act))
-        return len(actions)
+    def __step_str(self, actions: str) -> Tuple[int, bool]:
+        for i, act in enumerate(actions):
+            dead = self.game.react(ord(act))
+            if dead:
+                return i + 1, True
+        return len(actions), False
 
     def step(self, action: Union[int, str]) -> Tuple[PlayerState, float, bool, None]:
         """
@@ -196,14 +198,16 @@ class RogueEnv(gym.Env):
         gold_before = self.result.gold
         if isinstance(action, int) and action < self.ACTION_LEN:
             s = self.ACTIONS[action]
-            self.steps += self.__step_str(s)
+            step, done = self.__step_str(s)
+            self.steps += step
         elif isinstance(action, str):
-            self.steps += self.__step_str(action)
+            step, done = self.__step_str(action)
+            self.steps += step
         else:
             raise ValueError("Invalid action: {}".format(action))
         self.__cache()
         reward = self.result.gold - gold_before
-        done = self.steps >= self.max_steps
+        done |= self.steps >= self.max_steps
         return self.result, reward, done, None
 
     def seed(self, seed: int) -> None:

@@ -7,9 +7,11 @@ extern crate pyo3;
 extern crate rect_iter;
 extern crate rogue_gym_core;
 
+mod fearures;
 mod state_impls;
 mod thread_impls;
 
+use fearures::{MessageFlagInner, StatusFlagInner};
 use ndarray::{Array2, Axis, Zip};
 use numpy::PyArray3;
 use pyo3::{
@@ -20,8 +22,8 @@ use pyo3::{
 use rect_iter::{Get2D, GetMut2D, RectRange};
 use rogue_gym_core::character::player::Status;
 use rogue_gym_core::dungeon::{Positioned, X, Y};
-use rogue_gym_core::{error::*, symbol, GameConfig, GameMsg, RunTime};
-use state_impls::{GameStateImpl, StatusFlagInner};
+use rogue_gym_core::{error::*, symbol, GameConfig, RunTime};
+use state_impls::GameStateImpl;
 use std::collections::HashMap;
 use std::str::from_utf8_unchecked;
 
@@ -33,13 +35,14 @@ fn pyresult_with<T>(result: GameResult<T>, msg: &str) -> PyResult<T> {
     result.map_err(|e| PyErr::new::<RuntimeError, _>(format!("{}: {}", msg, e)))
 }
 
-/// A memory efficient representation of State.
+/// A memory efficient representation of Agent observation.
 #[pyclass]
 #[derive(Clone, Debug)]
 struct PlayerState {
     map: Vec<Vec<u8>>,
     history: Array2<bool>,
     status: Status,
+    message: MessageFlagInner,
 }
 
 impl PlayerState {
@@ -49,6 +52,7 @@ impl PlayerState {
             map: vec![vec![b' '; w]; h],
             history: Array2::from_elem([h, w], false),
             status: Status::default(),
+            message: MessageFlagInner::new(),
         }
     }
     fn update(&mut self, runtime: &RunTime) -> GameResult<()> {
@@ -158,6 +162,10 @@ impl PlayerState {
     fn gold(&self) -> PyResult<u32> {
         Ok(self.status.gold)
     }
+    fn status_vec(&self, flag: u32) -> Vec<i32> {
+        let flag = StatusFlagInner(flag);
+        flag.to_vector(&self.status)
+    }
 }
 
 struct StateConverter {
@@ -265,13 +273,14 @@ impl GameState {
     fn prev(&self) -> PlayerState {
         self.inner.state.clone()
     }
-    fn react(&mut self, input: u8) -> PyResult<PlayerState> {
+    fn react(&mut self, input: u8) -> PyResult<bool> {
         pyresult(self.inner.react(input))
     }
     /// Convert PlayerState with 2D gray image dungeon
     fn gray_image(&self, state: &PlayerState, flag: Option<u32>) -> PyResult<&PyArray3<f32>> {
         self.state_converter.gray_image(state, flag)
     }
+    /// Convert PlayerState with 2D gray image dungeon + history
     fn gray_image_with_hist(
         &self,
         state: &PlayerState,
@@ -283,7 +292,7 @@ impl GameState {
     fn symbol_image(&self, state: &PlayerState, flag: Option<u32>) -> PyResult<&PyArray3<f32>> {
         self.state_converter.symbol_image(state, flag)
     }
-    /// Convert PlayerState to 3D symbol image, with player history
+    /// Convert PlayerState with 3D symbol image dungeon + history
     fn symbol_image_with_hist(
         &self,
         state: &PlayerState,
