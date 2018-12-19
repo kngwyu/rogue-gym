@@ -94,6 +94,8 @@ pub struct GameConfig {
     pub hide_dungeon: bool,
 }
 
+unsafe impl Send for GameConfig {}
+
 fn is_default<T>(s: &T) -> bool
 where
     T: Default + PartialEq,

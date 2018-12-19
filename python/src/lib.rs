@@ -5,11 +5,14 @@ extern crate pyo3;
 extern crate rect_iter;
 extern crate rogue_gym_core;
 
+mod state_impls;
+mod thread_impls;
+
 use ndarray::{Array2, ArrayViewMut, Axis, Ix3, Zip};
 use numpy::PyArray3;
 use pyo3::{
     basic::{PyObjectProtocol, PyObjectReprProtocol, PyObjectStrProtocol},
-    exceptions::{RuntimeError, TypeError},
+    exceptions::RuntimeError,
     prelude::*,
 };
 use rect_iter::{Get2D, GetMut2D, RectRange};
@@ -17,10 +20,8 @@ use rogue_gym_core::character::player::Status;
 use rogue_gym_core::dungeon::{Positioned, X, Y};
 use rogue_gym_core::error::*;
 use rogue_gym_core::symbol;
-use rogue_gym_core::{
-    input::{Key, KeyMap},
-    GameConfig, Reaction, RunTime,
-};
+use rogue_gym_core::{GameConfig, RunTime};
+use state_impls::GameStateImpl;
 use std::collections::HashMap;
 use std::str::from_utf8_unchecked;
 
@@ -76,6 +77,14 @@ impl StatusFlagInner {
         }
         offset
     }
+}
+
+fn pyresult<T>(result: GameResult<T>) -> PyResult<T> {
+    pyresult_with(result, "Error in rogue-gym")
+}
+
+fn pyresult_with<T>(result: GameResult<T>, msg: &str) -> PyResult<T> {
+    result.map_err(|e| PyErr::new::<RuntimeError, _>(format!("{}: {}", msg, e)))
 }
 
 /// A memory efficient representation of State.
@@ -205,93 +214,19 @@ impl PlayerState {
     }
 }
 
-#[pyclass]
-struct GameState {
-    runtime: RunTime,
-    state: PlayerState,
-    config: GameConfig,
-    prev_actions: Vec<Reaction>,
-    dungeon_symbols: u8,
+struct StateConverter {
     token: PyToken,
+    symbols: u8,
 }
 
-#[pymethods]
-impl GameState {
-    #[new]
-    fn __new__(obj: &PyRawObject, seed: Option<u64>, config_str: Option<String>) -> PyResult<()> {
-        let mut config = if let Some(cfg) = config_str {
-            GameConfig::from_json(&cfg).map_err(|e| {
-                PyErr::new::<RuntimeError, _>(format!("failed to parse config, {}", e))
-            })?
-        } else {
-            GameConfig::default()
-        };
-        if let Some(seed) = seed {
-            config.seed = Some(u128::from(seed));
-        }
-        let mut runtime = config.clone().build().unwrap();
-        let (w, h) = runtime.screen_size();
-        runtime.keymap = KeyMap::ai();
-        let symbols = config
-            .symbol_max()
-            .expect("Failed to get symbol max")
-            .to_byte()
-            + 1;
-        let mut state = PlayerState::new(w, h);
-        state.update(&mut runtime).unwrap();
-        obj.init(|token| GameState {
-            runtime,
-            state,
-            config,
-            prev_actions: vec![Reaction::Redraw],
-            dungeon_symbols: symbols,
-            token,
-        })
+impl StateConverter {
+    fn new(token: PyToken, symbols: u8) -> Self {
+        StateConverter { token, symbols }
     }
-    fn dungeon_channels(&self) -> usize {
-        usize::from(self.dungeon_symbols)
-    }
-    fn screen_size(&self) -> (i32, i32) {
-        (self.config.height, self.config.width)
-    }
-    fn set_seed(&mut self, seed: u64) -> PyResult<()> {
-        self.config.seed = Some(seed as u128);
-        Ok(())
-    }
-    /// Reset the game state
-    fn reset(&mut self) -> PyResult<()> {
-        let mut runtime = self.config.clone().build().unwrap();
-        runtime.keymap = KeyMap::ai();
-        self.state.update(&mut runtime).unwrap();
-        self.runtime = runtime;
-        Ok(())
-    }
-    /// Returns the latest game state
-    fn prev(&self) -> PlayerState {
-        self.state.clone()
-    }
-    fn react(&mut self, input: u8) -> PyResult<PlayerState> {
-        let res = self
-            .runtime
-            .react_to_key(Key::Char(input as char))
-            .map_err(|e| PyErr::new::<TypeError, _>(format!("error in rogue_gym_core: {}", e)))?;
-        res.iter().for_each(|reaction| match reaction {
-            Reaction::Redraw => {
-                self.state.draw_map(&self.runtime).unwrap();
-            }
-            Reaction::StatusUpdated => {
-                self.state.status = self.runtime.player_status();
-            }
-            // ignore ui transition
-            Reaction::UiTransition(_) => {}
-            Reaction::Notify(_) => {}
-        });
-        self.prev_actions = res;
-        Ok(self.state.clone())
-    }
+    /// Convert PlayerState with 2D gray image dungeon
     fn gray_image(&self, state: &PlayerState, flag: Option<u32>) -> PyResult<&PyArray3<f32>> {
         let (py, flag) = (self.token.py(), StatusFlagInner(flag.unwrap_or(0)));
-        let array = state.gray_image_with_offset(py, self.dungeon_symbols, flag.len())?;
+        let array = state.gray_image_with_offset(py, self.symbols, flag.len())?;
         flag.copy_status(&state.status, 1, &mut array.as_array_mut());
         Ok(array)
     }
@@ -301,18 +236,18 @@ impl GameState {
         flag: Option<u32>,
     ) -> PyResult<&PyArray3<f32>> {
         let (py, flag) = (self.token.py(), StatusFlagInner(flag.unwrap_or(0)));
-        let array = state.gray_image_with_offset(py, self.dungeon_symbols, flag.len() + 1)?;
+        let array = state.gray_image_with_offset(py, self.symbols, flag.len() + 1)?;
         let offset = flag.copy_status(&state.status, 1, &mut array.as_array_mut());
         state.copy_hist(&array, offset);
         Ok(array)
     }
-    /// Convert PlayerState to 3D symbol image(like AlphaGo's inputs)
+    /// Convert PlayerState with 3D symbol image dungeon(like AlphaGo's inputs)
     fn symbol_image(&self, state: &PlayerState, flag: Option<u32>) -> PyResult<&PyArray3<f32>> {
         let (py, flag) = (self.token.py(), StatusFlagInner(flag.unwrap_or(0)));
-        let array = state.symbol_image_with_offset(py, self.dungeon_symbols, flag.len())?;
+        let array = state.symbol_image_with_offset(py, self.symbols, flag.len())?;
         flag.copy_status(
             &state.status,
-            self.dungeon_channels(),
+            usize::from(self.symbols),
             &mut array.as_array_mut(),
         );
         Ok(array)
@@ -324,26 +259,102 @@ impl GameState {
         flag: Option<u32>,
     ) -> PyResult<&PyArray3<f32>> {
         let (py, flag) = (self.token.py(), StatusFlagInner(flag.unwrap_or(0)));
-        let array = state.symbol_image_with_offset(py, self.dungeon_symbols, flag.len() + 1)?;
+        let array = state.symbol_image_with_offset(py, self.symbols, flag.len() + 1)?;
         let offset = flag.copy_status(
             &state.status,
-            self.dungeon_channels(),
+            usize::from(self.symbols),
             &mut array.as_array_mut(),
         );
         state.copy_hist(&array, offset);
         Ok(array)
     }
+}
+
+#[pyclass]
+struct GameState {
+    inner: GameStateImpl,
+    config: GameConfig,
+    state_converter: StateConverter,
+}
+
+#[pymethods]
+impl GameState {
+    #[new]
+    fn __new__(obj: &PyRawObject, seed: Option<u64>, config_str: Option<String>) -> PyResult<()> {
+        let mut config = if let Some(cfg) = config_str {
+            pyresult_with(GameConfig::from_json(&cfg), "Failed to parse config")?
+        } else {
+            GameConfig::default()
+        };
+        if let Some(seed) = seed {
+            config.seed = Some(u128::from(seed));
+        }
+        let symbols = config
+            .symbol_max()
+            .expect("Failed to get symbol max")
+            .to_byte()
+            + 1;
+        let inner = pyresult(GameStateImpl::new(config.clone()))?;
+        obj.init(|token| GameState {
+            inner,
+            config,
+            state_converter: StateConverter::new(token, symbols),
+        })
+    }
+    fn dungeon_channels(&self) -> usize {
+        usize::from(self.state_converter.symbols)
+    }
+    fn screen_size(&self) -> (i32, i32) {
+        (self.config.height, self.config.width)
+    }
+    fn set_seed(&mut self, seed: u64) -> PyResult<()> {
+        self.config.seed = Some(seed as u128);
+        Ok(())
+    }
+    /// Reset the game state
+    fn reset(&mut self) -> PyResult<()> {
+        pyresult(self.inner.reset(self.config.clone()))
+    }
+    /// Returns the latest game state
+    fn prev(&self) -> PlayerState {
+        self.inner.state.clone()
+    }
+    fn react(&mut self, input: u8) -> PyResult<PlayerState> {
+        pyresult(self.inner.react(input))
+    }
+    /// Convert PlayerState with 2D gray image dungeon
+    fn gray_image(&self, state: &PlayerState, flag: Option<u32>) -> PyResult<&PyArray3<f32>> {
+        self.state_converter.gray_image(state, flag)
+    }
+    fn gray_image_with_hist(
+        &self,
+        state: &PlayerState,
+        flag: Option<u32>,
+    ) -> PyResult<&PyArray3<f32>> {
+        self.state_converter.gray_image_with_hist(state, flag)
+    }
+    /// Convert PlayerState with 3D symbol image dungeon(like AlphaGo's inputs)
+    fn symbol_image(&self, state: &PlayerState, flag: Option<u32>) -> PyResult<&PyArray3<f32>> {
+        self.state_converter.symbol_image(state, flag)
+    }
+    /// Convert PlayerState to 3D symbol image, with player history
+    fn symbol_image_with_hist(
+        &self,
+        state: &PlayerState,
+        flag: Option<u32>,
+    ) -> PyResult<&PyArray3<f32>> {
+        self.state_converter.symbol_image_with_hist(state, flag)
+    }
     /// Returns action history as Json
     fn dump_history(&self) -> PyResult<String> {
-        self.runtime.saved_inputs_as_json().map_err(|e| {
-            PyErr::new::<RuntimeError, _>(format!("error when getting history: {}", e))
-        })
+        pyresult_with(
+            self.inner.runtime.saved_inputs_as_json(),
+            "Error when getting history",
+        )
     }
     /// Returns config as Json
     fn dump_config(&self) -> PyResult<String> {
-        self.config
-            .to_json()
-            .map_err(|e| PyErr::new::<RuntimeError, _>(format!("error when getting config: {}", e)))
+        pyresult_with(self.config.to_json(), "Error when getting config")
     }
 }
 
