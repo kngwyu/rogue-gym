@@ -1,2 +1,6 @@
-from gym.envs.registration import register
 from . import envs
+try:
+    import rainy
+    from . import rainy_impls
+except ImportError:
+    pass

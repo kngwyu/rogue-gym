@@ -3,7 +3,7 @@ try:
     from rainy.envs import EnvExt
 except ImportError:
     raise ImportError('To use rogue_gym.rainy_impls, install rainy first.')
-from .rogue_env import PlayerState, RogueEnv
+from .envs.rogue_env import PlayerState, RogueEnv
 from typing import Tuple
 ACTION_DIM = len(RogueEnv.ACTIONS)
 
