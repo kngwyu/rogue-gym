@@ -9,18 +9,25 @@ use PlayerState;
 pub(crate) struct GameStateImpl {
     pub(crate) runtime: RunTime,
     state: PlayerState,
+    steps: usize,
+    max_steps: usize,
 }
 
 unsafe impl Send for GameStateImpl {}
 
 impl GameStateImpl {
-    pub(crate) fn new(config: GameConfig) -> GameResult<Self> {
+    pub(crate) fn new(config: GameConfig, max_steps: usize) -> GameResult<Self> {
         let mut runtime = config.build()?;
         runtime.keymap = KeyMap::ai();
         let (w, h) = runtime.screen_size();
         let mut state = PlayerState::new(w, h);
         state.update(&mut runtime)?;
-        Ok(GameStateImpl { runtime, state })
+        Ok(GameStateImpl {
+            runtime,
+            state,
+            steps: 0,
+            max_steps,
+        })
     }
     pub(crate) fn reset(&mut self, config: GameConfig) -> GameResult<()> {
         let mut runtime = config.build()?;
@@ -33,6 +40,9 @@ impl GameStateImpl {
         self.state.clone()
     }
     pub(crate) fn react(&mut self, input: u8) -> GameResult<bool> {
+        if self.steps > self.max_steps {
+            return Ok(true);
+        }
         let res = self.runtime.react_to_key(Key::Char(input as char))?;
         self.state.message.reset();
         let mut dead = false;
@@ -54,6 +64,7 @@ impl GameStateImpl {
                 Reaction::Notify(msg) => self.state.message.append(&msg),
             }
         }
-        Ok(dead)
+        self.steps += 1;
+        Ok(dead || self.steps >= self.max_steps)
     }
 }

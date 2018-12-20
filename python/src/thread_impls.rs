@@ -14,11 +14,11 @@ pub(crate) struct ThreadConductor {
 
 impl ThreadConductor {
     const SENDER_BOUND: usize = 4;
-    pub fn new(config: &GameConfig, nworkers: usize) -> GameResult<Self> {
+    pub fn new(configs: Vec<GameConfig>, max_steps: usize) -> GameResult<Self> {
         let mut receivers = vec![];
         let mut senders = vec![];
-        for i in 0..nworkers {
-            let state = GameStateImpl::new(config.clone())?;
+        for config in configs {
+            let state = GameStateImpl::new(config.clone(), max_steps)?;
             let (tx1, rx1) = mpsc::sync_channel(Self::SENDER_BOUND);
             let (tx2, rx2) = mpsc::sync_channel(Self::SENDER_BOUND);
             thread::spawn(move || {
@@ -26,6 +26,7 @@ impl ThreadConductor {
                     game_state: state,
                     receiver: rx1,
                     sender: tx2,
+                    config,
                 };
                 worker.run();
             });
@@ -34,15 +35,15 @@ impl ThreadConductor {
         }
         Ok(ThreadConductor { receivers, senders })
     }
-    pub fn stop(&mut self) -> GameResult<()> {
-        for sender in &mut self.senders {
+    pub fn stop(self) -> GameResult<()> {
+        for sender in self.senders {
             sender.send(Instruction::Stop).compat()?;
         }
         Ok(())
     }
-    pub fn reset(&mut self, config: &GameConfig) -> GameResult<Vec<PlayerState>> {
+    pub fn reset(&mut self) -> GameResult<Vec<PlayerState>> {
         for sender in &mut self.senders {
-            sender.send(Instruction::Reset(config.clone())).compat()?;
+            sender.send(Instruction::Reset).compat()?;
         }
         let mut result = vec![];
         for res in self.receivers.iter_mut().map(|rx| rx.recv().compat()) {
@@ -75,7 +76,7 @@ impl ThreadConductor {
 #[derive(Clone, Debug)]
 enum Instruction {
     Step(u8),
-    Reset(GameConfig),
+    Reset,
     State,
     Stop,
 }
@@ -84,6 +85,7 @@ unsafe impl Send for Instruction {}
 
 struct ThreadWorker {
     game_state: GameStateImpl,
+    config: GameConfig,
     receiver: Receiver<Instruction>,
     sender: SyncSender<GameResult<(PlayerState, bool)>>,
 }
@@ -99,10 +101,10 @@ impl ThreadWorker {
                         .map(|done| (self.game_state.state(), done));
                     self.sender.send(res)
                 }
-                Instruction::Reset(config) => {
+                Instruction::Reset => {
                     let res = self
                         .game_state
-                        .reset(config)
+                        .reset(self.config.clone())
                         .map(|_| (self.game_state.state(), false));
                     self.sender.send(res)
                 }
@@ -135,8 +137,10 @@ mod test {
 "#;
     #[test]
     fn test_threads() {
+        use std::iter::repeat_with;
         let config = GameConfig::from_json(CONFIG).unwrap();
-        let mut threads = ThreadConductor::new(&config, 8).unwrap();
+        let mut threads =
+            ThreadConductor::new(repeat_with(|| config.clone()).take(8).collect(), 100).unwrap();
         let states = threads.states().unwrap();
         for state in &states {
             assert_eq!(*state, states[0]);
@@ -148,5 +152,6 @@ mod test {
             same &= *state == states[0];
         }
         assert!(!same);
+        threads.stop().unwrap();
     }
 }

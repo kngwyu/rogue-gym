@@ -1,4 +1,4 @@
-"""module for wrapper of rogue_gym_core::Runtime as gym environment"""
+"""Mainly provides RogueEnv, rogue_gym_core::Runtime wrapper as gym environment"""
 from enum import Enum, Flag
 import gym
 from gym import spaces
@@ -35,7 +35,7 @@ class DungeonType(Enum):
     SYMBOL = 2
 
 
-class ExpandSetting(NamedTuple):
+class ImageSetting(NamedTuple):
     dungeon: DungeonType = DungeonType.SYMBOL
     status: StatusFlag = StatusFlag.FULL
     includes_hist: bool = False
@@ -90,11 +90,8 @@ class RogueEnv(gym.Env):
             config_path: Optional[str] = None,
             config_dict: Optional[dict] = None,
             max_steps: int = 1000,
-            expand_setting: ExpandSetting = ExpandSetting(),
+            image_setting: ImageSetting = ImageSetting(),
     ) -> None:
-        """
-        @param config_path(string): path to config file
-        """
         super().__init__()
         config = None
         if config_dict:
@@ -102,20 +99,18 @@ class RogueEnv(gym.Env):
         elif config_path:
             with open(config_path, 'r') as f:
                 config = f.read()
-        self.game = GameState(seed, config)
+        self.game = GameState(max_steps, seed, config)
         self.result = None
-        self.max_steps = max_steps
-        self.steps = 0
         self.action_space = spaces.discrete.Discrete(self.ACTION_LEN)
         h, w = self.game.screen_size()
-        channels = expand_setting.dim(self.game.dungeon_channels())
+        channels = image_setting.dim(self.game.dungeon_channels())
         self.observation_space = spaces.box.Box(
             low=0,
             high=1,
             shape=(channels, h, w),
             dtype=np.float32,
         )
-        self.expand_setting = expand_setting
+        self.image_setting = image_setting
         self.__cache()
 
     def __cache(self) -> None:
@@ -130,7 +125,7 @@ class RogueEnv(gym.Env):
     def get_key_to_action(self) -> Dict[str, str]:
         return self.ACION_MEANINGS
 
-    def get_dungeon(self, is_ascii: bool = True) -> List[str]:
+    def get_dungeon(self) -> List[str]:
         return self.result.dungeon
 
     def get_config(self) -> dict:
@@ -145,20 +140,33 @@ class RogueEnv(gym.Env):
         with open(fname, 'w') as f:
             f.write(self.game.dump_history())
 
-    def expand_state(self, state: PlayerState) -> ndarray:
+    def state_to_image(
+            self,
+            state: PlayerState,
+            setting: Optional[ImageSetting] = None
+    ) -> ndarray:
+        """Convert PlayerState to 3d array, according to setting or self.expand_setting
+        """
         if not isinstance(state, PlayerState):
             raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
-        exs = self.expand_setting
-        if exs.dungeon == DungeonType.SYMBOL:
-            if exs.includes_hist:
-                return self.game.symbol_image_with_hist(state, flag=exs.status.value)
+        ims = setting if setting else self.image_setting
+        if ims.dungeon == DungeonType.SYMBOL:
+            if ims.includes_hist:
+                return self.game.symbol_image_with_hist(state, flag=ims.status.value)
             else:
-                return self.game.symbol_image(state, flag=exs.status.value)
+                return self.game.symbol_image(state, flag=ims.status.value)
         else:
-            if exs.includes_hist:
-                return self.game.gray_image_with_hist(state, flag=exs.status.value)
+            if ims.includes_hist:
+                return self.game.gray_image_with_hist(state, flag=ims.status.value)
             else:
-                return self.game.gray_image(state, flag=exs.status.value)
+                return self.game.gray_image(state, flag=ims.status.value)
+
+    def state_to_status_vec(
+            self,
+            state: PlayerState,
+            flag: StatusFlag = StatusFlag.FULL
+    ) -> List[int]:
+        return state.status_vec(flag.value)
 
     def symbol_image(self, state: PlayerState, flag: StatusFlag) -> ndarray:
         if not isinstance(state, PlayerState):
@@ -193,21 +201,16 @@ class RogueEnv(gym.Env):
         @param actions(string):
              key board inputs to rogue(e.g. "hjk" or "hh>")
         """
-        if self.steps >= self.max_steps:
-            return self.result, 0., True, None
         gold_before = self.result.gold
         if isinstance(action, int) and action < self.ACTION_LEN:
             s = self.ACTIONS[action]
             step, done = self.__step_str(s)
-            self.steps += step
         elif isinstance(action, str):
             step, done = self.__step_str(action)
-            self.steps += step
         else:
             raise ValueError("Invalid action: {}".format(action))
         self.__cache()
         reward = self.result.gold - gold_before
-        done |= self.steps >= self.max_steps
         return self.result, reward, done, {}
 
     def seed(self, seed: int) -> None:
@@ -227,7 +230,6 @@ class RogueEnv(gym.Env):
     def reset(self) -> PlayerState:
         """reset game state"""
         self.game.reset()
-        self.steps = 0
         self.__cache()
         return self.result
 

@@ -26,6 +26,7 @@ use rogue_gym_core::{error::*, symbol, GameConfig, RunTime};
 use state_impls::GameStateImpl;
 use std::collections::HashMap;
 use std::str::from_utf8_unchecked;
+use thread_impls::ThreadConductor;
 
 fn pyresult<T>(result: GameResult<T>) -> PyResult<T> {
     pyresult_with(result, "Error in rogue-gym")
@@ -234,7 +235,12 @@ struct GameState {
 #[pymethods]
 impl GameState {
     #[new]
-    fn __new__(obj: &PyRawObject, seed: Option<u64>, config_str: Option<String>) -> PyResult<()> {
+    fn __new__(
+        obj: &PyRawObject,
+        max_steps: usize,
+        seed: Option<u64>,
+        config_str: Option<String>,
+    ) -> PyResult<()> {
         let mut config = if let Some(cfg) = config_str {
             pyresult_with(GameConfig::from_json(&cfg), "Failed to parse config")?
         } else {
@@ -248,7 +254,7 @@ impl GameState {
             .expect("Failed to get symbol max")
             .to_byte()
             + 1;
-        let inner = pyresult(GameStateImpl::new(config.clone()))?;
+        let inner = pyresult(GameStateImpl::new(config.clone(), max_steps))?;
         obj.init(|token| GameState {
             inner,
             config,
@@ -313,9 +319,46 @@ impl GameState {
     }
 }
 
+#[pyclass]
+struct ParallelGameState {
+    conductor: ThreadConductor,
+}
+
+#[pymethods]
+impl ParallelGameState {
+    #[new]
+    fn __new__(obj: &PyRawObject, max_steps: usize, configs: Vec<String>) -> PyResult<()> {
+        let configs = {
+            let mut res = vec![];
+            for cfg in configs {
+                res.push(pyresult_with(
+                    GameConfig::from_json(&cfg),
+                    "Failed to parse config",
+                )?);
+            }
+            res
+        };
+        let conductor = pyresult(ThreadConductor::new(configs.clone(), max_steps))?;
+        obj.init(|_| ParallelGameState { conductor })
+    }
+    fn states(&mut self, py: Python) -> PyResult<Vec<PlayerState>> {
+        let res = py.allow_threads(move || self.conductor.states());
+        pyresult(res)
+    }
+    fn step(&mut self, py: Python, input: Vec<u8>) -> PyResult<Vec<(PlayerState, bool)>> {
+        let res = py.allow_threads(move || self.conductor.step(input));
+        pyresult(res)
+    }
+    fn reset(&mut self, py: Python) -> PyResult<Vec<PlayerState>> {
+        let res = py.allow_threads(move || self.conductor.reset());
+        pyresult(res)
+    }
+}
+
 #[pymodinit(_rogue_gym)]
 fn init_mod(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<GameState>()?;
     m.add_class::<PlayerState>()?;
+    m.add_class::<ParallelGameState>()?;
     Ok(())
 }
