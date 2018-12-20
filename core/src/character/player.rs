@@ -254,7 +254,7 @@ impl Leveling {
 }
 
 /// Hunger level
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub enum Hunger {
     Normal,
     Hungry,
@@ -288,7 +288,7 @@ impl fmt::Display for Hunger {
 }
 
 /// status for displaying
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Status {
     pub dungeon_level: u32,
     pub gold: u32,

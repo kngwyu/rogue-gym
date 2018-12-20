@@ -187,7 +187,7 @@ class RogueEnv(gym.Env):
                 return i + 1, True
         return len(actions), False
 
-    def step(self, action: Union[int, str]) -> Tuple[PlayerState, float, bool, None]:
+    def step(self, action: Union[int, str]) -> Tuple[PlayerState, float, bool, dict]:
         """
         Do action.
         @param actions(string):
@@ -208,7 +208,7 @@ class RogueEnv(gym.Env):
         self.__cache()
         reward = self.result.gold - gold_before
         done |= self.steps >= self.max_steps
-        return self.result, reward, done, None
+        return self.result, reward, done, {}
 
     def seed(self, seed: int) -> None:
         """

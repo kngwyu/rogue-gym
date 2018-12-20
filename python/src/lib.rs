@@ -37,7 +37,7 @@ fn pyresult_with<T>(result: GameResult<T>, msg: &str) -> PyResult<T> {
 
 /// A memory efficient representation of Agent observation.
 #[pyclass]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 struct PlayerState {
     map: Vec<Vec<u8>>,
     history: Array2<bool>,
@@ -271,7 +271,7 @@ impl GameState {
     }
     /// Returns the latest game state
     fn prev(&self) -> PlayerState {
-        self.inner.state.clone()
+        self.inner.state()
     }
     fn react(&mut self, input: u8) -> PyResult<bool> {
         pyresult(self.inner.react(input))

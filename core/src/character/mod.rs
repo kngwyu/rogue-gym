@@ -161,7 +161,7 @@ from_impls!(Level, i8 u8 i16 u16 i32 u32);
 from_impls!(Defense, i8 u8 i16 u16);
 from_impls!(Exp, u8 u16);
 
-#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Maxed<T> {
     pub max: T,
     pub current: T,

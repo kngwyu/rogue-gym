@@ -1,4 +1,3 @@
-use fearures::MessageFlagInner;
 use rogue_gym_core::{
     error::GameResult,
     input::{Key, KeyMap},
@@ -9,8 +8,10 @@ use PlayerState;
 
 pub(crate) struct GameStateImpl {
     pub(crate) runtime: RunTime,
-    pub(crate) state: PlayerState,
+    state: PlayerState,
 }
+
+unsafe impl Send for GameStateImpl {}
 
 impl GameStateImpl {
     pub(crate) fn new(config: GameConfig) -> GameResult<Self> {
@@ -27,6 +28,9 @@ impl GameStateImpl {
         self.state.update(&mut runtime)?;
         self.runtime = runtime;
         Ok(())
+    }
+    pub(crate) fn state(&self) -> PlayerState {
+        self.state.clone()
     }
     pub(crate) fn react(&mut self, input: u8) -> GameResult<bool> {
         let res = self.runtime.react_to_key(Key::Char(input as char))?;

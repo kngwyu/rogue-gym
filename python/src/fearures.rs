@@ -2,7 +2,7 @@ use ndarray::{ArrayViewMut, Axis, Ix3};
 use rogue_gym_core::character::player::Status;
 use rogue_gym_core::GameMsg;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub(crate) struct MessageFlagInner(pub u32);
 
 #[rustfmt::skip]
