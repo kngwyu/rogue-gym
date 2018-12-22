@@ -37,14 +37,14 @@ def test_images():
     env = RogueEnv(config_dict=CONFIG_NOENEM)
     state, *_ = env.step('H')
     status = StatusFlag.EMPTY
-    symbol_img_hist = env.symbol_image_with_hist(state, status)
+    symbol_img_hist = status.symbol_image_with_hist(state)
     assert symbol_img_hist.shape == (18, 24, 80)
     hist = symbol_img_hist[-1]
     for cell in hist[20][2:15]:
         assert cell, 1.
-    gray_img = env.gray_image(state, status)
+    gray_img = status.gray_image(state)
     assert gray_img.shape == (1, 24, 80)
-    gray_img_hist = env.gray_image_with_hist(state, status)
+    gray_img_hist = status.gray_image_with_hist(state)
     assert gray_img_hist.shape == (2, 24, 80)
 
 

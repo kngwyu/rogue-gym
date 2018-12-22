@@ -34,5 +34,4 @@ def test_configs():
     assert img.shape == (21, 16, 32)
     assert img[17][0][0] == 3.0
     assert img[18][0][0] == 12.0
-    print(state)
-    assert env.state_to_status_vec(state) == [3, 12, 12, 16, 16, 0, 1, 0, 0]
+    assert StatusFlag.FULL.status_vec(state) == [3, 12, 12, 16, 16, 0, 1, 0, 0]

@@ -29,6 +29,29 @@ class StatusFlag(Flag):
             val >>= 1
         return s
 
+    def symbol_image(self, state: PlayerState) -> ndarray:
+        if not isinstance(state, PlayerState):
+            raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
+        return state.symbol_image(flag=self.value)
+
+    def symbol_image_with_hist(self, state: PlayerState) -> ndarray:
+        if not isinstance(state, PlayerState):
+            raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
+        return state.symbol_image_with_hist(flag=self.value)
+
+    def gray_image(self, state: PlayerState) -> ndarray:
+        if not isinstance(state, PlayerState):
+            raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
+        return state.gray_image(flag=self.value)
+
+    def gray_image_with_hist(self, state: PlayerState) -> ndarray:
+        if not isinstance(state, PlayerState):
+            raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
+        return state.gray_image_with_hist(flag=self.value)
+
+    def status_vec(self, state: PlayerState) -> List[int]:
+        return state.status_vec(flag=self.value)
+
 
 class DungeonType(Enum):
     GRAY   = 1
@@ -45,6 +68,20 @@ class ImageSetting(NamedTuple):
         s += self.status.count_one()
         s += 1 if self.includes_hist else 0
         return s
+
+    def expand(self, state: PlayerState) -> ndarray:
+        if not isinstance(state, PlayerState):
+            raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
+        if self.dungeon == DungeonType.SYMBOL:
+            if self.includes_hist:
+                return self.status.symbol_image_with_hist(state)
+            else:
+                return self.status.symbol_image(state)
+        else:
+            if self.includes_hist:
+                return self.status.gray_image_with_hist(state)
+            else:
+                return self.status.gray_image(state)
 
 
 class RogueEnv(gym.Env):
@@ -103,7 +140,7 @@ class RogueEnv(gym.Env):
         self.result = None
         self.action_space = spaces.discrete.Discrete(self.ACTION_LEN)
         h, w = self.game.screen_size()
-        channels = image_setting.dim(self.game.dungeon_channels())
+        channels = image_setting.dim(self.game.symbols())
         self.observation_space = spaces.box.Box(
             low=0,
             high=1,
@@ -147,46 +184,9 @@ class RogueEnv(gym.Env):
     ) -> ndarray:
         """Convert PlayerState to 3d array, according to setting or self.expand_setting
         """
-        if not isinstance(state, PlayerState):
-            raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
-        ims = setting if setting else self.image_setting
-        if ims.dungeon == DungeonType.SYMBOL:
-            if ims.includes_hist:
-                return self.game.symbol_image_with_hist(state, flag=ims.status.value)
-            else:
-                return self.game.symbol_image(state, flag=ims.status.value)
-        else:
-            if ims.includes_hist:
-                return self.game.gray_image_with_hist(state, flag=ims.status.value)
-            else:
-                return self.game.gray_image(state, flag=ims.status.value)
-
-    def state_to_status_vec(
-            self,
-            state: PlayerState,
-            flag: StatusFlag = StatusFlag.FULL
-    ) -> List[int]:
-        return state.status_vec(flag.value)
-
-    def symbol_image(self, state: PlayerState, flag: StatusFlag) -> ndarray:
-        if not isinstance(state, PlayerState):
-            raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
-        return self.game.symbol_image(state, flag=flag.value)
-
-    def symbol_image_with_hist(self, state: PlayerState, flag: StatusFlag) -> ndarray:
-        if not isinstance(state, PlayerState):
-            raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
-        return self.game.symbol_image_with_hist(state, flag=flag.value)
-
-    def gray_image(self, state: PlayerState, flag: StatusFlag) -> ndarray:
-        if not isinstance(state, PlayerState):
-            raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
-        return self.game.gray_image(state, flag=flag.value)
-
-    def gray_image_with_hist(self, state: PlayerState, flag: StatusFlag) -> ndarray:
-        if not isinstance(state, PlayerState):
-            raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
-        return self.game.gray_image_with_hist(state, flag=flag.value)
+        if setting is None:
+            setting = self.image_setting
+        return setting.expand(state)
 
     def __step_str(self, actions: str) -> Tuple[int, bool]:
         for i, act in enumerate(actions):

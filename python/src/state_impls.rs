@@ -17,10 +17,15 @@ unsafe impl Send for GameStateImpl {}
 
 impl GameStateImpl {
     pub(crate) fn new(config: GameConfig, max_steps: usize) -> GameResult<Self> {
+        let symbols = config
+            .symbol_max()
+            .expect("Failed to get symbol max")
+            .to_byte()
+            + 1;
         let mut runtime = config.build()?;
         runtime.keymap = KeyMap::ai();
         let (w, h) = runtime.screen_size();
-        let mut state = PlayerState::new(w, h);
+        let mut state = PlayerState::new(w, h, symbols);
         state.update(&mut runtime)?;
         Ok(GameStateImpl {
             runtime,
@@ -38,6 +43,9 @@ impl GameStateImpl {
     }
     pub(crate) fn state(&self) -> PlayerState {
         self.state.clone()
+    }
+    pub(crate) fn symbols(&self) -> usize {
+        usize::from(self.state.symbols)
     }
     pub(crate) fn react(&mut self, input: u8) -> GameResult<bool> {
         if self.steps > self.max_steps {
