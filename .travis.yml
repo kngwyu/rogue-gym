@@ -30,7 +30,7 @@ before_install:
   - source ./ci/setup.sh
 
 install:
-  - pip install setuptools-rust
+  - pip install setuptools-rust tox
 
 script:
   - ./ci/test.sh

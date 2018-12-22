@@ -8,7 +8,7 @@ PYTHON_MAJOR_VERSION = sys.version_info[0]
 setup_requirements = ['setuptools-rust>=0.6.0']
 install_requirements = ['numpy', 'gym']
 test_requirements = install_requirements + ['pytest']
-extra_requirements = {'rainy': 'git+https://github.com/kngwyu/Rainy'}
+extra_requirements = {'rainy': ['rainy']}
 
 setup(
     name='rouge-gym',
@@ -28,10 +28,10 @@ setup(
     ],
     packages=find_packages(),
     rust_extensions=[RustExtension('rogue_gym_python._rogue_gym', 'Cargo.toml')],
+    tests_require=test_requirements,
     install_requires=install_requirements,
-    test_requires=test_requirements,
     setup_requires=setup_requirements,
-    extra_requires=extra_requirements,
+    extras_require=extra_requirements,
     include_package_data=True,
     zip_safe=False,
 )
