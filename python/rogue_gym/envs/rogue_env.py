@@ -69,6 +69,14 @@ class ImageSetting(NamedTuple):
         s += 1 if self.includes_hist else 0
         return s
 
+    def _space(self, h: int, w: int, symbols: int) -> gym.Space:
+        return spaces.box.Box(
+            low=0,
+            high=1,
+            shape=(self.dim(symbols), h, w),
+            dtype=np.float32,
+        )
+
     def expand(self, state: PlayerState) -> ndarray:
         if not isinstance(state, PlayerState):
             raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
@@ -139,14 +147,8 @@ class RogueEnv(gym.Env):
         self.game = GameState(max_steps, seed, config)
         self.result = None
         self.action_space = spaces.discrete.Discrete(self.ACTION_LEN)
-        h, w = self.game.screen_size()
-        channels = image_setting.dim(self.game.symbols())
-        self.observation_space = spaces.box.Box(
-            low=0,
-            high=1,
-            shape=(channels, h, w),
-            dtype=np.float32,
-        )
+        self.observation_space = \
+            image_setting._space(*self.game.screen_size(), self.game.symbols())
         self.image_setting = image_setting
         self.__cache()
 

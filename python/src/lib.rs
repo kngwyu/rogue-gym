@@ -273,13 +273,15 @@ impl GameState {
         pyresult_with(self.config.to_json(), "Error when getting config")
     }
     fn symbols(&self) -> PyResult<usize> {
-        Ok(usize::from(self.inner.symbols()))
+        Ok(self.inner.symbols())
     }
 }
 
 #[pyclass]
 struct ParallelGameState {
     conductor: ThreadConductor,
+    configs: Vec<GameConfig>,
+    symbols: u8,
 }
 
 #[pymethods]
@@ -296,8 +298,23 @@ impl ParallelGameState {
             }
             res
         };
+        let symbols = configs[0]
+            .symbol_max()
+            .expect("Failed to get symbol max")
+            .to_byte()
+            + 1;
         let conductor = pyresult(ThreadConductor::new(configs.clone(), max_steps))?;
-        obj.init(|_| ParallelGameState { conductor })
+        obj.init(|_| ParallelGameState {
+            conductor,
+            configs,
+            symbols,
+        })
+    }
+    fn screen_size(&self) -> (i32, i32) {
+        (self.configs[0].height, self.configs[0].width)
+    }
+    fn symbols(&self) -> PyResult<usize> {
+        Ok(usize::from(self.symbols))
     }
     fn states(&mut self, py: Python) -> PyResult<Vec<PlayerState>> {
         let ParallelGameState {

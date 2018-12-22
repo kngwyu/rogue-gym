@@ -49,9 +49,13 @@ class ParallelRogueEnvExt(ParallelEnv, ParallelRogueEnv):
     def num_envs(self) -> int:
         return self.num_workers
 
+    @property
     def action_dim(self) -> int:
         return ACTION_DIM
 
+    @property
     def state_dim(self) -> Tuple[int, ...]:
-        pass
+        return self.observation_space.shape
 
+    def states_to_array(self, states: Iterable[PlayerState]) -> Array:
+        return np.stack([self._env.image_setting.expand(state) for state in states])
