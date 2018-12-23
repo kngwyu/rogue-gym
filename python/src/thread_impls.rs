@@ -35,12 +35,6 @@ impl ThreadConductor {
         }
         Ok(ThreadConductor { receivers, senders })
     }
-    pub fn stop(self) -> GameResult<()> {
-        for sender in self.senders {
-            sender.send(Instruction::Stop).compat()?;
-        }
-        Ok(())
-    }
     pub fn reset(&mut self) -> GameResult<Vec<PlayerState>> {
         for sender in &mut self.senders {
             sender.send(Instruction::Reset).compat()?;
@@ -69,16 +63,27 @@ impl ThreadConductor {
         for res in self.receivers.iter_mut().map(|rx| rx.recv().compat()) {
             result.push(res??);
         }
+        for (i, res) in result.iter().enumerate() {
+            if res.1 {
+                self.senders[i].send(Instruction::Reset).compat()?;
+            }
+        }
+        for (i, res) in result.iter_mut().enumerate() {
+            if res.1 {
+                res.0 = self.receivers[i].recv().compat()??.0;
+            }
+        }
         Ok(result)
     }
 }
 
+/// Thread instruction
+/// have no 'stop' or 'close', becase they're not integrated with python's GC well.
 #[derive(Clone, Debug)]
 enum Instruction {
     Step(u8),
     Reset,
     State,
-    Stop,
 }
 
 unsafe impl Send for Instruction {}
@@ -109,7 +114,6 @@ impl ThreadWorker {
                     self.sender.send(res)
                 }
                 Instruction::State => self.sender.send(Ok((self.game_state.state(), false))),
-                Instruction::Stop => break,
             }
             .expect("ThreadWorker: disconnected")
         }
@@ -152,6 +156,5 @@ mod test {
             same &= *state == states[0];
         }
         assert!(!same);
-        threads.stop().unwrap();
     }
 }

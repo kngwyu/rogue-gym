@@ -26,14 +26,15 @@ use rogue_gym_core::dungeon::{Positioned, X, Y};
 use rogue_gym_core::{error::*, symbol, GameConfig, RunTime};
 use state_impls::GameStateImpl;
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::str::from_utf8_unchecked;
 use thread_impls::ThreadConductor;
 
-fn pyresult<T>(result: GameResult<T>) -> PyResult<T> {
+fn pyresult<T, E: Display>(result: Result<T, E>) -> PyResult<T> {
     pyresult_with(result, "Error in rogue-gym")
 }
 
-fn pyresult_with<T>(result: GameResult<T>, msg: &str) -> PyResult<T> {
+fn pyresult_with<T, E: Display>(result: Result<T, E>, msg: &str) -> PyResult<T> {
     result.map_err(|e| PyErr::new::<RuntimeError, _>(format!("{}: {}", msg, e)))
 }
 
@@ -101,10 +102,13 @@ impl PlayerState {
         let (h, w) = (self.map.len(), self.map[0].len());
         let channels = usize::from(self.symbols);
         let py_array = PyArray3::zeros(py, [channels + offset, h, w], false);
-        symbol::construct_symbol_map(&self.map, h, w, self.symbols - 1, |idx| unsafe {
-            py_array.uget_mut(idx)
-        })
-        .map_err(|e| PyErr::new::<RuntimeError, _>(format!("{}", e)))?;
+        pyresult(symbol::construct_symbol_map(
+            &self.map,
+            h,
+            w,
+            self.symbols - 1,
+            |idx| unsafe { py_array.uget_mut(idx) },
+        ))?;
         Ok(py_array)
     }
     fn copy_hist(&self, py_array: &PyArray3<f32>, offset: usize) {
@@ -227,7 +231,7 @@ struct GameState {
 impl GameState {
     #[new]
     fn __new__(obj: &PyRawObject, max_steps: usize, config_str: Option<String>) -> PyResult<()> {
-        let mut config = if let Some(cfg) = config_str {
+        let config = if let Some(cfg) = config_str {
             pyresult_with(GameConfig::from_json(&cfg), "Failed to parse config")?
         } else {
             GameConfig::default()

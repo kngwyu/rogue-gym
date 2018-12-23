@@ -27,6 +27,14 @@ def test_action():
     assert res.dungeon == SEED1_DUNGEON2
 
 
+def test_noaction():
+    env = RogueEnv(seed=1)
+    state = env.result
+    res, *_ = env.step('.')
+    assert res.dungeon == state.dungeon
+    assert res.status == state.status
+
+
 def test_max_steps():
     env = RogueEnv(seed=1, max_steps=5)
     _, _, done, _ = env.step(CMD_STR)

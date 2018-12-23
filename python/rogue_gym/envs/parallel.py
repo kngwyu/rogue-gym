@@ -50,20 +50,18 @@ class ParallelRogueEnv:
         """
         if isinstance(action, str) and len(action) == self.num_workers:
             action = [ord(c) for c in action]
-        elif isinstance(action, list):
-            pass
         else:
             try:
-                action = [x for x in action]
+                action = [ord(self.ACTIONS[x]) for x in action]
             except Exception:
                 raise ValueError("Invalid action: {}".format(action))
         states, done = map(list, zip(*self.game.step(action)))
         rewards = [after.gold - before.gold for before, after in zip(self.states, states)]
         self.states = states
-        return self.result, rewards, done, [{}] * self.num_workers
+        return states, rewards, done, [{}] * self.num_workers
 
     def reset(self) -> List[PlayerState]:
         """reset game state"""
         states = self.game.reset()
         self.states = states
-        return self.states
+        return states

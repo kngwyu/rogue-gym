@@ -59,25 +59,22 @@
         }
     },
     "keymap": {
-        ">": {
-            "Act": "DownStair"
-        },
-        "H": {
+        "J": {
             "Act": {
-                "MoveUntil": "Left"
+                "MoveUntil": "Down"
             }
         },
-        "u": {
+        "l": {
             "Act": {
-                "Move": "RightUp"
+                "Move": "Right"
             }
         },
         "s": {
             "Act": "Search"
         },
-        "Y": {
+        "Down": {
             "Act": {
-                "MoveUntil": "LeftUp"
+                "Move": "Down"
             }
         },
         "S": {
@@ -88,35 +85,38 @@
                 "MoveUntil": "LeftDown"
             }
         },
-        "n": {
-            "Both": {
-                "act": {
-                    "Move": "RightDown"
-                },
-                "sys": "No"
+        "Right": {
+            "Act": {
+                "Move": "Right"
             }
+        },
+        " ": {
+            "Sys": "Continue"
+        },
+        "j": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "K": {
+            "Act": {
+                "MoveUntil": "Up"
+            }
+        },
+        ".": {
+            "Act": "NoOp"
+        },
+        "Q": {
+            "Sys": "Quit"
         },
         "U": {
             "Act": {
                 "MoveUntil": "RightUp"
             }
         },
-        "l": {
+        "u": {
             "Act": {
-                "Move": "Right"
-            }
-        },
-        "i": {
-            "Sys": "Inventory"
-        },
-        "Left": {
-            "Act": {
-                "Move": "Left"
-            }
-        },
-        "L": {
-            "Act": {
-                "MoveUntil": "Right"
+                "Move": "RightUp"
             }
         },
         "y": {
@@ -127,52 +127,14 @@
                 "sys": "Yes"
             }
         },
-        "K": {
-            "Act": {
-                "MoveUntil": "Up"
-            }
-        },
-        "Right": {
-            "Act": {
-                "Move": "Right"
-            }
-        },
-        "b": {
-            "Act": {
-                "Move": "LeftDown"
-            }
-        },
-        "N": {
-            "Act": {
-                "MoveUntil": "RightDown"
-            }
-        },
-        "Up": {
-            "Act": {
-                "Move": "Up"
-            }
-        },
-        "j": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
-        "Down": {
-            "Act": {
-                "Move": "Down"
-            }
-        },
-        "J": {
-            "Act": {
-                "MoveUntil": "Down"
-            }
-        },
-        "Q": {
-            "Sys": "Quit"
-        },
         "k": {
             "Act": {
                 "Move": "Up"
+            }
+        },
+        "Y": {
+            "Act": {
+                "MoveUntil": "LeftUp"
             }
         },
         "h": {
@@ -180,11 +142,52 @@
                 "Move": "Left"
             }
         },
+        "N": {
+            "Act": {
+                "MoveUntil": "RightDown"
+            }
+        },
+        "n": {
+            "Both": {
+                "act": {
+                    "Move": "RightDown"
+                },
+                "sys": "No"
+            }
+        },
+        "L": {
+            "Act": {
+                "MoveUntil": "Right"
+            }
+        },
+        "H": {
+            "Act": {
+                "MoveUntil": "Left"
+            }
+        },
         "Esc": {
             "Sys": "Cancel"
         },
-        " ": {
-            "Sys": "Continue"
+        "b": {
+            "Act": {
+                "Move": "LeftDown"
+            }
+        },
+        ">": {
+            "Act": "DownStair"
+        },
+        "i": {
+            "Sys": "Inventory"
+        },
+        "Left": {
+            "Act": {
+                "Move": "Left"
+            }
+        },
+        "Up": {
+            "Act": {
+                "Move": "Up"
+            }
         }
     },
     "player": {

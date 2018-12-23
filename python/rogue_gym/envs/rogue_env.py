@@ -110,21 +110,22 @@ class RogueEnv(gym.Env):
 
     # Same as data/keymaps/ai.json
     ACTION_MEANINGS = {
-        "h": "MOVE_LEFT",
-        "j": "MOVE_UP",
-        "k": "MOVE_DOWN",
-        "l": "MOVE_RIGHT",
-        "n": "MOVE_RIGHTDOWN",
-        "b": "MOVE_LEFTDOWN",
-        "u": "MOVE_RIGHTUP",
-        "y": "MOVE_LEFTDOWN",
-        ">": "DOWNSTAIR",
-        "s": "SEARCH",
+        '.': 'NO_OPERATION',
+        'h': 'MOVE_LEFT',
+        'j': 'MOVE_UP',
+        'k': 'MOVE_DOWN',
+        'l': 'MOVE_RIGHT',
+        'n': 'MOVE_RIGHTDOWN',
+        'b': 'MOVE_LEFTDOWN',
+        'u': 'MOVE_RIGHTUP',
+        'y': 'MOVE_LEFTDOWN',
+        '>': 'DOWNSTAIR',
+        's': 'SEARCH',
     }
 
     ACTIONS = [
-        "h", "j", "k", "l", "n",
-        "b", "u", "y", ">", "s",
+        '.', 'h', 'j', 'k', 'l', 'n',
+        'b', 'u', 'y', '>', 's',
     ]
 
     ACTION_LEN = len(ACTIONS)

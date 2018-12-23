@@ -39,6 +39,7 @@ impl GameStateImpl {
         runtime.keymap = KeyMap::ai();
         self.state.update(&mut runtime)?;
         self.runtime = runtime;
+        self.steps = 0;
         Ok(())
     }
     pub(crate) fn state(&self) -> PlayerState {

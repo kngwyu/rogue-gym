@@ -226,6 +226,7 @@ pub enum Action {
     UpStair,
     DownStair,
     Search,
+    NoOp,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]

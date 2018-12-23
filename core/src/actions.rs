@@ -56,6 +56,10 @@ pub(crate) fn process_action(
             player.turn_passed();
             search(dungeon, player)
         }
+        Action::NoOp => {
+            player.turn_passed();
+            Ok(vec![])
+        }
     }
 }
 

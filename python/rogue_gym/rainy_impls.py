@@ -11,20 +11,23 @@ from typing import Iterable, Tuple
 ACTION_DIM = len(RogueEnv.ACTIONS)
 
 
-class RogueEnvExt(EnvExt, RogueEnv):
+class RogueEnvExt(EnvExt):
+    def __init__(self, rogue_env: RogueEnv) -> None:
+        super().__init__(rogue_env)
+
     @property
     def action_dim(self) -> int:
         return ACTION_DIM
 
     @property
     def state_dim(self) -> Tuple[int, ...]:
-        return self.observation_space.shape
+        return self._env.observation_space.shape
 
     def state_to_array(self, state: PlayerState) -> ndarray:
-        return self.expand_state(state)
+        return self._env.expand_state(state)
 
     def save_history(self, file_name: str) -> None:
-        self.save_actions(file_name)
+        self._env.save_actions(file_name)
 
 
 class ParallelRogueEnvExt(ParallelEnv, ParallelRogueEnv):
