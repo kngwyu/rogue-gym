@@ -1,5 +1,6 @@
 from .rogue_env import PlayerState, RogueEnv
-from typing import Tuple, Union
+from .parallel import ParallelRogueEnv
+from typing import Iterable, List, Tuple, Union
 
 
 class StairRewardEnv(RogueEnv):
@@ -32,3 +33,26 @@ class FirstFloorEnv(StairRewardEnv):
 
     def __repr__(self):
         return super().__repr__()
+
+
+class StairRewardParallel(ParallelRogueEnv):
+    def __init__(self, *args, **kwargs) -> None:
+        self.stair_reward = 50.0  # default reward
+        if 'stair_reward' in kwargs:
+            self.stair_reward = kwargs['stair_reward']
+            del kwargs['stair_reward']
+        super().__init__(*args, **kwargs)
+        self.current_levels = [1] * self.num_workers
+
+    def step(
+            self,
+            action: Union[Iterable[int], str]
+    ) -> Tuple[List[PlayerState], List[float], List[bool], List[dict]]:
+        state, reward, end, info = super().step(action)
+        print(reward)
+        for i in range(self.num_workers):
+            level = state[i].status['dungeon_level']
+            if self.current_levels[i] < level:
+                reward[i] += self.stair_reward
+                self.current_levels[i] = level
+        return state, reward, end, info
