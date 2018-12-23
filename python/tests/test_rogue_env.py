@@ -57,5 +57,5 @@ def test_space():
     env = RogueEnv(config_dict=CONFIG_NOENEM)
     assert env.action_space == gym.spaces.discrete.Discrete(env.ACTION_LEN)
     # 26 = 17(symbols) + 9(all status)
-    assert env.observation_space.shape == \
-        spaces.box.Box(low=0, high=1, shape=(26, 24, 80), dtype=np.float32).shape
+    assert env.observation_space == \
+        spaces.box.Box(low=0, high=1, shape=(26, 24, 80), dtype=np.float32)
