@@ -226,20 +226,12 @@ struct GameState {
 #[pymethods]
 impl GameState {
     #[new]
-    fn __new__(
-        obj: &PyRawObject,
-        max_steps: usize,
-        seed: Option<u64>,
-        config_str: Option<String>,
-    ) -> PyResult<()> {
+    fn __new__(obj: &PyRawObject, max_steps: usize, config_str: Option<String>) -> PyResult<()> {
         let mut config = if let Some(cfg) = config_str {
             pyresult_with(GameConfig::from_json(&cfg), "Failed to parse config")?
         } else {
             GameConfig::default()
         };
-        if let Some(seed) = seed {
-            config.seed = Some(u128::from(seed));
-        }
         let inner = pyresult(GameStateImpl::new(config.clone(), max_steps))?;
         obj.init(|_| GameState { inner, config })
     }

@@ -33,6 +33,11 @@ def test_max_steps():
     assert done
 
 
+def test_kwargs_setting():
+    env = RogueEnv(seed=1, width=48, height=24)
+    assert env.screen_size() == (24, 48)
+
+
 def test_images():
     env = RogueEnv(config_dict=CONFIG_NOENEM)
     state, *_ = env.step('H')

@@ -131,20 +131,20 @@ class RogueEnv(gym.Env):
 
     def __init__(
             self,
-            seed: Optional[int] = None,
             config_path: Optional[str] = None,
-            config_dict: Optional[dict] = None,
+            config_dict: dict = {},
             max_steps: int = 1000,
             image_setting: ImageSetting = ImageSetting(),
+            **kwargs,
     ) -> None:
         super().__init__()
-        config = None
-        if config_dict:
-            config = json.dumps(config_dict)
-        elif config_path:
+        if config_path:
             with open(config_path, 'r') as f:
                 config = f.read()
-        self.game = GameState(max_steps, seed, config)
+        else:
+            config_dict.update(kwargs)
+            config = json.dumps(config_dict)
+        self.game = GameState(max_steps, config)
         self.result = None
         self.action_space = spaces.discrete.Discrete(self.ACTION_LEN)
         self.observation_space = \

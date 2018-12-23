@@ -9,7 +9,7 @@ COMING SOON
 
 ```python
 >>> from rogue_gym.envs import RogueEnv
->>> env = RogueEnv(seed=1, config_dict={"width":36,"height":18})
+>>> env = RogueEnv(seed=1, width=36, height=18)
 >>> env
                                     
                                     
