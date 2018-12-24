@@ -44,7 +44,7 @@ class ParallelRogueEnvExt(ParallelEnv, ParallelRogueEnv):
             self,
             actions: Iterable[int]
     ) -> Tuple[Array[PlayerState], Array[float], Array[bool], Array[dict]]:
-        return self._env.step(actions)
+        return tuple(map(np.asarray, self._env.step(actions)))
 
     def seed(self, seed: int) -> None:
         raise NotImplementedError('Please specify seed in config')
@@ -58,7 +58,7 @@ class ParallelRogueEnvExt(ParallelEnv, ParallelRogueEnv):
 
     @property
     def state_dim(self) -> Tuple[int, ...]:
-        return self.observation_space.shape
+        return self._env.observation_space.shape
 
     def states_to_array(self, states: Iterable[PlayerState]) -> Array:
         return np.stack([self._env.image_setting.expand(state) for state in states])

@@ -49,7 +49,6 @@ class StairRewardParallel(ParallelRogueEnv):
             action: Union[Iterable[int], str]
     ) -> Tuple[List[PlayerState], List[float], List[bool], List[dict]]:
         state, reward, end, info = super().step(action)
-        print(reward)
         for i in range(self.num_workers):
             level = state[i].status['dungeon_level']
             if self.current_levels[i] < level:
