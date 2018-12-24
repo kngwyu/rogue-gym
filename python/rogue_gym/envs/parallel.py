@@ -56,7 +56,7 @@ class ParallelRogueEnv:
             except Exception:
                 raise ValueError("Invalid action: {}".format(action))
         states, done = map(list, zip(*self.game.step(action)))
-        rewards = [after.gold - before.gold for before, after in zip(self.states, states)]
+        rewards = [max(0, cur.gold - bef.gold) for bef, cur in zip(self.states, states)]
         self.states = states
         return states, rewards, done, [{}] * self.num_workers
 

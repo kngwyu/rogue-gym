@@ -50,10 +50,19 @@ def test_step_cyclic() -> None:
 
 
 def test_stair_reward() -> None:
-    env = StairRewardParallel(config_dicts=[CONFIG_ST] * NUM_WOKRERS)
+    env = StairRewardParallel(config_dicts=[CONFIG_ST] * NUM_WOKRERS, max_steps=30)
     for c in CMD_STR3:
         _, rewards, *_ = env.step(c * NUM_WOKRERS)
+        for r in rewards:
+            assert r >= 0.0
     assert rewards == [50.0] * NUM_WOKRERS
     for c in CMD_STR4:
         _, rewards, *_ = env.step(c * NUM_WOKRERS)
+        for r in rewards:
+            assert r >= 0.0
     assert rewards == [50.0] * NUM_WOKRERS
+    rest = 30 - (len(CMD_STR3) + len(CMD_STR4))
+    for _ in range(rest):
+        _, rewards, *_ = env.step([0] * NUM_WOKRERS)
+        for r in rewards:
+            assert r >= 0.0
