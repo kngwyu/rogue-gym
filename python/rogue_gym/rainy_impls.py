@@ -44,7 +44,7 @@ class ParallelRogueEnvExt(ParallelEnv, ParallelRogueEnv):
             self,
             actions: Iterable[int]
     ) -> Tuple[Array[PlayerState], Array[float], Array[bool], Array[dict]]:
-        return tuple(map(np.asarray, self._env.step(actions)))
+        return tuple(map(np.array, self._env.step(actions)))
 
     def seed(self, seed: int) -> None:
         raise NotImplementedError('Please specify seed in config')
