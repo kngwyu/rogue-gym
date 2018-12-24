@@ -205,13 +205,14 @@ class RogueEnv(gym.Env):
              key board inputs to rogue(e.g. "hjk" or "hh>")
         """
         gold_before = self.result.gold
-        if isinstance(action, int) and action < self.ACTION_LEN:
-            s = self.ACTIONS[action]
-            step, done = self.__step_str(s)
-        elif isinstance(action, str):
+        if isinstance(action, str):
             step, done = self.__step_str(action)
         else:
-            raise ValueError("Invalid action: {}".format(action))
+            try:
+                s = self.ACTIONS[action]
+                step, done = self.__step_str(s)
+            except Exception:
+                raise ValueError("Invalid action: {}".format(action))
         self.__cache()
         reward = self.result.gold - gold_before
         return self.result, reward, done, {}

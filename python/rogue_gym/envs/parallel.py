@@ -21,7 +21,7 @@ class ParallelRogueEnv:
             max_steps: int = 1000,
             image_setting: ImageSetting = ImageSetting(),
     ) -> None:
-        self.game = ParallelGameState(max_steps, list(map(json.dumps, config_dicts)))
+        self.game = ParallelGameState(max_steps, [json.dumps(d) for d in config_dicts])
         self.result = None
         self.max_steps = max_steps
         self.steps = 0

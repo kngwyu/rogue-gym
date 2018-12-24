@@ -24,7 +24,7 @@ class RogueEnvExt(EnvExt):
         return self._env.observation_space.shape
 
     def state_to_array(self, state: PlayerState) -> ndarray:
-        return self._env.expand_state(state)
+        return self._env.image_setting.expand(state)
 
     def save_history(self, file_name: str) -> None:
         self._env.save_actions(file_name)
