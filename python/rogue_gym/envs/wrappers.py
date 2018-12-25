@@ -14,7 +14,7 @@ class StairRewardEnv(RogueEnv):
 
     def step(self, action: Union[int, str]) -> Tuple[PlayerState, float, bool, None]:
         state, reward, end, info = super().step(action)
-        current = self.result.status["dungeon_level"]
+        current = self.result.status['dungeon_level']
         if self.current_level < current:
             self.current_level = current
             reward += self.stair_reward
@@ -53,5 +53,5 @@ class StairRewardParallel(ParallelRogueEnv):
             level = state[i].status['dungeon_level']
             if self.current_levels[i] < level:
                 reward[i] += self.stair_reward
-                self.current_levels[i] = level
+            self.current_levels[i] = level
         return state, reward, end, info

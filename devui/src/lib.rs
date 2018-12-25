@@ -11,7 +11,6 @@ extern crate termion;
 extern crate tuple_map;
 
 pub mod error;
-#[macro_use]
 pub mod screen;
 use error::*;
 use rogue_gym_core::input::InputCode;
