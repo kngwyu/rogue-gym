@@ -8,7 +8,7 @@ use std::thread;
 use PlayerState;
 
 pub(crate) struct ThreadConductor {
-    receivers: Vec<Receiver<GameResult<(PlayerState, bool)>>>,
+    receivers: Vec<Receiver<GameResult<PlayerState>>>,
     senders: Vec<SyncSender<Instruction>>,
 }
 
@@ -41,7 +41,7 @@ impl ThreadConductor {
         }
         let mut result = vec![];
         for res in self.receivers.iter_mut().map(|rx| rx.recv().compat()) {
-            result.push(res??.0);
+            result.push(res??);
         }
         Ok(result)
     }
@@ -51,11 +51,11 @@ impl ThreadConductor {
         }
         let mut result = vec![];
         for res in self.receivers.iter_mut().map(|rx| rx.recv().compat()) {
-            result.push(res??.0);
+            result.push(res??);
         }
         Ok(result)
     }
-    pub fn step(&mut self, inputs: Vec<u8>) -> GameResult<Vec<(PlayerState, bool)>> {
+    pub fn step(&mut self, inputs: Vec<u8>) -> GameResult<Vec<PlayerState>> {
         for (sender, input) in self.senders.iter_mut().zip(inputs) {
             sender.send(Instruction::Step(input)).compat()?;
         }
@@ -64,16 +64,23 @@ impl ThreadConductor {
             result.push(res??);
         }
         for (i, res) in result.iter().enumerate() {
-            if res.1 {
+            if res.is_terminal {
                 self.senders[i].send(Instruction::Reset).compat()?;
             }
         }
         for (i, res) in result.iter_mut().enumerate() {
-            if res.1 {
-                res.0 = self.receivers[i].recv().compat()??.0;
+            if res.is_terminal {
+                *res = self.receivers[i].recv().compat()??;
+                res.is_terminal = true;
             }
         }
         Ok(result)
+    }
+    pub fn close(&mut self) -> GameResult<()> {
+        for sender in &mut self.senders {
+            sender.send(Instruction::Stop).compat()?;
+        }
+        Ok(())
     }
 }
 
@@ -84,6 +91,7 @@ enum Instruction {
     Step(u8),
     Reset,
     State,
+    Stop,
 }
 
 unsafe impl Send for Instruction {}
@@ -92,7 +100,7 @@ struct ThreadWorker {
     game_state: GameStateImpl,
     config: GameConfig,
     receiver: Receiver<Instruction>,
-    sender: SyncSender<GameResult<(PlayerState, bool)>>,
+    sender: SyncSender<GameResult<PlayerState>>,
 }
 
 impl ThreadWorker {
@@ -100,20 +108,18 @@ impl ThreadWorker {
         for inst in self.receiver.iter() {
             match inst {
                 Instruction::Step(code) => {
-                    let res = self
-                        .game_state
-                        .react(code)
-                        .map(|done| (self.game_state.state(), done));
+                    let res = self.game_state.react(code).map(|_| self.game_state.state());
                     self.sender.send(res)
                 }
                 Instruction::Reset => {
                     let res = self
                         .game_state
                         .reset(self.config.clone())
-                        .map(|_| (self.game_state.state(), false));
+                        .map(|_| self.game_state.state());
                     self.sender.send(res)
                 }
-                Instruction::State => self.sender.send(Ok((self.game_state.state(), false))),
+                Instruction::State => self.sender.send(Ok(self.game_state.state())),
+                Instruction::Stop => break,
             }
             .expect("ThreadWorker: disconnected")
         }

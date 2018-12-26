@@ -150,7 +150,12 @@ fn show_replay_(
                 continue;
             }
         };
-        screen.message(format!("{} turns left", replay.len()))?;
+        let left_turns = replay.len();
+        if left_turns == 0 {
+            screen.message(format!("--Press q or e to exit--"))?;
+        } else {
+            screen.message(format!("{} turns left", replay.len()))?;
+        }
         for reaction in res {
             let result = process_reaction(&mut screen, &mut runtime, reaction)
                 .chain_err(|| "in show_replay")?;

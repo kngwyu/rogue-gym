@@ -55,13 +55,15 @@ class ParallelRogueEnv:
                 action = [ord(self.ACTIONS[x]) for x in action]
             except Exception:
                 raise ValueError("Invalid action: {}".format(action))
-        states, done = map(list, zip(*self.game.step(action)))
-        rewards = [max(0, cur.gold - bef.gold) for bef, cur in zip(self.states, states)]
-        self.states = states
-        return states, rewards, done, [{}] * self.num_workers
+        states = self.game.step(action)
+        rewards = [max(0, after.gold - before.gold) for before, after in zip(self.states, states)]
+        done = [s.is_terminal for s in states]
+        return self.states, rewards, done, [{}] * self.num_workers
 
     def reset(self) -> List[PlayerState]:
         """reset game state"""
-        states = self.game.reset()
-        self.states = states
-        return states
+        self.states = self.game.reset()
+        return self.states
+
+    def close(self) -> None:
+        self.game.close()

@@ -180,6 +180,9 @@ class RogueEnv(gym.Env):
         with open(fname, 'w') as f:
             f.write(self.game.dump_history())
 
+    def replay(self, interval_ms: int = 100) -> None:
+        self.game.replay(interval_ms)
+
     def state_to_image(
             self,
             state: PlayerState,
@@ -191,12 +194,10 @@ class RogueEnv(gym.Env):
             setting = self.image_setting
         return setting.expand(state)
 
-    def __step_str(self, actions: str) -> Tuple[int, bool]:
-        for i, act in enumerate(actions):
-            dead = self.game.react(ord(act))
-            if dead:
-                return i + 1, True
-        return len(actions), False
+    def __step_str(self, actions: str) -> int:
+        for act in actions:
+            self.game.react(ord(act))
+        return len(actions)
 
     def step(self, action: Union[int, str]) -> Tuple[PlayerState, float, bool, dict]:
         """
@@ -206,16 +207,16 @@ class RogueEnv(gym.Env):
         """
         gold_before = self.result.gold
         if isinstance(action, str):
-            step, done = self.__step_str(action)
+            self.__step_str(action)
         else:
             try:
                 s = self.ACTIONS[action]
-                step, done = self.__step_str(s)
-            except Exception:
-                raise ValueError("Invalid action: {}".format(action))
+                self.__step_str(s)
+            except Exception as e:
+                raise ValueError("Invalid action: {} causes {}".format(action, e))
         self.__cache()
         reward = self.result.gold - gold_before
-        return self.result, reward, done, {}
+        return self.result, reward, self.result.is_terminal, {}
 
     def seed(self, seed: int) -> None:
         """

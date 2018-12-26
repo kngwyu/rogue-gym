@@ -26,7 +26,7 @@ impl GameStateImpl {
         runtime.keymap = KeyMap::ai();
         let (w, h) = runtime.screen_size();
         let mut state = PlayerState::new(w, h, symbols);
-        state.update(&mut runtime)?;
+        state.reset(&mut runtime)?;
         Ok(GameStateImpl {
             runtime,
             state,
@@ -35,10 +35,9 @@ impl GameStateImpl {
         })
     }
     pub(crate) fn reset(&mut self, config: GameConfig) -> GameResult<()> {
-        let mut runtime = config.build()?;
-        runtime.keymap = KeyMap::ai();
-        self.state.update(&mut runtime)?;
-        self.runtime = runtime;
+        self.runtime = config.build()?;
+        self.runtime.keymap = KeyMap::ai();
+        self.state.reset(&mut self.runtime)?;
         self.steps = 0;
         Ok(())
     }
@@ -48,9 +47,9 @@ impl GameStateImpl {
     pub(crate) fn symbols(&self) -> usize {
         usize::from(self.state.symbols)
     }
-    pub(crate) fn react(&mut self, input: u8) -> GameResult<bool> {
+    pub(crate) fn react(&mut self, input: u8) -> GameResult<()> {
         if self.steps > self.max_steps {
-            return Ok(true);
+            return Ok(());
         }
         let res = self.runtime.react_to_key(Key::Char(input as char))?;
         self.state.message.reset();
@@ -74,6 +73,7 @@ impl GameStateImpl {
             }
         }
         self.steps += 1;
-        Ok(dead || self.steps >= self.max_steps)
+        self.state.is_terminal = dead || self.steps >= self.max_steps;
+        Ok(())
     }
 }

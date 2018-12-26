@@ -6,6 +6,8 @@ extern crate numpy;
 extern crate pyo3;
 extern crate rect_iter;
 extern crate rogue_gym_core;
+#[cfg(unix)]
+extern crate rogue_gym_devui;
 
 mod fearures;
 mod state_impls;
@@ -47,6 +49,7 @@ struct PlayerState {
     status: Status,
     symbols: u8,
     message: MessageFlagInner,
+    is_terminal: bool,
 }
 
 impl PlayerState {
@@ -58,11 +61,14 @@ impl PlayerState {
             status: Status::default(),
             symbols,
             message: MessageFlagInner::new(),
+            is_terminal: false,
         }
     }
-    fn update(&mut self, runtime: &RunTime) -> GameResult<()> {
+    fn reset(&mut self, runtime: &RunTime) -> GameResult<()> {
         self.status = runtime.player_status();
         self.draw_map(runtime)?;
+        self.message = MessageFlagInner::new();
+        self.is_terminal = false;
         Ok(())
     }
     fn draw_map(&mut self, runtime: &RunTime) -> GameResult<()> {
@@ -179,6 +185,10 @@ impl PlayerState {
     fn symbols(&self) -> PyResult<usize> {
         Ok(usize::from(self.symbols))
     }
+    #[getter]
+    fn is_terminal(&self) -> PyResult<bool> {
+        Ok(self.is_terminal)
+    }
     fn status_vec(&self, flag: u32) -> Vec<i32> {
         let flag = StatusFlagInner(flag);
         flag.to_vector(&self.status)
@@ -239,6 +249,14 @@ impl GameState {
         let inner = pyresult(GameStateImpl::new(config.clone(), max_steps))?;
         obj.init(|_| GameState { inner, config })
     }
+    #[cfg(unix)]
+    fn replay(&self, py: Python, interval_ms: u64) -> PyResult<()> {
+        use rogue_gym_devui::show_replay;
+        let inputs = self.inner.runtime.saved_inputs().to_vec();
+        let config = self.config.clone();
+        let res = py.allow_threads(move || show_replay(config, inputs, interval_ms));
+        pyresult(res)
+    }
     fn screen_size(&self) -> (i32, i32) {
         (self.config.height, self.config.width)
     }
@@ -254,7 +272,7 @@ impl GameState {
     fn prev(&self) -> PlayerState {
         self.inner.state()
     }
-    fn react(&mut self, input: u8) -> PyResult<bool> {
+    fn react(&mut self, input: u8) -> PyResult<()> {
         pyresult(self.inner.react(input))
     }
     /// Returns action history as Json
@@ -299,7 +317,11 @@ impl ParallelGameState {
             .expect("Failed to get symbol max")
             .to_byte()
             + 1;
-        let conductor = pyresult(ThreadConductor::new(configs.clone(), max_steps))?;
+        let cloned = configs.clone();
+        let conductor = obj
+            .py()
+            .allow_threads(move || ThreadConductor::new(cloned, max_steps));
+        let conductor = pyresult(conductor)?;
         obj.init(|_| ParallelGameState {
             conductor,
             configs,
@@ -319,7 +341,7 @@ impl ParallelGameState {
         let res = py.allow_threads(move || conductor.states());
         pyresult(res)
     }
-    fn step(&mut self, py: Python, input: Vec<u8>) -> PyResult<Vec<(PlayerState, bool)>> {
+    fn step(&mut self, py: Python, input: Vec<u8>) -> PyResult<Vec<PlayerState>> {
         let ParallelGameState {
             ref mut conductor, ..
         } = self;
@@ -332,6 +354,12 @@ impl ParallelGameState {
         } = self;
         let res = py.allow_threads(move || conductor.reset());
         pyresult(res)
+    }
+    fn close(&mut self, py: Python) -> PyResult<()> {
+        let ParallelGameState {
+            ref mut conductor, ..
+        } = self;
+        pyresult(py.allow_threads(move || conductor.close()))
     }
 }
 
