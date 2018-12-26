@@ -58,6 +58,7 @@ class ParallelRogueEnv:
         states = self.game.step(action)
         rewards = [max(0, after.gold - before.gold) for before, after in zip(self.states, states)]
         done = [s.is_terminal for s in states]
+        self.states = states
         return self.states, rewards, done, [{}] * self.num_workers
 
     def reset(self) -> List[PlayerState]:
