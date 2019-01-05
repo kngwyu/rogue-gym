@@ -257,6 +257,11 @@ impl GameState {
         let res = py.allow_threads(move || show_replay(config, inputs, interval_ms));
         pyresult(res)
     }
+    #[cfg(unix)]
+    fn play_cli(&self) -> PyResult<()> {
+        use rogue_gym_devui::play_game;
+        pyresult(play_game(self.config.clone(), false))
+    }
     fn screen_size(&self) -> (i32, i32) {
         (self.config.height, self.config.width)
     }
