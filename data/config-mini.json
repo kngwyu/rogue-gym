@@ -1,7 +1,7 @@
 {
-    "width": 48,
-    "height": 24,
-    "seed": 0,
+    "width": 32,
+    "height": 16,
+    "seed": 4,
     "dungeon": {
         "style": "rogue",
         "room_num_x": 2,
@@ -10,5 +10,8 @@
             "x": 4,
             "y": 4
         }
+    },
+    "enemies": {
+        "enemies": []
     }
 }
