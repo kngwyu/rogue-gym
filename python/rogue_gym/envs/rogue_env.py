@@ -181,7 +181,14 @@ class RogueEnv(gym.Env):
             f.write(self.game.dump_history())
 
     def replay(self, interval_ms: int = 100) -> None:
+        if not hasattr(self.game, 'replay'):
+            raise RuntimeError('Currently replay is only supported on UNIX')
         self.game.replay(interval_ms)
+
+    def play_cli(self) -> None:
+        if not hasattr(self.game, 'play_cli'):
+            raise RuntimeError('CLI playing is only supported on UNIX')
+        self.game.play_cli()
 
     def state_to_image(
             self,
