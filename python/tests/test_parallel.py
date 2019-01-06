@@ -37,6 +37,16 @@ def test_configs() -> None:
             assert res.dungeon == SEED1_DUNGEON3
 
 
+def test_seed() -> None:
+    env = ParallelRogueEnv(config_dicts=[CONFIG_NOENEM] * NUM_WOKRERS)
+    for s in env.states:
+        assert s.dungeon == SEED1_DUNGEON
+    env.seed(10)
+    res = env.reset()
+    for s in res:
+        assert s.dungeon != SEED1_DUNGEON
+
+
 def test_step_cyclic() -> None:
     env = ParallelRogueEnv(config_dicts=[CONFIG_NOENEM] * NUM_WOKRERS, max_steps=5)
     for i, c in enumerate(CMD_STR):

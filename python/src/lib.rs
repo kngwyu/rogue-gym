@@ -339,6 +339,13 @@ impl ParallelGameState {
     fn symbols(&self) -> PyResult<usize> {
         Ok(usize::from(self.symbols))
     }
+    fn seed(&mut self, py: Python, seed: Vec<u128>) -> PyResult<()> {
+        let ParallelGameState {
+            ref mut conductor, ..
+        } = self;
+        let res = py.allow_threads(move || conductor.seed(seed));
+        pyresult(res)
+    }
     fn states(&mut self, py: Python) -> PyResult<Vec<PlayerState>> {
         let ParallelGameState {
             ref mut conductor, ..

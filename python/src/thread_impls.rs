@@ -45,6 +45,12 @@ impl ThreadConductor {
         }
         Ok(result)
     }
+    pub fn seed(&mut self, seeds: Vec<u128>) -> GameResult<()> {
+        for (sender, seed) in self.senders.iter_mut().zip(seeds) {
+            sender.send(Instruction::Seed(seed)).compat()?;
+        }
+        Ok(())
+    }
     pub fn states(&mut self) -> GameResult<Vec<PlayerState>> {
         for sender in &mut self.senders {
             sender.send(Instruction::State).compat()?;
@@ -90,6 +96,7 @@ impl ThreadConductor {
 enum Instruction {
     Step(u8),
     Reset,
+    Seed(u128),
     State,
     Stop,
 }
@@ -117,6 +124,10 @@ impl ThreadWorker {
                         .reset(self.config.clone())
                         .map(|_| self.game_state.state());
                     self.sender.send(res)
+                }
+                Instruction::Seed(seed) => {
+                    self.config.seed = Some(seed);
+                    continue;
                 }
                 Instruction::State => self.sender.send(Ok(self.game_state.state())),
                 Instruction::Stop => break,

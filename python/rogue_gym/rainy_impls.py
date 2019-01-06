@@ -47,7 +47,7 @@ class ParallelRogueEnvExt(ParallelEnv, ParallelRogueEnv):
         return tuple(map(np.array, self._env.step(actions)))
 
     def seed(self, seed: int) -> None:
-        raise NotImplementedError('Please specify seed in config')
+        self._env.seed(seed)
 
     def num_envs(self) -> int:
         return self.num_workers
