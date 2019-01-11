@@ -2,6 +2,7 @@
     "width": 80,
     "height": 24,
     "seed": null,
+    "seed_range": null,
     "dungeon": {
         "style": "rogue",
         "room_num_x": 3,
@@ -59,43 +60,51 @@
         }
     },
     "keymap": {
+        ">": {
+            "Act": "DownStair"
+        },
+        "U": {
+            "Act": {
+                "MoveUntil": "RightUp"
+            }
+        },
+        "H": {
+            "Act": {
+                "MoveUntil": "Left"
+            }
+        },
         "J": {
             "Act": {
                 "MoveUntil": "Down"
             }
         },
-        "l": {
+        "Y": {
             "Act": {
-                "Move": "Right"
+                "MoveUntil": "LeftUp"
             }
         },
-        "s": {
-            "Act": "Search"
-        },
-        "Down": {
+        "u": {
             "Act": {
-                "Move": "Down"
+                "Move": "RightUp"
             }
+        },
+        ".": {
+            "Act": "NoOp"
         },
         "S": {
             "Sys": "Save"
         },
+        "Left": {
+            "Act": {
+                "Move": "Left"
+            }
+        },
+        "i": {
+            "Sys": "Inventory"
+        },
         "B": {
             "Act": {
                 "MoveUntil": "LeftDown"
-            }
-        },
-        "Right": {
-            "Act": {
-                "Move": "Right"
-            }
-        },
-        " ": {
-            "Sys": "Continue"
-        },
-        "j": {
-            "Act": {
-                "Move": "Down"
             }
         },
         "K": {
@@ -103,20 +112,19 @@
                 "MoveUntil": "Up"
             }
         },
-        ".": {
-            "Act": "NoOp"
-        },
-        "Q": {
-            "Sys": "Quit"
-        },
-        "U": {
+        "L": {
             "Act": {
-                "MoveUntil": "RightUp"
+                "MoveUntil": "Right"
             }
         },
-        "u": {
+        "k": {
             "Act": {
-                "Move": "RightUp"
+                "Move": "Up"
+            }
+        },
+        "Down": {
+            "Act": {
+                "Move": "Down"
             }
         },
         "y": {
@@ -127,26 +135,6 @@
                 "sys": "Yes"
             }
         },
-        "k": {
-            "Act": {
-                "Move": "Up"
-            }
-        },
-        "Y": {
-            "Act": {
-                "MoveUntil": "LeftUp"
-            }
-        },
-        "h": {
-            "Act": {
-                "Move": "Left"
-            }
-        },
-        "N": {
-            "Act": {
-                "MoveUntil": "RightDown"
-            }
-        },
         "n": {
             "Both": {
                 "act": {
@@ -155,39 +143,52 @@
                 "sys": "No"
             }
         },
-        "L": {
-            "Act": {
-                "MoveUntil": "Right"
-            }
-        },
-        "H": {
-            "Act": {
-                "MoveUntil": "Left"
-            }
+        "s": {
+            "Act": "Search"
         },
         "Esc": {
             "Sys": "Cancel"
+        },
+        "h": {
+            "Act": {
+                "Move": "Left"
+            }
+        },
+        "l": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        "j": {
+            "Act": {
+                "Move": "Down"
+            }
         },
         "b": {
             "Act": {
                 "Move": "LeftDown"
             }
         },
-        ">": {
-            "Act": "DownStair"
+        " ": {
+            "Sys": "Continue"
         },
-        "i": {
-            "Sys": "Inventory"
-        },
-        "Left": {
+        "N": {
             "Act": {
-                "Move": "Left"
+                "MoveUntil": "RightDown"
+            }
+        },
+        "Right": {
+            "Act": {
+                "Move": "Right"
             }
         },
         "Up": {
             "Act": {
                 "Move": "Up"
             }
+        },
+        "Q": {
+            "Sys": "Quit"
         }
     },
     "player": {

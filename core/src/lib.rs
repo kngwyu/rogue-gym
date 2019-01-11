@@ -68,6 +68,11 @@ pub struct GameConfig {
     #[serde(default)]
     #[serde(skip_serializing_if = "is_default")]
     pub seed: Option<u128>,
+    /// The half-open range from which you choose the game seed
+    /// Only available when seed == None
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_default")]
+    pub seed_range: Option<[u128; 2]>,
     /// dungeon configuration
     #[serde(default)]
     #[serde(skip_serializing_if = "is_default")]
@@ -129,6 +134,7 @@ impl Default for GameConfig {
             width: DEFAULT_WIDTH,
             height: DEFAULT_HEIGHT,
             seed: Default::default(),
+            seed_range: Default::default(),
             dungeon: DungeonStyle::default(),
             item: item::Config::default(),
             keymap: KeyMap::default(),
@@ -162,7 +168,15 @@ impl GameConfig {
         }
     }
     fn to_global(&self) -> GameResult<GlobalConfig> {
-        let seed = self.seed.unwrap_or_else(rng::gen_seed);
+        let seed = if let Some(s) = self.seed {
+            s
+        } else {
+            if let Some(r) = self.seed_range {
+                rng::gen_ranged_seed(r[0], r[1])
+            } else {
+                rng::gen_seed()
+            }
+        };
         let (w, h) = (self.width, self.height);
         if w < MIN_WIDTH {
             return Err(ErrorId::InvalidSetting.into_with(|| "screen width is too narrow"));

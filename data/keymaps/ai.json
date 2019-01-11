@@ -1,50 +1,7 @@
 {
-    "l": {
-        "Act": {
-            "Move": "Right"
-        }
-    },
-    "n": {
-        "Act": {
-            "Move": "RightDown"
-        }
-    },
-    "s": {
-        "Act": "Search"
-    },
-    "y": {
-        "Act": {
-            "Move": "LeftUp"
-        }
-    },
-    "H": {
-        "Act": {
-            "MoveUntil": "Left"
-        }
-    },
-    "j": {
-        "Act": {
-            "Move": "Down"
-        }
-    },
-    "N": {
-        "Act": {
-            "MoveUntil": "RightDown"
-        }
-    },
     "U": {
         "Act": {
             "MoveUntil": "RightUp"
-        }
-    },
-    "k": {
-        "Act": {
-            "Move": "Up"
-        }
-    },
-    "Y": {
-        "Act": {
-            "MoveUntil": "LeftUp"
         }
     },
     "u": {
@@ -57,24 +14,29 @@
             "MoveUntil": "Down"
         }
     },
-    "h": {
+    "H": {
         "Act": {
-            "Move": "Left"
+            "MoveUntil": "Left"
         }
     },
-    "K": {
+    "k": {
         "Act": {
-            "MoveUntil": "Up"
+            "Move": "Up"
         }
     },
-    "b": {
+    "j": {
         "Act": {
-            "Move": "LeftDown"
+            "Move": "Down"
         }
     },
-    "L": {
+    "l": {
         "Act": {
-            "MoveUntil": "Right"
+            "Move": "Right"
+        }
+    },
+    "Y": {
+        "Act": {
+            "MoveUntil": "LeftUp"
         }
     },
     "B": {
@@ -82,7 +44,48 @@
             "MoveUntil": "LeftDown"
         }
     },
+    "K": {
+        "Act": {
+            "MoveUntil": "Up"
+        }
+    },
+    "h": {
+        "Act": {
+            "Move": "Left"
+        }
+    },
+    "b": {
+        "Act": {
+            "Move": "LeftDown"
+        }
+    },
+    "n": {
+        "Act": {
+            "Move": "RightDown"
+        }
+    },
+    "N": {
+        "Act": {
+            "MoveUntil": "RightDown"
+        }
+    },
+    "L": {
+        "Act": {
+            "MoveUntil": "Right"
+        }
+    },
+    "s": {
+        "Act": "Search"
+    },
+    "y": {
+        "Act": {
+            "Move": "LeftUp"
+        }
+    },
     ">": {
         "Act": "DownStair"
+    },
+    ".": {
+        "Act": "NoOp"
     }
 }

@@ -38,6 +38,11 @@ pub fn gen_seed() -> u128 {
     rng.gen()
 }
 
+pub fn gen_ranged_seed(start: u128, end: u128) -> u128 {
+    let mut rng = thread_rng();
+    rng.gen_range(start, end)
+}
+
 impl RngHandle {
     fn gen_seed(seed: u128) -> [u8; 16] {
         unsafe { mem::transmute::<_, [u8; 16]>(seed) }
