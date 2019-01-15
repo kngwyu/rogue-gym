@@ -20,6 +20,10 @@ class StairRewardEnv(RogueEnv):
             reward += self.stair_reward
         return state, reward, end, info
 
+    def reset(self)  -> PlayerState:
+        self.current_level = 1
+        return super().reset()
+
     def __repr__(self):
         return super().__repr__()
 
