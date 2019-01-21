@@ -40,13 +40,13 @@ fn setup_screen(
     Ok((screen, runtime))
 }
 
-pub fn play_game(config: GameConfig, is_default: bool) -> GameResult<()> {
+pub fn play_game(config: GameConfig, is_default: bool) -> GameResult<RunTime> {
     debug!("devui::play_game config: {:?}", config);
     let (mut screen, mut runtime) = setup_screen(config, is_default)?;
     let stdin = io::stdin();
     // let's receive keyboard inputs(our main loop)
     let mut pending = false;
-    for keys in stdin.keys() {
+    'outer: for keys in stdin.keys() {
         screen.clear_notification()?;
         let key = keys.into_chained(|| "in play_game")?;
         if pending {
@@ -68,13 +68,14 @@ pub fn play_game(config: GameConfig, is_default: bool) -> GameResult<()> {
             let result = process_reaction(&mut screen, &mut runtime, reaction)
                 .chain_err(|| "in play_game")?;
             match result {
-                Transition::Exit => return Ok(()),
+                Transition::Exit => break 'outer,
                 Transition::None => {}
             }
         }
         pending = screen.display_msg()?;
     }
-    screen.clear_screen()
+    screen.clear_screen()?;
+    Ok(runtime)
 }
 
 pub fn show_replay(config: GameConfig, replay: Vec<InputCode>, interval_ms: u64) -> GameResult<()> {

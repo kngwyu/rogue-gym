@@ -7,7 +7,8 @@ extern crate rogue_gym_devui;
 extern crate termion;
 extern crate tuple_map;
 
-use std::fs::OpenOptions;
+use std::fs::{File, OpenOptions};
+use std::io::prelude::*;
 
 use clap::ArgMatches;
 use rogue_gym_core::{json_to_inputs, read_file, GameConfig};
@@ -46,7 +47,13 @@ fn main_() -> GameResult<()> {
         }
         show_replay(config, replay, interval)
     } else {
-        play_game(config, is_default)
+        let runtime = play_game(config, is_default)?;
+        if let Some(save_file) = args.value_of("save") {
+            let s = runtime.saved_inputs_as_json()?;
+            let mut file = File::create(save_file)?;
+            file.write_all(s.as_bytes())?;
+        }
+        Ok(())
     }
 }
 
@@ -101,6 +108,13 @@ fn parse_args<'a>() -> ArgMatches<'a> {
                 .long("seed")
                 .value_name("SEED")
                 .help("Set seed")
+                .takes_value(true),
+        )
+        .arg(
+            clap::Arg::with_name("save")
+                .long("save")
+                .value_name("SAVE")
+                .help("save replay file")
                 .takes_value(true),
         )
         .subcommand(
