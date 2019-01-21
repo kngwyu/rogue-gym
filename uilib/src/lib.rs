@@ -37,6 +37,7 @@ pub trait Screen {
         self.flush()
     }
     fn message<S: AsRef<str>>(&mut self, msg: S) -> GameResult<()> {
+        self.clear_line(Y(0))?;
         self.write_str(Coord::new(0, 0), msg.as_ref())
     }
     fn pend_message<S: AsRef<str>>(&mut self, msg: S) -> GameResult<()> {
