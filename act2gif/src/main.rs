@@ -68,6 +68,14 @@ fn parse_args<'a>() -> ArgMatches<'a> {
                 .help("Replay only <MAX> times")
                 .takes_value(true),
         )
+        .arg(
+            clap::Arg::with_name("seed")
+                .short("s")
+                .long("seed")
+                .value_name("SEED")
+                .help("Specify seed")
+                .takes_value(true),
+        )
         .get_matches()
 }
 
@@ -94,11 +102,14 @@ fn get_arg<T: ::std::str::FromStr>(args: &ArgMatches, value: &str) -> Option<T> 
 
 fn setup<'a>() -> GameResult<(GifEncoder<'a>, Vec<InputCode>)> {
     let args = parse_args();
-    let config = get_config(&args)?;
+    let mut config = get_config(&args)?;
     let mut replay = get_replay(&args)?;
     let interval = get_arg(&args, "interval").unwrap_or(DEFAULT_INTERVAL_MS);
     let scale = get_arg(&args, "fontsize").unwrap_or(DEFAULT_FONT_SIZE);
     let max = get_arg(&args, "max_actions").unwrap_or(DEFAULT_MAX_ACTIONS);
+    if let Some(seed) = get_arg(&args, "seed") {
+        config.seed = Some(seed);
+    }
     replay.truncate(max);
     let theme = args.value_of("theme").unwrap_or("solarized-dark");
     let theme = Theme::from_str(theme).expect("Unknown theme was specified");
