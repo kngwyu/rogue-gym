@@ -45,7 +45,13 @@ impl<'a> GifEncoder<'a> {
             &mut self.font,
         );
         for i in inputs {
-            let reaction = runtime.react_to_input(i)?;
+            let reaction = match runtime.react_to_input(i) {
+                Ok(r) => r,
+                Err(e) => {
+                    eprintln!("error: {}", e);
+                    continue;
+                }
+            };
             for r in reaction {
                 let draw = r == Reaction::Redraw;
                 process_reaction(&mut term, &mut runtime, r)?;
