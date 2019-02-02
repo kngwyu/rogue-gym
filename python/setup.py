@@ -11,7 +11,7 @@ test_requirements = install_requirements + ['pytest']
 extra_requirements = {'rainy': ['rainy']}
 
 setup(
-    name='rouge-gym',
+    name='rogue-gym',
     version='0.1.0',
     description='OpenAI gym environment for rogue-gym',
     url='https://github.com/kngwyu/rogue-gym',
