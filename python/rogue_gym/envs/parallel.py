@@ -27,7 +27,7 @@ class ParallelRogueEnv:
         self.steps = 0
         self.action_space = spaces.discrete.Discrete(self.ACTION_LEN)
         self.observation_space = \
-            image_setting._space(*self.game.screen_size(), self.game.symbols())
+            image_setting.detect_space(*self.game.screen_size(), self.game.symbols())
         self.image_setting = image_setting
         self.states = self.game.states()
         self.num_workers = len(config_dicts)

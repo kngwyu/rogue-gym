@@ -69,7 +69,7 @@ class ImageSetting(NamedTuple):
         s += 1 if self.includes_hist else 0
         return s
 
-    def _space(self, h: int, w: int, symbols: int) -> gym.Space:
+    def detect_space(self, h: int, w: int, symbols: int) -> gym.Space:
         return spaces.box.Box(
             low=0,
             high=1,
@@ -149,7 +149,7 @@ class RogueEnv(gym.Env):
         self.result = None
         self.action_space = spaces.discrete.Discrete(self.ACTION_LEN)
         self.observation_space = \
-            image_setting._space(*self.game.screen_size(), self.game.symbols())
+            image_setting.detect_space(*self.game.screen_size(), self.game.symbols())
         self.image_setting = image_setting
         self.__cache()
 
