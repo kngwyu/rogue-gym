@@ -30,27 +30,28 @@ class StatusFlag(Flag):
         return s
 
     def symbol_image(self, state: PlayerState) -> ndarray:
-        if not isinstance(state, PlayerState):
-            raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
+        self.__check_input()
         return state.symbol_image(flag=self.value)
 
     def symbol_image_with_hist(self, state: PlayerState) -> ndarray:
-        if not isinstance(state, PlayerState):
-            raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
+        self.__check_input()
         return state.symbol_image_with_hist(flag=self.value)
 
     def gray_image(self, state: PlayerState) -> ndarray:
-        if not isinstance(state, PlayerState):
-            raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
+        self.__check_input()
         return state.gray_image(flag=self.value)
 
     def gray_image_with_hist(self, state: PlayerState) -> ndarray:
-        if not isinstance(state, PlayerState):
-            raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
+        self.__check_input()
         return state.gray_image_with_hist(flag=self.value)
 
     def status_vec(self, state: PlayerState) -> List[int]:
+        self.__check_input()
         return state.status_vec(flag=self.value)
+
+    def __check_input(self, state: PlayerState) -> None:
+        if not isinstance(state, PlayerState):
+            raise TypeError("Needs PlayerState, but {} was given".format(type(state)))
 
 
 class DungeonType(Enum):
