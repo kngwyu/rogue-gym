@@ -131,6 +131,7 @@ fn player_attack(
             DamageReaction::Death => {
                 enemies.remove(place);
                 res.push(Reaction::Notify(GameMsg::Killed(enemy.name().to_owned())));
+                res.push(Reaction::Redraw);
             }
             DamageReaction::None => {}
         }
