@@ -30,23 +30,23 @@ class StatusFlag(Flag):
         return s
 
     def symbol_image(self, state: PlayerState) -> ndarray:
-        self.__check_input()
+        self.__check_input(state)
         return state.symbol_image(flag=self.value)
 
     def symbol_image_with_hist(self, state: PlayerState) -> ndarray:
-        self.__check_input()
+        self.__check_input(state)
         return state.symbol_image_with_hist(flag=self.value)
 
     def gray_image(self, state: PlayerState) -> ndarray:
-        self.__check_input()
+        self.__check_input(state)
         return state.gray_image(flag=self.value)
 
     def gray_image_with_hist(self, state: PlayerState) -> ndarray:
-        self.__check_input()
+        self.__check_input(state)
         return state.gray_image_with_hist(flag=self.value)
 
     def status_vec(self, state: PlayerState) -> List[int]:
-        self.__check_input()
+        self.__check_input(state)
         return state.status_vec(flag=self.value)
 
     def __check_input(self, state: PlayerState) -> None:
