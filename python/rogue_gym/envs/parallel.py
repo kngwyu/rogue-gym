@@ -69,5 +69,5 @@ class ParallelRogueEnv:
     def close(self) -> None:
         self.game.close()
 
-    def seed(self, seed: int) -> None:
-        self.game.seed([seed] * self.num_workers)
+    def seed(self, seeds: List[int]) -> None:
+        self.game.seed(seeds)

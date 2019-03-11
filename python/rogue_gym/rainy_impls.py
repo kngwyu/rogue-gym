@@ -1,8 +1,8 @@
 import numpy as np
 from numpy import ndarray
 try:
-    from rainy.envs import EnvExt, ParallelEnv
-    from rainy.util.typehack import Array
+    from rainy.envs import EnvExt, EnvSpec, ParallelEnv
+    from rainy.prelude import Array
 except ImportError:
     raise ImportError('To use rogue_gym.rainy_impls, install rainy first.')
 from .envs.parallel import ParallelRogueEnv
@@ -30,12 +30,13 @@ class RogueEnvExt(EnvExt):
         self._env.save_actions(file_name)
 
 
-class ParallelRogueEnvExt(ParallelEnv, ParallelRogueEnv):
+class ParallelRogueEnvExt(ParallelEnv):
     def __init__(self, env: ParallelRogueEnv) -> None:
         self._env = env
+        self._spec = EnvSpec(env.observation_space.shape, env.action_space)
 
     def close(self) -> None:
-        pass
+        self._env.close()
 
     def reset(self) -> Array[PlayerState]:
         return np.array(self._env.reset())
@@ -46,19 +47,16 @@ class ParallelRogueEnvExt(ParallelEnv, ParallelRogueEnv):
     ) -> Tuple[Array[PlayerState], Array[float], Array[bool], Array[dict]]:
         return tuple(map(np.array, self._env.step(actions)))
 
-    def seed(self, seed: int) -> None:
-        self._env.seed(seed)
+    def seed(self, seeds: Iterable[int]) -> None:
+        self._env.seed([s for s in seeds])
 
+    @property
     def num_envs(self) -> int:
         return self.num_workers
 
     @property
-    def action_dim(self) -> int:
-        return ACTION_DIM
-
-    @property
-    def state_dim(self) -> Tuple[int, ...]:
-        return self._env.observation_space.shape
+    def spec(self) -> EnvSpec:
+        return self._spec
 
     def states_to_array(self, states: Iterable[PlayerState]) -> Array:
         return np.stack([self._env.image_setting.expand(state) for state in states])

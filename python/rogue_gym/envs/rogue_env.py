@@ -1,4 +1,4 @@
-"""Mainly provides RogueEnv, rogue_gym_core::Runtime wrapper as gym environment"""
+"""Provides RogueEnv, a gym environment which wraps rogue_gym_core::Runtime"""
 from enum import Enum, Flag
 import gym
 from gym import spaces
@@ -234,7 +234,7 @@ class RogueEnv(gym.Env):
         """
         self.game.set_seed(seed)
 
-    def render(self, mode='human', close: bool = False) -> None:
+    def render(self, mode: str = 'human', close: bool = False) -> None:
         """
         STUB
         """
