@@ -2,7 +2,7 @@
     "width": 80,
     "height": 24,
     "seed": null,
-    "seed_range": [0, 2],
+    "seed_range": [0, 10],
     "dungeon": {
         "style": "rogue",
         "room_num_x": 3,

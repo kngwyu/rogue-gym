@@ -1,12 +1,13 @@
-use super::{DamageReaction, Defense, Exp, HitPoint, Level, Maxed, Strength};
-use dungeon::{Direction, DungeonPath};
-use error::GameResult;
-use item::{
+use super::{clamp, DamageReaction, Defense, Exp, HitPoint, Level, Maxed, Strength};
+use crate::dungeon::{Direction, DungeonPath};
+use crate::error::GameResult;
+use crate::item::{
     armor, food::Food, itembox::ItemBox, weapon, InitItem, Item, ItemHandler, ItemKind, ItemToken,
 };
+use crate::rng::RngHandle;
+use crate::tile::{Drawable, Tile};
 use smallstr::SmallStr;
 use std::{cmp, fmt};
-use tile::{Drawable, Tile};
 use tuple_map::TupleMap2;
 
 /// Player configuration
@@ -24,6 +25,8 @@ pub struct Config {
     pub max_items: usize,
     #[serde(default = "default_init_items")]
     pub init_items: Vec<InitItem>,
+    #[serde(default = "default_heal_threshold")]
+    pub heal_threshold: u32,
 }
 
 impl Default for Config {
@@ -35,6 +38,7 @@ impl Default for Config {
             init_str: default_init_str(),
             max_items: default_max_items(),
             init_items: default_init_items(),
+            heal_threshold: default_heal_threshold(),
         }
     }
 }
@@ -53,6 +57,10 @@ const fn default_init_str() -> Strength {
 
 const fn default_max_items() -> usize {
     27
+}
+
+const fn default_heal_threshold() -> u32 {
+    20
 }
 
 fn default_init_items() -> Vec<InitItem> {
@@ -147,6 +155,23 @@ impl Player {
     pub fn level(&self) -> Level {
         self.status.level
     }
+    pub(crate) fn buttle(&mut self) {
+        self.status.quiet = 0
+    }
+    pub(crate) fn turn_passed(&mut self, rng: &mut RngHandle) -> Vec<PlayerEvent> {
+        let mut res = vec![];
+        self.status.food_left -= 1;
+        if self.status.food_left == 0 {
+            return vec![PlayerEvent::Dead];
+        }
+        if self.notify_hungry() {
+            res.push(PlayerEvent::Hungry);
+        }
+        if self.heal(rng) {
+            res.push(PlayerEvent::Healed);
+        }
+        res
+    }
     pub(crate) fn get_damage(&mut self, damage: HitPoint) -> DamageReaction {
         self.status.hp.current = cmp::max(self.status.hp.current - damage, HitPoint(0));
         if self.status.hp.current == HitPoint(0) {
@@ -178,9 +203,36 @@ impl Player {
             item
         })
     }
-    pub fn turn_passed(&mut self) {
-        self.status.food_left -= 1;
+    fn heal(&mut self, rng: &mut RngHandle) -> bool {
+        self.status.quiet += 1;
+        let quiet = i64::from(self.status.quiet);
+        let level = self.status.level.0;
+        let heal = if level < 8 {
+            clamp(quiet + (level << 1) - 20, 0, 1)
+        } else if quiet >= 3 {
+            rng.range(1..level - 6)
+        } else {
+            0
+        };
+        if heal > 0 {
+            self.status.hp.current += HitPoint(heal);
+            self.status.hp.verify();
+            self.status.quiet = 0;
+            true
+        } else {
+            false
+        }
     }
+    fn notify_hungry(&mut self) -> bool {
+        let hunger = self.config.hunger_time / 10;
+        self.status.food_left == hunger || self.status.food_left == hunger * 2
+    }
+}
+
+pub(crate) enum PlayerEvent {
+    Dead,
+    Healed,
+    Hungry,
 }
 
 impl Drawable for Player {
@@ -203,6 +255,7 @@ struct StatusInner {
     /// count down to death
     food_left: u32,
     running: bool,
+    quiet: u32,
 }
 
 impl StatusInner {
@@ -214,6 +267,7 @@ impl StatusInner {
             level: Level(1),
             food_left: config.hunger_time,
             running: false,
+            quiet: 0,
         }
     }
 }

@@ -298,23 +298,14 @@ impl RunTime {
             match self.ui {
                 UiState::Dungeon => match input {
                     InputCode::Sys(sys) => (None, self.check_interrupting(sys)?),
-                    InputCode::Act(act) | InputCode::Both { act, .. } => {
-                        let mut res = actions::process_action(
-                            act,
-                            &mut self.game_info,
-                            &mut *self.dungeon,
-                            &mut self.item,
-                            &mut self.player,
-                            &mut self.enemies,
-                        )?;
-                        let (ext, ui) = actions::move_active_enemies(
-                            &mut self.enemies,
-                            &mut *self.dungeon,
-                            &mut self.player,
-                        )?;
-                        res.extend(ext);
-                        (ui, res)
-                    }
+                    InputCode::Act(act) | InputCode::Both { act, .. } => actions::process_action(
+                        act,
+                        &mut self.game_info,
+                        &mut *self.dungeon,
+                        &mut self.item,
+                        &mut self.player,
+                        &mut self.enemies,
+                    )?,
                 },
                 UiState::Mordal(ref mut kind) => match input {
                     InputCode::Sys(sys) | InputCode::Both { sys, .. } => {

@@ -1,12 +1,14 @@
 //! module for handling actions and do some operations related to multiple modules
-use character::{fight, Action, DamageReaction, Enemy, EnemyHandler, Player};
-use dungeon::{Direction, Dungeon, DungeonPath};
-use error::*;
-use item::{itembox::Entry as ItemEntry, ItemHandler, ItemToken};
+use crate::character::{
+    fight, player::PlayerEvent, Action, DamageReaction, Enemy, EnemyHandler, Player,
+};
+use crate::dungeon::{Direction, Dungeon, DungeonPath};
+use crate::error::*;
+use crate::item::{itembox::Entry as ItemEntry, ItemHandler, ItemToken};
+use crate::ui::UiState;
+use crate::{GameInfo, GameMsg, Reaction};
 use std::iter;
 use std::rc::Rc;
-use ui::UiState;
-use {GameInfo, GameMsg, Reaction};
 
 pub(crate) fn process_action(
     action: Action,
@@ -15,61 +17,75 @@ pub(crate) fn process_action(
     item: &mut ItemHandler,
     player: &mut Player,
     enemies: &mut EnemyHandler,
-) -> GameResult<Vec<Reaction>> {
+) -> GameResult<(Option<UiState>, Vec<Reaction>)> {
+    let mut out = Vec::new();
+    let mut ui = None;
     match action {
         Action::DownStair => {
-            player.turn_passed();
             if dungeon.is_downstair(&player.pos) {
                 new_level(info, dungeon, item, player, enemies, false)
                     .chain_err(|| "action::process_action")?;
-                Ok(vec![Reaction::Redraw, Reaction::StatusUpdated])
+                out.extend_from_slice(&[Reaction::Redraw, Reaction::StatusUpdated]);
             } else {
-                Ok(vec![Reaction::Notify(GameMsg::NoDownStair)])
+                out.push(Reaction::Notify(GameMsg::NoDownStair));
             }
+            ui = after_turn(player, enemies, dungeon, &mut out)?;
         }
         Action::UpStair => {
-            Err(ErrorId::Unimplemented.into_with(|| "UpStair Command is unimplemented"))
+            return Err(ErrorId::Unimplemented.into_with(|| "UpStair Command is unimplemented"))
         }
         Action::Move(d) => {
-            player.turn_passed();
-            Ok(move_player(d, dungeon, player, enemies)?.0)
+            out.append(&mut move_player(d, dungeon, player, enemies)?.0);
+            ui = after_turn(player, enemies, dungeon, &mut out)?;
         }
-        Action::MoveUntil(d) => {
-            let mut out = Vec::new();
-            loop {
-                let res = move_player(d, dungeon, player, enemies)?;
-                player.turn_passed();
-                let tile = dungeon
-                    .tile(&player.pos)
-                    .map(|t| t.to_char())
-                    .unwrap_or(' ');
-                if res.1 || (tile != '.' && tile != '#') {
-                    out.extend(res.0);
-                    break;
-                } else if out.is_empty() {
-                    out.extend(res.0);
-                }
+        Action::MoveUntil(d) => loop {
+            let res = move_player(d, dungeon, player, enemies)?;
+            let tile = dungeon
+                .tile(&player.pos)
+                .map(|t| t.to_char())
+                .unwrap_or(' ');
+            if res.1 || (tile != '.' && tile != '#') {
+                out.extend(res.0);
+                break;
+            } else if out.is_empty() {
+                out.extend(res.0);
             }
-            Ok(out)
-        }
+            ui = after_turn(player, enemies, dungeon, &mut out)?;
+        },
         Action::Search => {
-            player.turn_passed();
-            search(dungeon, player)
+            out.append(&mut search(dungeon, player)?);
+            ui = after_turn(player, enemies, dungeon, &mut out)?;
         }
-        Action::NoOp => {
-            player.turn_passed();
-            Ok(vec![])
-        }
+        Action::NoOp => return Ok((None, out)),
     }
+    Ok((ui, out))
 }
 
-pub(crate) fn move_active_enemies(
+fn after_turn(
+    player: &mut Player,
+    enemies: &mut EnemyHandler,
+    dungeon: &mut Dungeon,
+    res: &mut Vec<Reaction>,
+) -> GameResult<Option<UiState>> {
+    for event in player.turn_passed(enemies.rng()) {
+        match event {
+            PlayerEvent::Dead => {}
+            PlayerEvent::Healed | PlayerEvent::Hungry => res.push(Reaction::StatusUpdated),
+        }
+    }
+    move_active_enemies(enemies, dungeon, player, res)
+}
+
+fn move_active_enemies(
     enemies: &mut EnemyHandler,
     dungeon: &mut dyn Dungeon,
     player: &mut Player,
-) -> GameResult<(Vec<Reaction>, Option<UiState>)> {
+    res: &mut Vec<Reaction>,
+) -> GameResult<Option<UiState>> {
     let attacks = enemies.move_actives(&player.pos, None, dungeon);
-    let mut res = Vec::new();
+    if !attacks.is_empty() {
+        player.buttle();
+    }
     let mut did_hit = false;
     for at in attacks {
         match fight::enemy_attack(at.enemy(), player, enemies.rng()) {
@@ -81,7 +97,7 @@ pub(crate) fn move_active_enemies(
                     DamageReaction::Death => {
                         let mordal = UiState::die(format!("Killed by {}", name));
                         res.push(Reaction::UiTransition(mordal.clone()));
-                        return Ok((res, Some(mordal)));
+                        return Ok(Some(mordal));
                     }
                     DamageReaction::None => {}
                 }
@@ -96,7 +112,7 @@ pub(crate) fn move_active_enemies(
     if did_hit {
         res.push(Reaction::StatusUpdated);
     }
-    Ok((res, None))
+    Ok(None)
 }
 
 pub(crate) fn new_level(
@@ -125,6 +141,7 @@ fn player_attack(
     enemies: &mut EnemyHandler,
 ) -> GameResult<Vec<Reaction>> {
     let mut res = Vec::new();
+    player.buttle();
     if let Some(hp) = fight::player_attack(player, None, &*enemy, enemies.rng()) {
         res.push(Reaction::Notify(GameMsg::HitTo(enemy.name().to_owned())));
         match enemy.get_damage(hp) {

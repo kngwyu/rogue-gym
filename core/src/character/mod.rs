@@ -176,6 +176,14 @@ impl<T: Copy> Maxed<T> {
     }
 }
 
+impl<T: Copy + PartialOrd> Maxed<T> {
+    fn verify(&mut self) {
+        if self.current > self.max {
+            self.current = self.max;
+        }
+    }
+}
+
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Dice<T> {
     pub times: usize,
@@ -244,6 +252,11 @@ where
 pub enum DamageReaction {
     Death,
     None,
+}
+
+pub(crate) fn clamp<T: Ord>(value: T, min: T, max: T) -> T {
+    use std::cmp;
+    cmp::max(cmp::min(value, max), min)
 }
 
 #[cfg(test)]
