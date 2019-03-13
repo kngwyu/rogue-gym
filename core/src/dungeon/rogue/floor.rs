@@ -389,12 +389,10 @@ impl Floor {
         if self.cd_to_room_id(b) != Some(id) {
             return false;
         }
-        let room = &self.rooms[id];
-        if let Some(range) = room.range() {
-            range.contains(a) == range.contains(b)
-        } else {
-            true
-        }
+        self.rooms[id]
+            .range()
+            .map(|r| r.contains(a) == r.contains(b))
+            .unwrap_or(true)
     }
 
     pub(super) fn make_dist_map(&self, from: Coord, is_enemy: bool) -> Array2<u32> {

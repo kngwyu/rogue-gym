@@ -286,7 +286,7 @@ impl RunTime {
                 return drawer(Positioned(cd, item.tile()));
             }
             if let Some(enemy) = self.enemies.get_enemy(&path) {
-                if self.dungeon.in_same_room(&self.player.pos, &path) {
+                if self.dungeon.draw_enemy(&self.player.pos, &path) {
                     return drawer(Positioned(cd, enemy.tile()));
                 }
             }

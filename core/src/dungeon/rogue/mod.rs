@@ -390,12 +390,12 @@ impl DungeonTrait for Dungeon {
             MoveResult::CanMove(res)
         }
     }
-    fn in_same_room(&self, this: &DungeonPath, other: &DungeonPath) -> bool {
-        let (t, o) = (this, other).map(Address::from_path);
-        if t.level != o.level {
+    fn draw_enemy(&self, player: &DungeonPath, enemy: &DungeonPath) -> bool {
+        let (p, e) = (player, enemy).map(Address::from_path);
+        if p.level != e.level {
             return false;
         }
-        self.current_floor.in_same_room(t.cd, o.cd)
+        p.cd.is_adjacent(e.cd) || self.current_floor.in_same_room(p.cd, e.cd)
     }
 }
 

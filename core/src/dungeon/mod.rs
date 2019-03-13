@@ -83,7 +83,7 @@ pub trait Dungeon {
         direction: Direction,
         enemies: &mut EnemyHandler,
     ) -> GameResult<DungeonPath>;
-    fn in_same_room(&self, this: &DungeonPath, other: &DungeonPath) -> bool;
+    fn draw_enemy(&self, player: &DungeonPath, enemy: &DungeonPath) -> bool;
     fn search(&mut self, path: &DungeonPath) -> GameResult<Vec<GameMsg>>;
     fn select_cell(&mut self, is_character: bool) -> Option<DungeonPath>;
     fn enter_room(&mut self, path: &DungeonPath, enemies: &mut EnemyHandler) -> GameResult<()>;

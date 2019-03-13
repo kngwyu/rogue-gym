@@ -84,6 +84,9 @@ impl Coord {
             y: y.into(),
         }
     }
+    pub fn is_adjacent(self, other: Coord) -> bool {
+        self.euc_dist_squared(other) <= 2
+    }
     /// calc dist^2 of two points
     pub fn euc_dist_squared(self, other: Coord) -> i32 {
         let (x, y) = ((self.x - other.x).0, (self.y - other.y).0);
