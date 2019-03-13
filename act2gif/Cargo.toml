@@ -6,9 +6,9 @@ edition = "2018"
 workspace = "../"
 
 [dependencies]
-failure = "0.1.3"
-image = "0.20.1"
-rusttype = "0.7.2"
+failure = "0.1.5"
+image = "0.21.0"
+rusttype = "0.7.5"
 tuple-map = "0.4.0"
 clap = "2.32.0"
 

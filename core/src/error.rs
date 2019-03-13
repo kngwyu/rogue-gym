@@ -1,5 +1,5 @@
+use crate::input::{InputCode, Key};
 use failure::{self, Error, Fail};
-use input::{InputCode, Key};
 use rect_iter::IndexError;
 use serde_json::Error as JsonError;
 use std::error::Error as StdError;
