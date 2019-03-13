@@ -41,7 +41,7 @@ def test_seed() -> None:
     env = ParallelRogueEnv(config_dicts=[CONFIG_NOENEM] * NUM_WOKRERS)
     for s in env.states:
         assert s.dungeon == SEED1_DUNGEON
-    env.seed(10)
+    env.seed([10] * env.num_workers)
     res = env.reset()
     for s in res:
         assert s.dungeon != SEED1_DUNGEON
