@@ -390,6 +390,13 @@ impl DungeonTrait for Dungeon {
             MoveResult::CanMove(res)
         }
     }
+    fn in_same_room(&self, this: &DungeonPath, other: &DungeonPath) -> bool {
+        let (t, o) = (this, other).map(Address::from_path);
+        if t.level != o.level {
+            return false;
+        }
+        self.current_floor.in_same_room(t.cd, o.cd)
+    }
 }
 
 impl Dungeon {

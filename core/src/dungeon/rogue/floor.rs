@@ -381,6 +381,22 @@ impl Floor {
         array
     }
 
+    pub(super) fn in_same_room(&self, a: Coord, b: Coord) -> bool {
+        let id = match self.cd_to_room_id(a) {
+            Some(i) => i,
+            None => return false,
+        };
+        if self.cd_to_room_id(b) != Some(id) {
+            return false;
+        }
+        let room = &self.rooms[id];
+        if let Some(range) = room.range() {
+            range.contains(a) == range.contains(b)
+        } else {
+            true
+        }
+    }
+
     pub(super) fn make_dist_map(&self, from: Coord, is_enemy: bool) -> Array2<u32> {
         let (w, h) = (self.field.width(), self.field.height());
         let inf = u32::max_value();

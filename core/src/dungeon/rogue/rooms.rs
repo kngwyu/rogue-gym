@@ -80,7 +80,7 @@ impl Room {
             RoomKind::Empty { .. } => Ok(()),
         }
     }
-    /// return a range occupied by the room
+    /// Returns the 'room' range
     pub fn range(&self) -> Option<&RectRange<i32>> {
         match self.kind {
             RoomKind::Normal { ref range } => Some(range),
