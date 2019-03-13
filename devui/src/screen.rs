@@ -79,6 +79,11 @@ impl<T: Write> Screen for TermScreen<T> {
     fn height(&self) -> Y {
         Y(i32::from(self.height))
     }
+    fn message<S: AsRef<str>>(&mut self, msg: S) -> GameResult<()> {
+        self.clear_line(Y(0))?;
+        self.has_notification = true;
+        self.write_str(Coord::new(0, 0), msg.as_ref())
+    }
     fn clear_line(&mut self, row: Y) -> GameResult<()> {
         let row = row.0 as u16;
         write!(self.term, "{}{}", cursor::Goto(1, row), clear::CurrentLine)

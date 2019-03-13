@@ -74,14 +74,14 @@ pub trait Screen {
     }
     fn dying_msg(&mut self, sig: &str) -> GameResult<()> {
         const MESSAGES: [&'static str; 9] = [
-            r"                __________",
-            r"               /          \",
-            r"              /    REST    \",
-            r"             /      IN      \",
-            r"            /     PEACE      \",
-            r"           /                  \",
-            r"           |                  |",
-            r"          *|     *  *  *      | *",
+            r"                __________        ",
+            r"               /          \       ",
+            r"              /    REST    \      ",
+            r"             /     IN       \     ",
+            r"            /     PEACE      \    ",
+            r"           /                  \   ",
+            r"           |                  |   ",
+            r"          *|     *  *  *      |   *",
             r" ________)/\\_//(\/(/\)/\//\/|_)_______",
         ];
         let sig = if sig.len() > 18 { &sig[..18] } else { sig };

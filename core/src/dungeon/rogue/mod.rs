@@ -175,8 +175,6 @@ impl Surface {
     }
 }
 
-const MAX_CACHED_DIST: usize = 8;
-
 /// representation of rogue dungeon
 #[derive(Clone)]
 pub struct Dungeon {
@@ -194,7 +192,7 @@ pub struct Dungeon {
     pub past_floors: Vec<Floor>,
     /// random number generator
     pub rng: RngHandle,
-    dist_cache: VecDeque<(Array2<u32>, Coord)>,
+    dist_cache: DistCache,
 }
 
 impl DungeonTrait for Dungeon {
@@ -344,17 +342,22 @@ impl DungeonTrait for Dungeon {
             return MoveResult::CantMove;
         }
         let mut cand = Vec::new();
-        let dist_map = self.make_dist_map(dist.cd, true);
+        let Dungeon {
+            current_floor,
+            dist_cache,
+            ..
+        } = self;
+        let dist_map = dist_cache.make_dist_map(current_floor, dist.cd, true);
         for d in Direction::into_enum_iter() {
             let next = cur.cd + d.to_cd();
             if skip(&DungeonPath::from(Address::new(cur.level, next))) {
                 continue;
             }
-            if next == dist.cd {
+            let ndist = *dist_map.get_p(next);
+            if ndist == 0 && current_floor.can_move_enemy(cur.cd, d) {
                 return MoveResult::Reach;
             }
-            let ndist = *dist_map.get_p(next);
-            if ndist != u32::max_value() {
+            if ndist != u32::max_value() && ndist > 0 {
                 cand.push((ndist, next))
             }
         }
@@ -408,7 +411,7 @@ impl Dungeon {
             config_global: config_global.clone(),
             past_floors: vec![],
             rng,
-            dist_cache: VecDeque::with_capacity(MAX_CACHED_DIST),
+            dist_cache: DistCache::new(),
         };
         dungeon
             .new_level_(game_info, item_handle, enemies, true)
@@ -469,19 +472,32 @@ impl Dungeon {
             0
         }
     }
+}
 
-    fn make_dist_map(&mut self, cd: Coord, is_enemy: bool) -> &Array2<u32> {
-        if let Some(pos) = self.dist_cache.iter().position(|t| t.1 == cd) {
-            return &self.dist_cache[pos].0;
+#[derive(Clone)]
+struct DistCache {
+    cache: VecDeque<(Array2<u32>, Coord)>,
+}
+
+impl DistCache {
+    const MAX_CACHED_DIST: usize = 8;
+    fn new() -> Self {
+        DistCache {
+            cache: VecDeque::with_capacity(Self::MAX_CACHED_DIST),
         }
-        let dist_map = self.current_floor.make_dist_map(cd, is_enemy);
-        let len = self.dist_cache.len();
-        self.dist_cache.push_back((dist_map, cd));
-        if len > MAX_CACHED_DIST {
-            self.dist_cache.pop_front();
-            &self.dist_cache[len - 1].0
+    }
+    fn make_dist_map(&mut self, floor: &Floor, cd: Coord, is_enemy: bool) -> &Array2<u32> {
+        if let Some(pos) = self.cache.iter().position(|t| t.1 == cd) {
+            return &self.cache[pos].0;
+        }
+        let dist_map = floor.make_dist_map(cd, is_enemy);
+        let len = self.cache.len();
+        self.cache.push_back((dist_map, cd));
+        if len > Self::MAX_CACHED_DIST {
+            self.cache.pop_front();
+            &self.cache[len - 1].0
         } else {
-            &self.dist_cache[len].0
+            &self.cache[len].0
         }
     }
 }

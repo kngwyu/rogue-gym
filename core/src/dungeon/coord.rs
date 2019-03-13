@@ -223,6 +223,34 @@ impl Direction {
             Stay => Coord::new(0, 0),
         }
     }
+    pub fn x(self) -> Coord {
+        use self::Direction::*;
+        match self {
+            Up => Coord::new(0, 0),
+            Down => Coord::new(0, 0),
+            Left => Coord::new(-1, 0),
+            Right => Coord::new(1, 0),
+            LeftUp => Coord::new(-1, 0),
+            RightUp => Coord::new(1, 0),
+            LeftDown => Coord::new(-1, 0),
+            RightDown => Coord::new(1, 0),
+            Stay => Coord::new(0, 0),
+        }
+    }
+    pub fn y(self) -> Coord {
+        use self::Direction::*;
+        match self {
+            Up => Coord::new(0, -1),
+            Down => Coord::new(0, 1),
+            Left => Coord::new(0, 0),
+            Right => Coord::new(0, 0),
+            LeftUp => Coord::new(0, -1),
+            RightUp => Coord::new(0, -1),
+            LeftDown => Coord::new(0, 1),
+            RightDown => Coord::new(0, 1),
+            Stay => Coord::new(0, 0),
+        }
+    }
     pub fn reverse(self) -> Direction {
         use self::Direction::*;
         match self {

@@ -171,35 +171,17 @@ impl Floor {
     }
 
     fn can_move_impl(&self, cd: Coord, direction: Direction, is_enemy: bool) -> Option<bool> {
-        let cur_cell = self.field.try_get_p(cd).ok()?;
-        let nxt_cell = self.field.try_get_p(cd + direction.to_cd()).ok()?;
-
-        // TODO: trap
-        let mut res = match cur_cell.surface {
-            Surface::Floor | Surface::Stair => match nxt_cell.surface {
-                Surface::Floor | Surface::Stair | Surface::Trap => true,
-                Surface::Door | Surface::Passage => !direction.is_diag(),
-                _ => false,
-            },
-            Surface::Passage => match nxt_cell.surface {
-                Surface::Passage | Surface::Stair | Surface::Trap | Surface::Door => {
-                    !direction.is_diag() || is_enemy
-                }
-                _ => false,
-            },
-            Surface::Door => match nxt_cell.surface {
-                Surface::Passage
-                | Surface::Stair
-                | Surface::Trap
-                | Surface::Door
-                | Surface::Floor => !direction.is_diag(),
-                _ => false,
-            },
-            _ => false,
-        };
-        res &= nxt_cell.surface.can_walk();
-        res &= !nxt_cell.is_hidden();
-        res &= !nxt_cell.is_locked();
+        let cell = |cd: Coord| self.field.try_get_p(cd).ok();
+        let nxt = cell(cd + direction.to_cd())?;
+        let mut res = nxt.surface.can_walk();
+        if !is_enemy {
+            res &= !nxt.is_hidden();
+            res &= !nxt.is_locked();
+        }
+        if direction.is_diag() {
+            res &= cell(cd + direction.x())?.surface.can_walk();
+            res &= cell(cd + direction.y())?.surface.can_walk();
+        }
         Some(res)
     }
     /// judge if the player can move from `cd` in `direction`
@@ -211,7 +193,7 @@ impl Floor {
         }
     }
     pub(super) fn can_move_enemy(&self, cd: Coord, direction: Direction) -> bool {
-        self.can_move_impl(cd, direction, false).unwrap_or(false)
+        self.can_move_impl(cd, direction, true).unwrap_or(false)
     }
     fn cd_to_room_id(&self, cd: Coord) -> Option<usize> {
         self.rooms
