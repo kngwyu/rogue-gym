@@ -1,5 +1,6 @@
 # rogue-gym
 [![Buid Status](https://travis-ci.org/kngwyu/rogue-gym.svg?branch=master)](https://travis-ci.org/kngwyu/rogue-gym)
+[![PyPI version](https://img.shields.io/pypi/v/rogue_gym.svg)](https://pypi.org/project/rogue-gym/)
 
 Highly customizable rogue-like implmentation for AI expmeriments.
 
