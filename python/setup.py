@@ -1,9 +1,6 @@
-import sys
 from setuptools import find_packages, setup
 from setuptools_rust import RustExtension
 
-
-PYTHON_MAJOR_VERSION = sys.version_info[0]
 
 setup_requirements = ['setuptools-rust>=0.6.0']
 install_requirements = ['numpy', 'gym']
@@ -12,7 +9,7 @@ extra_requirements = {'rainy': ['rainy']}
 
 setup(
     name='rogue-gym',
-    version='0.1.0',
+    version='0.0.1',
     description='OpenAI gym environment for rogue-gym',
     url='https://github.com/kngwyu/rogue-gym',
     author='Yuji Kanagawa',
@@ -22,9 +19,11 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        'Programming Language :: Python',
+        'Natural Language :: English',
+        'Operating System :: POSIX :: Linux',
         'Programming Language :: Rust',
-        'Operating System :: POSIX',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
     packages=find_packages(),
     rust_extensions=[RustExtension('rogue_gym_python._rogue_gym', 'Cargo.toml')],
