@@ -191,6 +191,9 @@ impl Enemy {
     pub fn defense(&self) -> Defense {
         self.defense
     }
+    pub fn exp(&self) -> Exp {
+        self.exp
+    }
     pub fn attack(&self) -> &DiceVec<HitPoint> {
         &self.attack
     }
@@ -332,7 +335,6 @@ impl EnemyHandler {
     where
         F: Fn(&DungeonPath) -> bool,
     {
-        debug!("activate: {:?}", self.placed_enemies);
         let removes: Vec<_> = self
             .placed_enemies
             .iter()

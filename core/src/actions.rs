@@ -147,6 +147,7 @@ fn player_attack(
         match enemy.get_damage(hp) {
             DamageReaction::Death => {
                 enemies.remove(place);
+                player.get_exp(enemy.exp(), enemies.rng());
                 res.push(Reaction::Notify(GameMsg::Killed(enemy.name().to_owned())));
                 res.push(Reaction::Redraw);
             }

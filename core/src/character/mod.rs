@@ -6,6 +6,7 @@ pub use enemies::{Enemy, EnemyHandler};
 use num_traits::PrimInt;
 use rand::distributions::uniform::SampleUniform;
 use rng::RngHandle;
+use std::ops::AddAssign;
 
 /// values compatible with Hit Point
 #[derive(
@@ -181,6 +182,16 @@ impl<T: Copy + PartialOrd> Maxed<T> {
         if self.current > self.max {
             self.current = self.max;
         }
+    }
+}
+
+impl<T> AddAssign<T> for Maxed<T>
+where
+    T: AddAssign<T> + Clone,
+{
+    fn add_assign(&mut self, rhs: T) {
+        self.max += rhs.clone();
+        self.current += rhs;
     }
 }
 

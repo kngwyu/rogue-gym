@@ -1,4 +1,4 @@
-use super::{clamp, DamageReaction, Defense, Exp, HitPoint, Level, Maxed, Strength};
+use super::{clamp, DamageReaction, Defense, Dice, Exp, HitPoint, Level, Maxed, Strength};
 use crate::dungeon::{Direction, DungeonPath};
 use crate::error::GameResult;
 use crate::item::{
@@ -180,7 +180,19 @@ impl Player {
             DamageReaction::None
         }
     }
-    fn get_initial_weapon(&self) -> Option<SmallStr> {
+    pub(crate) fn get_exp(&mut self, exp: Exp, rng: &mut RngHandle) {
+        self.status.exp += exp;
+        if let Some(l) = self
+            .config
+            .level
+            .check_level(self.status.level, self.status.exp)
+        {
+            let diff = l - self.status.level;
+            self.status.level = l;
+            self.status.hp += Dice::new(diff.0 as usize, HitPoint(10)).exec::<i64>(rng);
+        }
+    }
+    pub fn get_initial_weapon(&self) -> Option<SmallStr> {
         self.config.init_items.iter().find_map(|item| {
             if let InitItem::Weapon { name, .. } = item {
                 return Some(name.to_owned());
@@ -292,8 +304,27 @@ pub struct Leveling {
 impl Default for Leveling {
     fn default() -> Self {
         let exps: Vec<Exp> = vec![
-            10u32, 20, 40, 80, 160, 320, 640, 1300, 2600, 5200, 13000, 26000, 50000, 100_000,
-            200_000, 400_000, 800_000, 2_000_000, 4_000_000, 8_000_000, 0,
+            10u32,
+            20,
+            40,
+            80,
+            160,
+            320,
+            640,
+            1300,
+            2600,
+            5200,
+            13000,
+            26000,
+            50000,
+            100_000,
+            200_000,
+            400_000,
+            800_000,
+            2_000_000,
+            4_000_000,
+            8_000_000,
+            u32::max_value(),
         ]
         .into_iter()
         .map(|u| u.into())
@@ -303,8 +334,16 @@ impl Default for Leveling {
 }
 
 impl Leveling {
-    fn exp(&self, level: u32) -> Option<Exp> {
-        self.exps.get((level - 1) as usize).cloned()
+    fn check_level(&self, cur: Level, exp: Exp) -> Option<Level> {
+        let cur = (cur.0 - 1) as usize;
+        if cur >= self.exps.len() {
+            return None;
+        }
+        let pos = self.exps[cur..].iter().position(|e| exp < *e).unwrap();
+        if pos == cur {
+            return None;
+        }
+        return Some(Level(pos as i64 + 1));
     }
 }
 
