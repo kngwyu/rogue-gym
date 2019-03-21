@@ -331,7 +331,7 @@ impl EnemyHandler {
             .or_else(|| self.active_enemies.get(&path))
             .map(Rc::clone)
     }
-    pub fn activate<'a, F>(&mut self, is_in_activation_area: F)
+    pub fn activate_area<'a, F>(&mut self, is_in_activation_area: F)
     where
         F: Fn(&DungeonPath) -> bool,
     {
@@ -342,15 +342,18 @@ impl EnemyHandler {
             .map(|(p, _)| p.to_owned())
             .collect();
         for path in removes {
-            if let Some(enem) = self.placed_enemies.remove(&path) {
-                debug!(
-                    "[EnemyHandler::activate] activated {} at {:?}",
-                    enem.name, path
-                );
-                enem.run();
-                self.active_enemies.insert(path, enem);
-            }
+            self.activate(path);
         }
+    }
+    pub(crate) fn activate(&mut self, place: DungeonPath) -> Option<()> {
+        let enem = self.placed_enemies.remove(&place)?;
+        enem.run();
+        self.active_enemies.insert(place, enem);
+        Some(())
+    }
+    pub(crate) fn remove_enemies(&mut self) {
+        self.active_enemies = BTreeMap::new();
+        self.placed_enemies = BTreeMap::new();
     }
     pub(crate) fn move_actives(
         &mut self,

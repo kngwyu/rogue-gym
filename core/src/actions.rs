@@ -142,12 +142,15 @@ fn player_attack(
 ) -> GameResult<Vec<Reaction>> {
     let mut res = Vec::new();
     player.buttle();
+    enemies.activate(place.clone());
     if let Some(hp) = fight::player_attack(player, None, &*enemy, enemies.rng()) {
         res.push(Reaction::Notify(GameMsg::HitTo(enemy.name().to_owned())));
         match enemy.get_damage(hp) {
             DamageReaction::Death => {
                 enemies.remove(place);
-                player.get_exp(enemy.exp(), enemies.rng());
+                if player.level_up(enemy.exp(), enemies.rng()) {
+                    res.push(Reaction::StatusUpdated);
+                }
                 res.push(Reaction::Notify(GameMsg::Killed(enemy.name().to_owned())));
                 res.push(Reaction::Redraw);
             }

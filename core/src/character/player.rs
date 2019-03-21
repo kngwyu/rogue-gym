@@ -180,17 +180,18 @@ impl Player {
             DamageReaction::None
         }
     }
-    pub(crate) fn get_exp(&mut self, exp: Exp, rng: &mut RngHandle) {
+    pub(crate) fn level_up(&mut self, exp: Exp, rng: &mut RngHandle) -> bool {
         self.status.exp += exp;
-        if let Some(l) = self
+        let diff = self
             .config
             .level
-            .check_level(self.status.level, self.status.exp)
-        {
-            let diff = l - self.status.level;
-            self.status.level = l;
-            self.status.hp += Dice::new(diff.0 as usize, HitPoint(10)).exec::<i64>(rng);
+            .check_level(self.status.level, self.status.exp);
+        if diff > 0 {
+            self.status.level += Level(diff as i64);
+            self.status.hp += Dice::new(diff, HitPoint(10)).exec::<i64>(rng);
+            return true;
         }
+        false
     }
     pub fn get_initial_weapon(&self) -> Option<SmallStr> {
         self.config.init_items.iter().find_map(|item| {
@@ -334,16 +335,12 @@ impl Default for Leveling {
 }
 
 impl Leveling {
-    fn check_level(&self, cur: Level, exp: Exp) -> Option<Level> {
+    fn check_level(&self, cur: Level, exp: Exp) -> usize {
         let cur = (cur.0 - 1) as usize;
         if cur >= self.exps.len() {
-            return None;
+            return 0;
         }
-        let pos = self.exps[cur..].iter().position(|e| exp < *e).unwrap();
-        if pos == cur {
-            return None;
-        }
-        return Some(Level(pos as i64 + 1));
+        self.exps[cur..].iter().position(|e| exp < *e).unwrap()
     }
 }
 

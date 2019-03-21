@@ -275,7 +275,7 @@ impl Floor {
             self.enters_room(cd).chain_err(|| "Floor::player_in")?;
             if let Some(room_id) = self.cd_to_room_id(cd) {
                 let room = &self.rooms[room_id];
-                enemies.activate(|p| {
+                enemies.activate_area(|p| {
                     let cd = Address::from_path(p).cd;
                     room.assigned_area.contains(cd)
                 });

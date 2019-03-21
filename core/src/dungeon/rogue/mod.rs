@@ -452,6 +452,9 @@ impl Dungeon {
         // place stair
         floor.setup_stair(&mut self.rng).chain_err(|| ERR_STR)?;
         // place enemies
+        if !is_initial {
+            enemies.remove_enemies();
+        }
         floor.place_enemies(level, self.lev_add(), enemies, &mut self.rng);
         // place traps (STUB)
         if !self.config_global.hide_dungeon {
