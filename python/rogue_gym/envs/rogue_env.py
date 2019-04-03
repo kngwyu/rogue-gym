@@ -119,7 +119,7 @@ class RogueEnv(gym.Env):
         'n': 'MOVE_RIGHTDOWN',
         'b': 'MOVE_LEFTDOWN',
         'u': 'MOVE_RIGHTUP',
-        'y': 'MOVE_LEFTDOWN',
+        'y': 'MOVE_LEFTUP',
         '>': 'DOWNSTAIR',
         's': 'SEARCH',
     }
@@ -248,3 +248,7 @@ class RogueEnv(gym.Env):
 
     def __repr__(self):
         return self.result.__repr__()
+
+    @property
+    def unwrapped(self):
+        return self

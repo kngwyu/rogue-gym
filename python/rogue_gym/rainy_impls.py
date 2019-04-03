@@ -1,3 +1,4 @@
+from gym import Env
 import numpy as np
 from numpy import ndarray
 try:
@@ -7,13 +8,15 @@ except ImportError:
     raise ImportError('To use rogue_gym.rainy_impls, install rainy first.')
 from .envs.parallel import ParallelRogueEnv
 from .envs.rogue_env import PlayerState, RogueEnv
+from .envs.wrappers import check_rogue_env
 from typing import Iterable, Tuple
 ACTION_DIM = len(RogueEnv.ACTIONS)
 
 
 class RogueEnvExt(EnvExt):
-    def __init__(self, rogue_env: RogueEnv) -> None:
-        super().__init__(rogue_env)
+    def __init__(self, env: Env) -> None:
+        check_rogue_env(env)
+        super().__init__(env)
 
     @property
     def action_dim(self) -> int:
@@ -21,13 +24,13 @@ class RogueEnvExt(EnvExt):
 
     @property
     def state_dim(self) -> Tuple[int, ...]:
-        return self._env.observation_space.shape
+        return self._env.unwrapped.observation_space.shape
 
     def state_to_array(self, state: PlayerState) -> ndarray:
-        return self._env.image_setting.expand(state)
+        return self._env.unwrapped.image_setting.expand(state)
 
     def save_history(self, file_name: str) -> None:
-        self._env.save_actions(file_name)
+        self._env.unwrapped.save_actions(file_name)
 
 
 class ParallelRogueEnvExt(ParallelEnv):
