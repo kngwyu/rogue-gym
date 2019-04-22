@@ -54,6 +54,12 @@ impl StatusFlagInner {
     const HUNGER: u32        = 0b100_000_000;
 }
 
+impl From<Option<u32>> for StatusFlagInner {
+    fn from(u: Option<u32>) -> Self {
+        StatusFlagInner(u.unwrap_or(0))
+    }
+}
+
 impl StatusFlagInner {
     pub fn len(self) -> usize {
         self.0.count_ones() as usize

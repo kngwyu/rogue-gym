@@ -1,4 +1,3 @@
-#![feature(specialization)]
 #[macro_use]
 extern crate failure;
 extern crate ndarray;
@@ -20,7 +19,6 @@ use pyo3::{
     basic::{PyObjectProtocol, PyObjectReprProtocol, PyObjectStrProtocol},
     exceptions::RuntimeError,
     prelude::*,
-    PyObjectWithToken,
 };
 use rect_iter::{Get2D, GetMut2D, RectRange};
 use rogue_gym_core::character::player::Status;
@@ -151,13 +149,6 @@ impl<'p> PyObjectProtocol<'p> for PlayerState {
     }
 }
 
-impl PyObjectWithToken for PlayerState {
-    #[inline]
-    fn py(&self) -> Python {
-        unsafe { Python::assume_gil_acquired() }
-    }
-}
-
 #[pymethods]
 impl PlayerState {
     #[getter]
@@ -194,13 +185,19 @@ impl PlayerState {
         flag.to_vector(&self.status)
     }
     fn gray_image(&self, flag: Option<u32>) -> PyResult<&PyArray3<f32>> {
-        let (py, flag) = (self.py(), StatusFlagInner(flag.unwrap_or(0)));
+        let (py, flag) = (
+            unsafe { Python::assume_gil_acquired() },
+            StatusFlagInner::from(flag),
+        );
         let array = self.gray_image_with_offset(py, flag.len())?;
         flag.copy_status(&self.status, 1, &mut array.as_array_mut());
         Ok(array)
     }
     fn gray_image_with_hist(&self, flag: Option<u32>) -> PyResult<&PyArray3<f32>> {
-        let (py, flag) = (self.py(), StatusFlagInner(flag.unwrap_or(0)));
+        let (py, flag) = (
+            unsafe { Python::assume_gil_acquired() },
+            StatusFlagInner::from(flag),
+        );
         let array = self.gray_image_with_offset(py, flag.len() + 1)?;
         let offset = flag.copy_status(&self.status, 1, &mut array.as_array_mut());
         self.copy_hist(&array, offset);
@@ -208,7 +205,10 @@ impl PlayerState {
     }
     /// Convert PlayerSelf with 3D symbol image dungeon(like AlphaGo's inputs)
     fn symbol_image(&self, flag: Option<u32>) -> PyResult<&PyArray3<f32>> {
-        let (py, flag) = (self.py(), StatusFlagInner(flag.unwrap_or(0)));
+        let (py, flag) = (
+            unsafe { Python::assume_gil_acquired() },
+            StatusFlagInner::from(flag),
+        );
         let array = self.symbol_image_with_offset(py, flag.len())?;
         flag.copy_status(
             &self.status,
@@ -219,7 +219,10 @@ impl PlayerState {
     }
     /// Convert PlayerState to 3D symbol image, with player history
     fn symbol_image_with_hist(&self, flag: Option<u32>) -> PyResult<&PyArray3<f32>> {
-        let (py, flag) = (self.py(), StatusFlagInner(flag.unwrap_or(0)));
+        let (py, flag) = (
+            unsafe { Python::assume_gil_acquired() },
+            StatusFlagInner::from(flag),
+        );
         let array = self.symbol_image_with_offset(py, flag.len() + 1)?;
         let offset = flag.copy_status(
             &self.status,
@@ -247,7 +250,8 @@ impl GameState {
             GameConfig::default()
         };
         let inner = pyresult(GameStateImpl::new(config.clone(), max_steps))?;
-        obj.init(|_| GameState { inner, config })
+        obj.init(GameState { inner, config });
+        Ok(())
     }
     #[cfg(unix)]
     fn replay(&self, py: Python, interval_ms: u64) -> PyResult<()> {
@@ -307,7 +311,12 @@ struct ParallelGameState {
 #[pymethods]
 impl ParallelGameState {
     #[new]
-    fn __new__(obj: &PyRawObject, max_steps: usize, configs: Vec<String>) -> PyResult<()> {
+    fn __new__(
+        obj: &PyRawObject,
+        py: Python,
+        max_steps: usize,
+        configs: Vec<String>,
+    ) -> PyResult<()> {
         let configs = {
             let mut res = vec![];
             for cfg in configs {
@@ -324,15 +333,14 @@ impl ParallelGameState {
             .to_byte()
             + 1;
         let cloned = configs.clone();
-        let conductor = obj
-            .py()
-            .allow_threads(move || ThreadConductor::new(cloned, max_steps));
+        let conductor = py.allow_threads(move || ThreadConductor::new(cloned, max_steps));
         let conductor = pyresult(conductor)?;
-        obj.init(|_| ParallelGameState {
+        obj.init(ParallelGameState {
             conductor,
             configs,
             symbols,
-        })
+        });
+        Ok(())
     }
     fn screen_size(&self) -> (i32, i32) {
         (self.configs[0].height, self.configs[0].width)
@@ -376,7 +384,7 @@ impl ParallelGameState {
     }
 }
 
-#[pymodinit(_rogue_gym)]
+#[pymodule(_rogue_gym)]
 fn init_mod(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<GameState>()?;
     m.add_class::<PlayerState>()?;
