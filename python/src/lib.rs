@@ -271,7 +271,8 @@ impl GameState {
         (self.config.height, self.config.width)
     }
     fn set_seed(&mut self, seed: u64) -> PyResult<()> {
-        self.config.seed = Some(seed as u128);
+        let seed = u128::from(seed);
+        self.config.seed_range = Some([seed, seed + 1]);
         Ok(())
     }
     /// Reset the game state

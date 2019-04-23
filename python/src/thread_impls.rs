@@ -126,7 +126,7 @@ impl ThreadWorker {
                     self.sender.send(res)
                 }
                 Instruction::Seed(seed) => {
-                    self.config.seed = Some(seed);
+                    self.config.seed_range = Some([seed, seed + 1]);
                     continue;
                 }
                 Instruction::State => self.sender.send(Ok(self.game_state.state())),

@@ -1,22 +1,7 @@
 {
-    "U": {
+    "K": {
         "Act": {
-            "MoveUntil": "RightUp"
-        }
-    },
-    "u": {
-        "Act": {
-            "Move": "RightUp"
-        }
-    },
-    "J": {
-        "Act": {
-            "MoveUntil": "Down"
-        }
-    },
-    "H": {
-        "Act": {
-            "MoveUntil": "Left"
+            "MoveUntil": "Up"
         }
     },
     "k": {
@@ -24,19 +9,37 @@
             "Move": "Up"
         }
     },
+    "H": {
+        "Act": {
+            "MoveUntil": "Left"
+        }
+    },
+    "J": {
+        "Act": {
+            "MoveUntil": "Down"
+        }
+    },
     "j": {
         "Act": {
             "Move": "Down"
         }
     },
-    "l": {
+    "u": {
         "Act": {
-            "Move": "Right"
+            "Move": "RightUp"
         }
     },
-    "Y": {
+    ">": {
+        "Act": "DownStair"
+    },
+    "L": {
         "Act": {
-            "MoveUntil": "LeftUp"
+            "MoveUntil": "Right"
+        }
+    },
+    "N": {
+        "Act": {
+            "MoveUntil": "RightDown"
         }
     },
     "B": {
@@ -44,14 +47,30 @@
             "MoveUntil": "LeftDown"
         }
     },
-    "K": {
+    "s": {
+        "Act": "Search"
+    },
+    "Y": {
         "Act": {
-            "MoveUntil": "Up"
+            "MoveUntil": "LeftUp"
+        }
+    },
+    "l": {
+        "Act": {
+            "Move": "Right"
         }
     },
     "h": {
         "Act": {
             "Move": "Left"
+        }
+    },
+    ".": {
+        "Act": "NoOp"
+    },
+    "U": {
+        "Act": {
+            "MoveUntil": "RightUp"
         }
     },
     "b": {
@@ -64,28 +83,9 @@
             "Move": "RightDown"
         }
     },
-    "N": {
-        "Act": {
-            "MoveUntil": "RightDown"
-        }
-    },
-    "L": {
-        "Act": {
-            "MoveUntil": "Right"
-        }
-    },
-    "s": {
-        "Act": "Search"
-    },
     "y": {
         "Act": {
             "Move": "LeftUp"
         }
-    },
-    ">": {
-        "Act": "DownStair"
-    },
-    ".": {
-        "Act": "NoOp"
     }
 }

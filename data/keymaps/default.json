@@ -1,37 +1,25 @@
 {
-    ".": {
-        "Act": "NoOp"
+    "Esc": {
+        "Sys": "Cancel"
     },
-    "Left": {
+    "L": {
         "Act": {
-            "Move": "Left"
+            "MoveUntil": "Right"
         }
     },
-    "s": {
-        "Act": "Search"
-    },
-    ">": {
-        "Act": "DownStair"
+    "b": {
+        "Act": {
+            "Move": "LeftDown"
+        }
     },
     "U": {
         "Act": {
             "MoveUntil": "RightUp"
         }
     },
-    "Q": {
-        "Sys": "Quit"
-    },
-    "i": {
-        "Sys": "Inventory"
-    },
-    "J": {
+    "h": {
         "Act": {
-            "MoveUntil": "Down"
-        }
-    },
-    "l": {
-        "Act": {
-            "Move": "Right"
+            "Move": "Left"
         }
     },
     "Y": {
@@ -39,8 +27,80 @@
             "MoveUntil": "LeftUp"
         }
     },
-    "Esc": {
-        "Sys": "Cancel"
+    "n": {
+        "Both": {
+            "act": {
+                "Move": "RightDown"
+            },
+            "sys": "No"
+        }
+    },
+    "K": {
+        "Act": {
+            "MoveUntil": "Up"
+        }
+    },
+    "k": {
+        "Act": {
+            "Move": "Up"
+        }
+    },
+    "N": {
+        "Act": {
+            "MoveUntil": "RightDown"
+        }
+    },
+    "J": {
+        "Act": {
+            "MoveUntil": "Down"
+        }
+    },
+    "u": {
+        "Act": {
+            "Move": "RightUp"
+        }
+    },
+    "Up": {
+        "Act": {
+            "Move": "Up"
+        }
+    },
+    "l": {
+        "Act": {
+            "Move": "Right"
+        }
+    },
+    "Down": {
+        "Act": {
+            "Move": "Down"
+        }
+    },
+    "i": {
+        "Sys": "Inventory"
+    },
+    "B": {
+        "Act": {
+            "MoveUntil": "LeftDown"
+        }
+    },
+    " ": {
+        "Sys": "Continue"
+    },
+    ">": {
+        "Act": "DownStair"
+    },
+    "j": {
+        "Act": {
+            "Move": "Down"
+        }
+    },
+    "Q": {
+        "Sys": "Quit"
+    },
+    "H": {
+        "Act": {
+            "MoveUntil": "Left"
+        }
     },
     "y": {
         "Both": {
@@ -50,83 +110,23 @@
             "sys": "Yes"
         }
     },
-    "L": {
-        "Act": {
-            "MoveUntil": "Right"
-        }
+    ".": {
+        "Act": "NoOp"
     },
-    "B": {
-        "Act": {
-            "MoveUntil": "LeftDown"
-        }
-    },
-    "j": {
-        "Act": {
-            "Move": "Down"
-        }
-    },
-    "N": {
-        "Act": {
-            "MoveUntil": "RightDown"
-        }
-    },
-    "Up": {
-        "Act": {
-            "Move": "Up"
-        }
-    },
-    "k": {
-        "Act": {
-            "Move": "Up"
-        }
-    },
-    "K": {
-        "Act": {
-            "MoveUntil": "Up"
-        }
-    },
-    "u": {
-        "Act": {
-            "Move": "RightUp"
-        }
-    },
-    "b": {
-        "Act": {
-            "Move": "LeftDown"
-        }
-    },
-    "Down": {
-        "Act": {
-            "Move": "Down"
-        }
-    },
-    "h": {
+    "Left": {
         "Act": {
             "Move": "Left"
-        }
-    },
-    " ": {
-        "Sys": "Continue"
-    },
-    "Right": {
-        "Act": {
-            "Move": "Right"
         }
     },
     "S": {
         "Sys": "Save"
     },
-    "H": {
-        "Act": {
-            "MoveUntil": "Left"
-        }
+    "s": {
+        "Act": "Search"
     },
-    "n": {
-        "Both": {
-            "act": {
-                "Move": "RightDown"
-            },
-            "sys": "No"
+    "Right": {
+        "Act": {
+            "Move": "Right"
         }
     }
 }

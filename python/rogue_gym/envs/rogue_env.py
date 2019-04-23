@@ -93,6 +93,16 @@ class ImageSetting(NamedTuple):
                 return self.status.gray_image(state)
 
 
+def _patch_config(d: dict) -> dict:
+    """Modify a config dict for backward compatibility
+    """
+    if 'seed' in d:
+        s = d['seed']
+        del d['seed']
+        d['seed_range'] = [s, s + 1]
+    return d
+
+
 class RogueEnv(gym.Env):
     metadata = {'render.modes': ['human', 'ascii']}
 
@@ -145,7 +155,7 @@ class RogueEnv(gym.Env):
                 config = f.read()
         else:
             config_dict.update(kwargs)
-            config = json.dumps(config_dict)
+            config = json.dumps(_patch_config(config_dict))
         self.game = GameState(max_steps, config)
         self.result = None
         self.action_space = spaces.discrete.Discrete(self.ACTION_LEN)

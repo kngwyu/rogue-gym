@@ -3,7 +3,7 @@ from gym import spaces
 import json
 from typing import Dict, Iterable, List, Tuple, Union
 from rogue_gym_python._rogue_gym import ParallelGameState, PlayerState
-from .rogue_env import ImageSetting, RogueEnv
+from .rogue_env import ImageSetting, RogueEnv, _patch_config
 
 
 class ParallelRogueEnv:
@@ -21,7 +21,10 @@ class ParallelRogueEnv:
             max_steps: int = 1000,
             image_setting: ImageSetting = ImageSetting(),
     ) -> None:
-        self.game = ParallelGameState(max_steps, [json.dumps(d) for d in config_dicts])
+        self.game = ParallelGameState(
+            max_steps,
+            [json.dumps(_patch_config(d)) for d in config_dicts]
+        )
         self.result = None
         self.max_steps = max_steps
         self.steps = 0

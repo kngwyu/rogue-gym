@@ -51,25 +51,19 @@ pub use smallstr::SmallStr;
 use tile::{Drawable, Tile};
 use ui::{MordalKind, MordalMsg, UiState};
 
-/// Game configuration
-/// it's inteded to construct from json
+/// Game configuration which is serialize to JSON
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct GameConfig {
-    /// screen width
+    /// Screen width
     #[serde(default = "default_screen_width")]
     #[serde(skip_serializing_if = "is_default_width")]
     pub width: i32,
-    /// screen height
+    /// Screen height
     #[serde(default = "default_screen_height")]
     #[serde(skip_serializing_if = "is_default_height")]
     pub height: i32,
-    /// seed of random number generator
-    /// if None, we use random value chosen by `thread_rng().gen()`
-    #[serde(default)]
-    #[serde(skip_serializing_if = "is_default")]
-    pub seed: Option<u128>,
-    /// The half-open range from which you choose the game seed
-    /// Only available when seed == None
+    /// The half-open range from which you choose the game seed.
+    /// It's mainy used to specify the number of training seeds.
     #[serde(default)]
     #[serde(skip_serializing_if = "is_default")]
     pub seed_range: Option<[u128; 2]>,
@@ -133,7 +127,6 @@ impl Default for GameConfig {
         GameConfig {
             width: DEFAULT_WIDTH,
             height: DEFAULT_HEIGHT,
-            seed: Default::default(),
             seed_range: Default::default(),
             dungeon: DungeonStyle::default(),
             item: item::Config::default(),
@@ -168,15 +161,13 @@ impl GameConfig {
         }
     }
     fn to_global(&self) -> GameResult<GlobalConfig> {
-        let seed = if let Some(s) = self.seed {
-            s
+        println!("{:?}", self.seed_range);
+        let seed = if let Some([start, end]) = self.seed_range {
+            rng::gen_ranged_seed(start, end)
         } else {
-            if let Some(r) = self.seed_range {
-                rng::gen_ranged_seed(r[0], r[1])
-            } else {
-                rng::gen_seed()
-            }
+            rng::gen_seed()
         };
+        println!("{:?}", seed);
         let (w, h) = (self.width, self.height);
         if w < MIN_WIDTH {
             return Err(ErrorId::InvalidSetting.into_with(|| "screen width is too narrow"));

@@ -1,7 +1,6 @@
 {
     "width": 80,
     "height": 24,
-    "seed": null,
     "seed_range": null,
     "dungeon": {
         "style": "rogue",
@@ -60,71 +59,14 @@
         }
     },
     "keymap": {
-        ">": {
-            "Act": "DownStair"
-        },
-        "U": {
-            "Act": {
-                "MoveUntil": "RightUp"
-            }
-        },
-        "H": {
-            "Act": {
-                "MoveUntil": "Left"
-            }
-        },
-        "J": {
-            "Act": {
-                "MoveUntil": "Down"
-            }
-        },
-        "Y": {
-            "Act": {
-                "MoveUntil": "LeftUp"
-            }
-        },
-        "u": {
-            "Act": {
-                "Move": "RightUp"
-            }
-        },
-        ".": {
-            "Act": "NoOp"
-        },
-        "S": {
-            "Sys": "Save"
-        },
         "Left": {
             "Act": {
                 "Move": "Left"
             }
         },
-        "i": {
-            "Sys": "Inventory"
-        },
-        "B": {
+        "Right": {
             "Act": {
-                "MoveUntil": "LeftDown"
-            }
-        },
-        "K": {
-            "Act": {
-                "MoveUntil": "Up"
-            }
-        },
-        "L": {
-            "Act": {
-                "MoveUntil": "Right"
-            }
-        },
-        "k": {
-            "Act": {
-                "Move": "Up"
-            }
-        },
-        "Down": {
-            "Act": {
-                "Move": "Down"
+                "Move": "Right"
             }
         },
         "y": {
@@ -135,6 +77,72 @@
                 "sys": "Yes"
             }
         },
+        "s": {
+            "Act": "Search"
+        },
+        ">": {
+            "Act": "DownStair"
+        },
+        "k": {
+            "Act": {
+                "Move": "Up"
+            }
+        },
+        "j": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "S": {
+            "Sys": "Save"
+        },
+        "Q": {
+            "Sys": "Quit"
+        },
+        "Esc": {
+            "Sys": "Cancel"
+        },
+        "H": {
+            "Act": {
+                "MoveUntil": "Left"
+            }
+        },
+        "N": {
+            "Act": {
+                "MoveUntil": "RightDown"
+            }
+        },
+        "l": {
+            "Act": {
+                "Move": "Right"
+            }
+        },
+        " ": {
+            "Sys": "Continue"
+        },
+        "Down": {
+            "Act": {
+                "Move": "Down"
+            }
+        },
+        "B": {
+            "Act": {
+                "MoveUntil": "LeftDown"
+            }
+        },
+        "L": {
+            "Act": {
+                "MoveUntil": "Right"
+            }
+        },
+        "i": {
+            "Sys": "Inventory"
+        },
+        "Up": {
+            "Act": {
+                "Move": "Up"
+            }
+        },
         "n": {
             "Both": {
                 "act": {
@@ -143,25 +151,9 @@
                 "sys": "No"
             }
         },
-        "s": {
-            "Act": "Search"
-        },
-        "Esc": {
-            "Sys": "Cancel"
-        },
-        "h": {
+        "K": {
             "Act": {
-                "Move": "Left"
-            }
-        },
-        "l": {
-            "Act": {
-                "Move": "Right"
-            }
-        },
-        "j": {
-            "Act": {
-                "Move": "Down"
+                "MoveUntil": "Up"
             }
         },
         "b": {
@@ -169,26 +161,33 @@
                 "Move": "LeftDown"
             }
         },
-        " ": {
-            "Sys": "Continue"
+        ".": {
+            "Act": "NoOp"
         },
-        "N": {
+        "u": {
             "Act": {
-                "MoveUntil": "RightDown"
+                "Move": "RightUp"
             }
         },
-        "Right": {
+        "U": {
             "Act": {
-                "Move": "Right"
+                "MoveUntil": "RightUp"
             }
         },
-        "Up": {
+        "J": {
             "Act": {
-                "Move": "Up"
+                "MoveUntil": "Down"
             }
         },
-        "Q": {
-            "Sys": "Quit"
+        "h": {
+            "Act": {
+                "Move": "Left"
+            }
+        },
+        "Y": {
+            "Act": {
+                "MoveUntil": "LeftUp"
+            }
         }
     },
     "player": {
@@ -213,7 +212,7 @@
             2000000,
             4000000,
             8000000,
-            0
+            4294967295
         ],
         "hunger_time": 1300,
         "init_hp": 12,
@@ -266,7 +265,8 @@
                     "dam_plus": 0
                 }
             }
-        ]
+        ],
+        "heal_threshold": 20
     },
     "enemies": {
         "enemies": [
