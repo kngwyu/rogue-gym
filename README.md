@@ -4,6 +4,10 @@
 
 A highly customizable roguelike game, with APIs for training AI agents.
 
+Now [the paper](https://arxiv.org/abs/1904.08129) is on arxiv, check it out!
+
+We're now preparing for publishing the code for the experiment.
+
 # Play as human
 
 ```
