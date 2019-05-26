@@ -1,6 +1,7 @@
 # rogue-gym python API
 
-You can use rogue-gym as [Open AI Gym](https://github.com/openai/gym) environment.
+Python interface of [Rogue-Gym](https://github.com/kngwyu/rogue-gym) compatible with
+[Open AI Gym](https://github.com/openai/gym) environments.
 
 # API documents
 COMING SOON
@@ -42,12 +43,4 @@ COMING SOON
                                 
                                 
 Level:  1 Gold:     0 Hp: 12(12) Str: 16(16) Arm:  0 Exp:  1/ 0 
-```
-
-
-# Developper notes
-Build wheel 
-```
-cd ../
-docker run --rm -v $PWD:/io quay.io/pypa/manylinux1_x86_64 /io/build-wheels.sh
 ```
