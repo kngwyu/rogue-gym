@@ -3,7 +3,8 @@
 set -ex
 
 cargo build --verbose --all
-cargo test --verbose --all
-
-cd python
+cd core
+cargo test --verbose
+cd ../python
+cargo test --no-default-features
 tox -e py
