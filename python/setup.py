@@ -14,7 +14,7 @@ DESCRIPTION = 'OpenAI gym environment for rogue-gym'
 
 
 here = os.path.abspath(os.path.dirname(__file__))
-with io.open('rainy/__init__.py', 'rt', encoding='utf8') as f:
+with io.open(os.path.join(here, 'rogue_gym/__init__.py'), encoding='utf-8') as f:
     VERSION = re.search(r"__version__ = \'(.*?)\'", f.read()).group(1)
 
 try:
