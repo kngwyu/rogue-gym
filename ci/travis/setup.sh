@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
@@ -15,7 +15,7 @@ _latest() {
 }
 
 ### Setup Rust toolchain #######################################################
-curl -SsL "https://sh.rustup.rs/" | sh -s -- -y --default-toolchain=$TRAVIS_RUST_VERSION
+curl -SsL "https://sh.rustup.rs/" | sh -s -- -y --default-toolchain=$RUST_VERSION
 export PATH=$PATH:$HOME/.cargo/bin
 
 ### Setup python linker flags ##################################################

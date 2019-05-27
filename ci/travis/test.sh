@@ -1,10 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 
 set -ex
 
 cargo build --verbose --all
-cd core
-cargo test --verbose
-cd ../python
+cargo test --manifest-path=core/Cargo.toml 
+cd python
 cargo test --no-default-features
 tox -e py

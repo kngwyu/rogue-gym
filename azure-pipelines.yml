@@ -1,0 +1,48 @@
+jobs:
+
+- job: ManyLinux1Wheel
+  pool: {vmImage: 'Ubuntu-16.04'}
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+  steps:
+  - script: |
+      docker pull quay.io/pypa/manylinux1_x86_64
+      docker run --rm -v $PWD:/io quay.io/pypa/manylinux1_x86_64 /io/build-wheels.sh
+      mkdir wheelhouse
+      sudo mv python/dist/*manylinux1*.whl wheelhouse
+    displayName: Build manylinux1 wheel
+  - task: PublishBuildArtifacts@1
+    inputs: {pathtoPublish: 'wheelhouse'}
+
+- job: MacOsWheel
+  pool: {vmImage: 'macOS-10.13'}
+  steps:
+  - task: UsePythonVersion@0
+  - template: ci/azure/install.yml
+  - template: ci/azure/buildwheel.yml
+  - task: PublishBuildArtifacts@1
+    inputs: {pathtoPublish: 'wheelhouse'}
+
+- job: WindowsBuildWheel
+  pool: {vmImage: 'vs2017-win2016'}
+  steps:
+    - {task: UsePythonVersion@0, inputs: {versionSpec: '3.6', architecture: x64}}
+    - {task: UsePythonVersion@0, inputs: {versionSpec: '3.7', architecture: x64}}
+    - template: ci/azure/install.yml
+    - template: ci/azure/buildwheel.yml
+    - task: PublishBuildArtifacts@1
+      inputs: {pathtoPublish: 'wheelhouse'}
+
+- job: WindowsTest
+  pool: {vmImage: 'vs2017-win2016'}
+  steps:
+    - {task: UsePythonVersion@0, inputs: {versionSpec: '3.6', architecture: x64}}
+    - {task: UsePythonVersion@0, inputs: {versionSpec: '3.7', architecture: x64}}
+    - template: ci/azure/install.yml
+    - bash: |
+        cargo test --manifest-path=core/Cargo.toml
+        cd python
+        cargo test --no-default-features
+        tox -e py
+      displayName: Test on windows
+    - task: PublishBuildArtifacts@1
+      inputs: {pathtoPublish: 'wheelhouse'}
