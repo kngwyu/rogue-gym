@@ -253,20 +253,6 @@ impl GameState {
         obj.init(GameState { inner, config });
         Ok(())
     }
-    #[cfg(unix)]
-    fn replay(&self, py: Python, interval_ms: u64) -> PyResult<()> {
-        use rogue_gym_devui::show_replay;
-        let inputs = self.inner.runtime.saved_inputs().to_vec();
-        let config = self.config.clone();
-        let res = py.allow_threads(move || show_replay(config, inputs, interval_ms));
-        pyresult(res)
-    }
-    #[cfg(unix)]
-    fn play_cli(&self) -> PyResult<()> {
-        use rogue_gym_devui::play_game;
-        pyresult(play_game(self.config.clone(), false))?;
-        Ok(())
-    }
     fn screen_size(&self) -> (i32, i32) {
         (self.config.height, self.config.width)
     }
@@ -384,10 +370,32 @@ impl ParallelGameState {
     }
 }
 
+#[cfg(unix)]
+#[pyfunction]
+fn replay(game: &GameState, py: Python, interval_ms: u64) -> PyResult<()> {
+    use rogue_gym_devui::show_replay;
+    let inputs = game.inner.runtime.saved_inputs().to_vec();
+    let config = game.config.clone();
+    let res = py.allow_threads(move || show_replay(config, inputs, interval_ms));
+    pyresult(res)
+}
+
+#[cfg(unix)]
+#[pyfunction]
+fn play_cli(game: &GameState) -> PyResult<()> {
+    use rogue_gym_devui::play_game;
+    pyresult(play_game(game.config.clone(), false))?;
+    Ok(())
+}
+
 #[pymodule(_rogue_gym)]
 fn init_mod(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<GameState>()?;
     m.add_class::<PlayerState>()?;
     m.add_class::<ParallelGameState>()?;
+    #[cfg(unix)]
+    m.add_wrapped(pyo3::wrap_pyfunction!(replay))?;
+    #[cfg(unix)]
+    m.add_wrapped(pyo3::wrap_pyfunction!(play_cli))?;
     Ok(())
 }

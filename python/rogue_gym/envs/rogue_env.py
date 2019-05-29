@@ -6,6 +6,7 @@ import json
 import numpy as np
 from numpy import ndarray
 from typing import Dict, List, NamedTuple, Optional, Tuple, Union
+from rogue_gym_python import _rogue_gym as rogue_gym_inner
 from rogue_gym_python._rogue_gym import GameState, PlayerState
 
 
@@ -182,14 +183,16 @@ class RogueEnv(gym.Env):
             f.write(self.game.dump_history())
 
     def replay(self, interval_ms: int = 100) -> None:
-        if not hasattr(self.game, 'replay'):
+        if not hasattr(rogue_gym_inner, 'replay'):
             raise RuntimeError('Currently replay is only supported on UNIX')
-        self.game.replay(interval_ms)
+        rogue_gym_inner.replay(self.game, interval_ms)
+        print()
 
     def play_cli(self) -> None:
-        if not hasattr(self.game, 'play_cli'):
+        if not hasattr(rogue_gym_inner, 'play_cli'):
             raise RuntimeError('CLI playing is only supported on UNIX')
-        self.game.play_cli()
+        rogue_gym_inner.play_cli(self.game)
+        print()
 
     def state_to_image(
             self,
