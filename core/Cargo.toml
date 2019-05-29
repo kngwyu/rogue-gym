@@ -37,8 +37,7 @@ version = "1.0"
 features = ["serde"]
 version = "0.6"
 
-[dependencies.termion]
-optional = true
+[target.'cfg(unix)'.dependencies.termion]
 version = "1.5.1"
 
 [features]

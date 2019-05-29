@@ -135,7 +135,7 @@ impl Coord {
     pub fn is_lefter(self, other: Coord) -> bool {
         self.x < other.x
     }
-    #[cfg(feature = "termion")]
+    #[cfg(unix)]
     pub fn into_cursor(self) -> termion::cursor::Goto {
         let (x, y) = (self.x.0, self.y.0).map(|i| i as u16).add((1, 1));
         termion::cursor::Goto(x, y)
