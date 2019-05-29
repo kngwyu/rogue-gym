@@ -1,4 +1,64 @@
 jobs:
+- job: WindowsTest
+  pool: {vmImage: 'vs2017-win2016'}
+  strategy:
+    maxParallel: 2
+    matrix:
+        Python36:
+          PYTHON_VERSION: '3.6'
+        Python37:
+          PYTHON_VERSION: '3.7'
+  steps:
+    - template: ci/azure/install.yml
+      parameters:
+        python_version: $(PYTHON_VERSION)
+    - bash: |
+        rustup default nightly
+        cargo test --manifest-path=core/Cargo.toml
+        cd python
+        cargo test --no-default-features
+        tox -e py
+      displayName: Test on windows
+
+- job: MacOsWheel
+  pool: {vmImage: 'macOS-10.13'}
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+  strategy:
+    maxParallel: 2
+    matrix:
+        Python36:
+          PYTHON_VERSION: '3.6'
+        Python37:
+          PYTHON_VERSION: '3.7'
+  steps:
+  - template: ci/azure/install.yml
+    parameters:
+      python_version: $(PYTHON_VERSION)
+  - template: ci/azure/buildwheel.yml
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: wheelhouse
+      artifactName: MacOsWheel
+
+- job: WindowsWheel
+  pool: {vmImage: 'vs2017-win2016'}
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+  strategy:
+    maxParallel: 2
+    matrix:
+        Python36:
+          PYTHON_VERSION: '3.6'
+        Python37:
+          PYTHON_VERSION: '3.7'
+  steps:
+    - template: ci/azure/install.yml
+      parameters:
+        python_version: $(PYTHON_VERSION)
+    - template: ci/azure/buildwheel.yml
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: wheelhouse
+        artifactName: WindowsWheel
 
 - job: ManyLinux1Wheel
   pool: {vmImage: 'Ubuntu-16.04'}
@@ -11,39 +71,6 @@ jobs:
       sudo mv python/dist/*manylinux1*.whl wheelhouse
     displayName: Build manylinux1 wheel
   - task: PublishBuildArtifacts@1
-    inputs: {pathtoPublish: 'wheelhouse'}
-
-- job: MacOsWheel
-  pool: {vmImage: 'macOS-10.13'}
-  steps:
-  - task: UsePythonVersion@0
-  - template: ci/azure/install.yml
-  - template: ci/azure/buildwheel.yml
-  - task: PublishBuildArtifacts@1
-    inputs: {pathtoPublish: 'wheelhouse'}
-
-- job: WindowsBuildWheel
-  pool: {vmImage: 'vs2017-win2016'}
-  steps:
-    - {task: UsePythonVersion@0, inputs: {versionSpec: '3.6', architecture: x64}}
-    - {task: UsePythonVersion@0, inputs: {versionSpec: '3.7', architecture: x64}}
-    - template: ci/azure/install.yml
-    - template: ci/azure/buildwheel.yml
-    - task: PublishBuildArtifacts@1
-      inputs: {pathtoPublish: 'wheelhouse'}
-
-- job: WindowsTest
-  pool: {vmImage: 'vs2017-win2016'}
-  steps:
-    - {task: UsePythonVersion@0, inputs: {versionSpec: '3.6', architecture: x64}}
-    - {task: UsePythonVersion@0, inputs: {versionSpec: '3.7', architecture: x64}}
-    - template: ci/azure/install.yml
-    - bash: |
-        rustup default nightly
-        cargo test --manifest-path=core/Cargo.toml
-        cd python
-        cargo test --no-default-features
-        tox -e py
-      displayName: Test on windows
-    - task: PublishBuildArtifacts@1
-      inputs: {pathtoPublish: 'wheelhouse'}
+    inputs:
+      pathtoPublish: wheelhouse
+      artifactName: ManyLinux1Wheel

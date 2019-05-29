@@ -1,7 +1,8 @@
 steps:
   - bash: |
-      cibuildwheel python --output-dir wheelhouse
-      env:
-        CIBW_BEFORE_BUILD: 'pip install setuptools-rust'
-        CIBW_SKIP: 'cp27-* cp33-* cp34-* cp35-*'
-      displayName: Build wheel
+      rustup default nightly
+      mkdir wheelhouse
+      cd python
+      python setup.py bdist_wheel
+      mv dist/*.whl ../wheelhouse
+    displayName: Build wheel
