@@ -39,6 +39,7 @@ jobs:
     - {task: UsePythonVersion@0, inputs: {versionSpec: '3.7', architecture: x64}}
     - template: ci/azure/install.yml
     - bash: |
+        rustup default nightly
         cargo test --manifest-path=core/Cargo.toml
         cd python
         cargo test --no-default-features
