@@ -1,0 +1,8 @@
+steps:
+  - bash: |
+      rustup default nightly
+      mkdir wheelhouse
+      cd python
+      python setup.py bdist_wheel
+      mv dist/*.whl ../wheelhouse
+    displayName: Build wheel

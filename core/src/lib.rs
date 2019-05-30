@@ -20,7 +20,7 @@ extern crate regex;
 extern crate serde;
 extern crate serde_json;
 extern crate smallvec;
-#[cfg(feature = "termion")]
+#[cfg(unix)]
 extern crate termion;
 #[cfg(feature = "bench")]
 extern crate test;

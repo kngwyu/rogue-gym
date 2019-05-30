@@ -1,0 +1,76 @@
+jobs:
+- job: WindowsTest
+  pool: {vmImage: 'vs2017-win2016'}
+  strategy:
+    maxParallel: 2
+    matrix:
+        Python36:
+          PYTHON_VERSION: '3.6'
+        Python37:
+          PYTHON_VERSION: '3.7'
+  steps:
+    - template: ci/azure/install.yml
+      parameters:
+        python_version: $(PYTHON_VERSION)
+    - bash: |
+        rustup default nightly
+        cargo test --manifest-path=core/Cargo.toml
+        cd python
+        cargo test --no-default-features
+        tox -e py
+      displayName: Test on windows
+
+- job: MacOsWheel
+  pool: {vmImage: 'macOS-10.13'}
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+  strategy:
+    maxParallel: 2
+    matrix:
+        Python36:
+          PYTHON_VERSION: '3.6'
+        Python37:
+          PYTHON_VERSION: '3.7'
+  steps:
+  - template: ci/azure/install.yml
+    parameters:
+      python_version: $(PYTHON_VERSION)
+  - template: ci/azure/buildwheel.yml
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: wheelhouse
+      artifactName: MacOsWheel
+
+- job: WindowsWheel
+  pool: {vmImage: 'vs2017-win2016'}
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+  strategy:
+    maxParallel: 2
+    matrix:
+        Python36:
+          PYTHON_VERSION: '3.6'
+        Python37:
+          PYTHON_VERSION: '3.7'
+  steps:
+    - template: ci/azure/install.yml
+      parameters:
+        python_version: $(PYTHON_VERSION)
+    - template: ci/azure/buildwheel.yml
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: wheelhouse
+        artifactName: WindowsWheel
+
+- job: ManyLinux1Wheel
+  pool: {vmImage: 'Ubuntu-16.04'}
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+  steps:
+  - script: |
+      docker pull quay.io/pypa/manylinux1_x86_64
+      docker run --rm -v $PWD:/io quay.io/pypa/manylinux1_x86_64 /io/build-wheels.sh
+      mkdir wheelhouse
+      sudo mv python/dist/*manylinux1*.whl wheelhouse
+    displayName: Build manylinux1 wheel
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: wheelhouse
+      artifactName: ManyLinux1Wheel

@@ -11,7 +11,7 @@ cache:
 
 env:
   global:
-    - TRAVIS_RUST_VERSION=nightly
+    - RUST_VERSION=nightly
     - RUST_BACKTRACE=1
     - FEATURES=python3
 
@@ -27,13 +27,13 @@ addons:
       - libiberty-dev
 
 before_install:
-  - source ./ci/setup.sh
+  - source ./ci/travis/setup.sh
 
 install:
   - pip install setuptools-rust tox
 
 script:
-  - ./ci/test.sh
+  - ./ci/travis/test.sh
 
 notifications:
   email: false

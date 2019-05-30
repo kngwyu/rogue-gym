@@ -63,25 +63,3 @@ class StairRewardParallel(ParallelRogueEnv):
                 reward[i] += self.stair_reward
             self.current_levels[i] = level
         return state, reward, end, info
-
-
-class Parallel(ParallelRogueEnv):
-    def __init__(self, *args, **kwargs) -> None:
-        self.stair_reward = 50.0  # default reward
-        if 'stair_reward' in kwargs:
-            self.stair_reward = kwargs['stair_reward']
-            del kwargs['stair_reward']
-        super().__init__(*args, **kwargs)
-        self.current_levels = [1] * self.num_workers
-
-    def step(
-            self,
-            action: Union[Iterable[int], str]
-    ) -> Tuple[List[PlayerState], List[float], List[bool], List[dict]]:
-        state, reward, end, info = super().step(action)
-        for i in range(self.num_workers):
-            level = state[i].status['dungeon_level']
-            if self.current_levels[i] < level:
-                reward[i] += self.stair_reward
-            self.current_levels[i] = level
-        return state, reward, end, info

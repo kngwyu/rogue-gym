@@ -14,4 +14,3 @@ done
 for whl in dist/*.whl; do
     auditwheel repair "$whl" -w dist/
 done
-

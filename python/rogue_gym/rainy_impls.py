@@ -26,7 +26,7 @@ class RogueEnvExt(EnvExt):
     def state_dim(self) -> Tuple[int, ...]:
         return self._env.unwrapped.observation_space.shape
 
-    def state_to_array(self, state: PlayerState) -> ndarray:
+    def extract(self, state: PlayerState) -> ndarray:
         return self._env.unwrapped.image_setting.expand(state)
 
     def save_history(self, file_name: str) -> None:
@@ -61,5 +61,5 @@ class ParallelRogueEnvExt(ParallelEnv):
     def spec(self) -> EnvSpec:
         return self._spec
 
-    def states_to_array(self, states: Iterable[PlayerState]) -> Array:
+    def extract(self, states: Iterable[PlayerState]) -> Array:
         return np.stack([self._env.image_setting.expand(state) for state in states])

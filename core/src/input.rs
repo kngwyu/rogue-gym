@@ -303,10 +303,10 @@ mod keymap_test {
     }
 }
 
-#[cfg(feature = "termion")]
+#[cfg(unix)]
 use termion::event::Key as TermionKey;
 
-#[cfg(feature = "termion")]
+#[cfg(unix)]
 impl From<TermionKey> for Key {
     fn from(key: TermionKey) -> Key {
         use self::TermionKey::*;
