@@ -1,6 +1,6 @@
 # Rogue-Gym
 [![Buid Status](https://travis-ci.org/kngwyu/rogue-gym.svg?branch=master)](https://travis-ci.org/kngwyu/rogue-gym)
-[![Build Status](https://dev.azure.com/kngwyu/Github-CI/_apis/build/status/kngwyu.rogue-gym?branchName=master)](https://dev.azure.com/kngwyu/Github-CI/_build/latest?definitionId=1&branchName=master)
+[![Build Status](https://dev.azure.com/kngwyu/Rogue-Gym/_apis/build/status/kngwyu.rogue-gym?branchName=master)](https://dev.azure.com/kngwyu/Rogue-Gym/_build/latest?definitionId=1&branchName=master)
 [![PyPI version](https://badge.fury.io/py/rogue-gym.svg)](https://badge.fury.io/py/rogue-gym)
 
 A highly customizable roguelike game, with APIs for training AI agents.
