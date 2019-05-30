@@ -1,12 +1,14 @@
 # Rogue-Gym
 [![Buid Status](https://travis-ci.org/kngwyu/rogue-gym.svg?branch=master)](https://travis-ci.org/kngwyu/rogue-gym)
-[![PyPI version](https://img.shields.io/pypi/v/rogue_gym.svg)](https://pypi.org/project/rogue-gym/)
+[![Build Status](https://dev.azure.com/kngwyu/Github-CI/_apis/build/status/kngwyu.rogue-gym?branchName=master)](https://dev.azure.com/kngwyu/Github-CI/_build/latest?definitionId=1&branchName=master)
+[![PyPI version](https://badge.fury.io/py/rogue-gym.svg)](https://badge.fury.io/py/rogue-gym)
 
 A highly customizable roguelike game, with APIs for training AI agents.
 
-Now [the paper](https://arxiv.org/abs/1904.08129) is on arxiv, check it out!
+Now [the paper of Rogue-Gym](https://arxiv.org/abs/1904.08129) is on arxiv.
 
-We're now preparing for publishing the code for the experiment.
+We also published [the traning code](https://github.com/kngwyu/rogue-gym-agents-cog19)
+used for the paper.
 
 # Play as human
 
