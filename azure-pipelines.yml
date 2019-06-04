@@ -38,7 +38,7 @@ jobs:
   - task: PublishBuildArtifacts@1
     inputs:
       pathtoPublish: wheelhouse
-      artifactName: MacOsWheel
+      artifactName: Wheels
 
 - job: WindowsWheel
   pool: {vmImage: 'vs2017-win2016'}
@@ -58,7 +58,7 @@ jobs:
     - task: PublishBuildArtifacts@1
       inputs:
         pathtoPublish: wheelhouse
-        artifactName: WindowsWheel
+        artifactName: Wheels
 
 - job: ManyLinux1Wheel
   pool: {vmImage: 'Ubuntu-16.04'}
@@ -73,4 +73,4 @@ jobs:
   - task: PublishBuildArtifacts@1
     inputs:
       pathtoPublish: wheelhouse
-      artifactName: ManyLinux1Wheel
+      artifactName: Wheels
