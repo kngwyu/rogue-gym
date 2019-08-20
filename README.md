@@ -19,15 +19,22 @@ cargo run --release
 ```
 
 # Watch learned AI
+
+## Double DQN
 ![Double DQN gif](data/gif/ddqn-small-16.gif)
 
-Now this repository has Double DQN result.
+There's also the action history file, and you can watch it by
 
-```
+```bash
 cargo install --path ./devui --force
 cd data/learned/ddqn-minidungeon/
 rogue_gym_devui --config config.json replay --file best-actions.json --interval 100
 ```
+
+## PPO + IMPALA ResNet
+Code is at https://github.com/kngwyu/rogue-gym-agents-cog19
+
+![PPO Gif](data/gif/pporesnet-cog19-10seed.gif)
 
 # Python API
 
