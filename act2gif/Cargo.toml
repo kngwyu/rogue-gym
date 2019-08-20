@@ -7,10 +7,10 @@ workspace = "../"
 
 [dependencies]
 failure = "0.1.5"
-image = "0.21.0"
 rusttype = "0.7.5"
 tuple-map = "0.4.0"
 clap = "2.32.0"
+image = "0.22"
 
 [dependencies.rogue-gym-core]
 path = "../core/"
@@ -21,6 +21,6 @@ path = "../uilib/"
 version = "0.1.0"
 
 [dependencies.rect-iter]
-version = "0.2.2"
+version = "0.2.3"
 default-features = false
 features = ["image"]

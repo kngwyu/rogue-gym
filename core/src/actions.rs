@@ -64,7 +64,7 @@ pub(crate) fn process_action(
 fn after_turn(
     player: &mut Player,
     enemies: &mut EnemyHandler,
-    dungeon: &mut Dungeon,
+    dungeon: &mut dyn Dungeon,
     res: &mut Vec<Reaction>,
 ) -> GameResult<Option<UiState>> {
     for event in player.turn_passed(enemies.rng()) {
