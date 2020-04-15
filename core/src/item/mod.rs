@@ -12,16 +12,12 @@ use self::handler::Handler;
 use self::handler::ItemStat;
 pub use self::itembox::ItemBox;
 use self::weapon::{Weapon, WeaponStatus};
-use character::{Dice, HitPoint, Level};
-use error::*;
-use rng::RngHandle;
-use smallstr::SmallStr;
-use std::cell::UnsafeCell;
-use std::collections::BTreeMap;
-use std::fmt;
+use crate::character::{Dice, HitPoint, Level};
+use crate::tile::{Drawable, Tile};
+use crate::{error::*, rng::RngHandle, smallstr::SmallStr};
 use std::ops::{Deref, DerefMut};
 use std::rc::{Rc, Weak};
-use tile::{Drawable, Tile};
+use std::{cell::UnsafeCell, collections::BTreeMap, fmt};
 
 /// Item configuration
 #[derive(Clone, Debug, Default, Serialize, Deserialize, Eq, PartialEq)]

@@ -1,9 +1,9 @@
-use dungeon::{Coord, Direction};
+use crate::dungeon::{Coord, Direction};
+use crate::error::*;
+use crate::fenwick::FenwickSet;
+use crate::rng::RngHandle;
 use enum_iterator::IntoEnumIterator;
-use error::*;
-use fenwick::FenwickSet;
 use rect_iter::RectRange;
-use rng::RngHandle;
 use std::collections::HashSet;
 
 /// structure of maze
@@ -91,7 +91,7 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use error::ErrorId;
+    use crate::error::ErrorId;
     use rect_iter::GetMut2D;
     #[test]
     #[ignore]

@@ -1,16 +1,13 @@
 //! rogue floor
 use super::{passages, rooms, Address, Config, Room, Surface};
-use dungeon::{Cell, CellAttr, Coord, Direction, Field, Positioned, X, Y};
-use enemies::EnemyHandler;
+use crate::dungeon::{Cell, CellAttr, Coord, Direction, Field, Positioned, X, Y};
+use crate::enemies::EnemyHandler;
+use crate::item::{ItemHandler, ItemToken};
+use crate::{error::*, fenwick::FenwickSet, rng::RngHandle, GameMsg};
 use enum_iterator::IntoEnumIterator;
-use error::*;
-use fenwick::FenwickSet;
-use item::{ItemHandler, ItemToken};
 use ndarray::Array2;
 use rect_iter::{Get2D, GetMut2D};
-use rng::RngHandle;
 use std::collections::{HashMap, HashSet, VecDeque};
-use GameMsg;
 
 /// representation of 'floor'
 #[derive(Clone, Debug, Default)]

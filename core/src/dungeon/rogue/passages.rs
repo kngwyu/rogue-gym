@@ -1,11 +1,13 @@
 use super::{Room, RoomKind, Surface};
-use dungeon::{Coord, Direction, Positioned, X, Y};
+use crate::dungeon::{Coord, Direction, Positioned, X, Y};
+use crate::{
+    error::*,
+    fenwick::FenwickSet,
+    rng::{RngHandle, SliceRandom},
+};
 use enum_iterator::IntoEnumIterator;
-use error::*;
-use fenwick::FenwickSet;
 use fixedbitset::FixedBitSet;
 use rect_iter::{IntoTuple2, RectRange};
-use rng::{RngHandle, SliceRandom};
 use std::collections::HashMap;
 use tuple_map::TupleMap2;
 
@@ -295,10 +297,10 @@ fn test_inclusive_edges() {
 #[cfg(test)]
 mod test {
     use super::*;
-    use dungeon::rogue::rooms;
+    use crate::dungeon::rogue::rooms;
+    use crate::tile::Drawable;
     use rect_iter::{Get2D, GetMut2D};
     use std::collections::VecDeque;
-    use tile::Drawable;
     fn to_buffer() -> Vec<Vec<Surface>> {
         let rooms = rooms::test::gen(10);
         let mut buffer = rooms::test::draw_to_buffer(&rooms);

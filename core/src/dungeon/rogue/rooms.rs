@@ -1,10 +1,8 @@
 use super::{maze, Config, Surface};
-use dungeon::{Coord, Positioned, X, Y};
-use error::*;
-use fenwick::FenwickSet;
+use crate::dungeon::{Coord, Positioned, X, Y};
+use crate::{error::*, fenwick::FenwickSet, rng::RngHandle};
 use fixedbitset::FixedBitSet;
 use rect_iter::{IntoTuple2, RectRange};
-use rng::RngHandle;
 use tuple_map::TupleMap2;
 
 /// type of room
@@ -271,9 +269,9 @@ pub(super) fn make_room(
 #[cfg(test)]
 pub(super) mod test {
     use super::*;
-    use dungeon::Direction;
+    use crate::dungeon::Direction;
+    use crate::tile::Drawable;
     use rect_iter::GetMut2D;
-    use tile::Drawable;
     pub fn gen(level: u32) -> Vec<Room> {
         let mut config = Config::default();
         config.maze_rate_inv = 5;

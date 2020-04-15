@@ -4,14 +4,11 @@ mod field;
 mod rogue;
 pub use self::coord::{Coord, Direction, Positioned, X, Y};
 pub use self::field::{Cell, CellAttr, Field};
-use character::player::Status as PlayerStatus;
-use character::EnemyHandler;
-use error::*;
-use item::{ItemHandler, ItemToken};
+use crate::character::{player::Status as PlayerStatus, EnemyHandler};
+use crate::item::{ItemHandler, ItemToken};
+use crate::{error::*, tile::Tile, GameInfo, GameMsg, GlobalConfig};
 use ndarray::Array2;
 use smallvec::SmallVec;
-use tile::Tile;
-use {GameInfo, GameMsg, GlobalConfig};
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(tag = "style")]

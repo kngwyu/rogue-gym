@@ -4,9 +4,11 @@ use crate::error::GameResult;
 use crate::item::{
     armor, food::Food, itembox::ItemBox, weapon, InitItem, Item, ItemHandler, ItemKind, ItemToken,
 };
-use crate::rng::RngHandle;
-use crate::tile::{Drawable, Tile};
-use smallstr::SmallStr;
+use crate::{
+    rng::RngHandle,
+    smallstr::SmallStr,
+    tile::{Drawable, Tile},
+};
 use std::{cmp, fmt};
 use tuple_map::TupleMap2;
 

@@ -5,18 +5,18 @@ pub mod rooms;
 
 use self::floor::Floor;
 pub use self::rooms::{Room, RoomKind};
-use super::{Coord, Direction, Dungeon as DungeonTrait, DungeonPath, MoveResult, Positioned, X, Y};
-use character::{player::Status as PlayerStatus, EnemyHandler};
+use crate::character::{player::Status as PlayerStatus, EnemyHandler};
+use crate::dungeon::{
+    Coord, Direction, Dungeon as DungeonTrait, DungeonPath, MoveResult, Positioned, X, Y,
+};
+use crate::item::{ItemHandler, ItemToken};
+use crate::tile::{Drawable, Tile};
+use crate::{error::*, rng::RngHandle, GameInfo, GameMsg, GlobalConfig};
 use enum_iterator::IntoEnumIterator;
-use error::*;
-use item::{ItemHandler, ItemToken};
 use ndarray::Array2;
 use rect_iter::{Get2D, GetMut2D, RectRange};
-use rng::RngHandle;
 use std::collections::VecDeque;
-use tile::{Drawable, Tile};
 use tuple_map::TupleMap2;
-use {GameInfo, GameMsg, GlobalConfig};
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Config {
