@@ -1,6 +1,7 @@
 //! Symbol representation of tiles for neural network
 use crate::tile::Tile;
 use rect_iter::Get2D;
+use thiserror::Error;
 
 /// Symbol
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
@@ -43,8 +44,8 @@ pub fn tile_to_sym(t: u8) -> Option<u8> {
     Symbol::from_tile(Tile::from(t)).map(|s| s.0)
 }
 
-#[derive(Clone, Copy, Debug, Fail)]
-#[fail(display = "Invalid tile: {}, while max is {}", _0, _1)]
+#[derive(Clone, Copy, Debug, Error)]
+#[error("Invalid tile: {}, while max is {}", _0, _1)]
 pub struct InvalidTileError(Tile, u8);
 
 pub fn construct_symbol_map<'c>(

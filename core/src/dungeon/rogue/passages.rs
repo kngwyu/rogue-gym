@@ -5,6 +5,7 @@ use crate::{
     fenwick::FenwickSet,
     rng::{RngHandle, SliceRandom},
 };
+use anyhow::Context;
 use enum_iterator::IntoEnumIterator;
 use fixedbitset::FixedBitSet;
 use rect_iter::{IntoTuple2, RectRange};
@@ -128,7 +129,7 @@ where
         .chain(turn_start.direc_iter(turn_dir, |cd| cd != turn_end))
         .chain(turn_end.direc_iter(direction, |cd| cd != end))
         .try_for_each(|cd| register(Positioned(cd, Surface::Passage)))
-        .chain_err(|| "passages::connect_2rooms")
+        .context("passages::connect_2rooms")
 }
 
 fn door_kind(room: &Room) -> Surface {
@@ -318,7 +319,7 @@ mod test {
                         *buf = surface;
                         Ok(())
                     })
-                    .into_chained(|| "passages::test::to_buffer")
+                    .context("passages::test::to_buffer")
             },
         )
         .unwrap();

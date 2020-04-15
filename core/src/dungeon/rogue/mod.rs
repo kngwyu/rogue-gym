@@ -12,6 +12,7 @@ use crate::dungeon::{
 use crate::item::{ItemHandler, ItemToken};
 use crate::tile::{Drawable, Tile};
 use crate::{error::*, rng::RngHandle, GameInfo, GameMsg, GlobalConfig};
+use anyhow::{bail, Context};
 use enum_iterator::IntoEnumIterator;
 use ndarray::Array2;
 use rect_iter::{Get2D, GetMut2D, RectRange};
@@ -236,11 +237,9 @@ impl DungeonTrait for Dungeon {
         let address = Address::from_path(path);
         const ERR_STR: &str = "[rogue::Dungeon::move_player]";
         if address.level != self.level {
-            return Err(ErrorId::MaybeBug.into_with(|| ERR_STR));
+            bail!(ErrorKind::MaybeBug(ERR_STR));
         }
-        self.current_floor
-            .player_out(address.cd)
-            .chain_err(|| ERR_STR)?;
+        self.current_floor.player_out(address.cd).context(ERR_STR)?;
         let cd = address.cd + direction.to_cd();
         let address = Address {
             level: self.level,
@@ -248,13 +247,13 @@ impl DungeonTrait for Dungeon {
         };
         self.current_floor
             .player_in(cd, false, enemies)
-            .chain_err(|| ERR_STR)?;
+            .context(ERR_STR)?;
         Ok(address.into())
     }
     fn search(&mut self, path: &DungeonPath) -> GameResult<Vec<GameMsg>> {
         let address = Address::from_path(path);
         if address.level != self.level {
-            return Err(ErrorId::MaybeBug.into_with(|| "[rogue::Dungeon::search]"));
+            bail!(ErrorKind::MaybeBug("[rogue::Dungeon::search]"));
         }
         Ok(self
             .current_floor
@@ -276,7 +275,7 @@ impl DungeonTrait for Dungeon {
             .current_floor
             .field
             .size_ytrimed()
-            .ok_or_else(|| ErrorId::MaybeBug.into_with(|| ERR_STR))?;
+            .ok_or(ErrorKind::MaybeBug(ERR_STR))?;
         range.into_iter().try_for_each(|cd| {
             let cd = Coord::from(cd);
             let cell = self.current_floor.field.try_get_p(cd)?;
@@ -422,7 +421,7 @@ impl Dungeon {
         };
         dungeon
             .new_level_(game_info, item_handle, enemies, true)
-            .chain_err(|| "rogue::Dungeon::new")?;
+            .context("rogue::Dungeon::new")?;
         Ok(dungeon)
     }
 
@@ -442,15 +441,15 @@ impl Dungeon {
             self.max_level = level;
         }
         let (width, height) = (self.config_global.width, self.config_global.height);
-        let mut floor = Floor::gen_floor(level, &self.config, width, height, &mut self.rng)
-            .chain_err(|| ERR_STR)?;
+        let mut floor =
+            Floor::gen_floor(level, &self.config, width, height, &mut self.rng).context(ERR_STR)?;
         debug!("[Dungeon::new_level] field: {}", floor.field);
         // setup gold
         let set_gold = !game_info.is_cleared || level >= self.max_level;
         debug!("[Dungeon::new_level] set_gold: {}", set_gold);
         floor.setup_items(level, item_handle, set_gold, &mut self.rng);
         // place stair
-        floor.setup_stair(&mut self.rng).chain_err(|| ERR_STR)?;
+        floor.setup_stair(&mut self.rng).context(ERR_STR)?;
         // place enemies
         if !is_initial {
             enemies.remove_enemies();

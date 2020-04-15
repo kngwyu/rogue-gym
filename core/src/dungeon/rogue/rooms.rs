@@ -1,6 +1,7 @@
 use super::{maze, Config, Surface};
 use crate::dungeon::{Coord, Positioned, X, Y};
 use crate::{error::*, fenwick::FenwickSet, rng::RngHandle};
+use anyhow::{bail, Context};
 use fixedbitset::FixedBitSet;
 use rect_iter::{IntoTuple2, RectRange};
 use tuple_map::TupleMap2;
@@ -70,11 +71,11 @@ impl Room {
                     };
                     register(Positioned(cd.into(), surface))
                 })
-                .chain_err(|| "Room::draw"),
+                .context("Room::draw"),
             RoomKind::Maze(ref maze) => maze
                 .passages()
                 .try_for_each(|cd| register(Positioned(cd, Surface::Passage)))
-                .chain_err(|| "Room::draw"),
+                .context("Room::draw"),
             RoomKind::Empty { .. } => Ok(()),
         }
     }
@@ -244,7 +245,7 @@ pub(super) fn make_room(
                 passages.insert(id);
                 Ok(())
             } else {
-                Err(ErrorId::MaybeBug.into_with(|| "dig_maze produced invalid Coordinate!"))
+                bail!(ErrorKind::MaybeBug("dig_maze produced invalid Coordinate!"));
             }
         })?;
         let maze = maze::Maze { range, passages };

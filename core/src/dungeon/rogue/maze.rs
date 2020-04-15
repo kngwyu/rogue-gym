@@ -2,6 +2,7 @@ use crate::dungeon::{Coord, Direction};
 use crate::error::*;
 use crate::fenwick::FenwickSet;
 use crate::rng::RngHandle;
+use anyhow::Context;
 use enum_iterator::IntoEnumIterator;
 use rect_iter::RectRange;
 use std::collections::HashSet;
@@ -43,11 +44,10 @@ where
     F: FnMut(Coord) -> GameResult<()>,
 {
     let start: Coord = range.lower_left().into();
-    register(start).chain_err(|| "dungeon::rogue::maze::dig_maze")?;
+    register(start).context("dungeon::rogue::maze::dig_maze")?;
     let mut used = HashSet::new();
     used.insert(start);
-    dig_impl(&range, rng, &mut register, &mut used, start)
-        .chain_err(|| "dungeon::rogue::maze::dig_maze")
+    dig_impl(&range, rng, &mut register, &mut used, start).context("dungeon::rogue::maze::dig_maze")
 }
 
 /// implementation of maze digging by DFS
@@ -91,7 +91,7 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::error::ErrorId;
+    use crate::error::ErrorKind;
     use rect_iter::GetMut2D;
     #[test]
     #[ignore]
@@ -101,7 +101,7 @@ mod test {
         let mut buffer = vec![vec![false; 80]; 24];
         dig_maze(range.clone(), &mut rng, |cd| {
             if !range.contains(cd) {
-                Err(ErrorId::MaybeBug.into_with(|| "dig_maze produced invalid Coordinate!"))
+                anyhow::bail!(ErrorKind::MaybeBug("dig_maze produced invalid Coordinate!"));
             } else {
                 *buffer.get_mut_p(cd) = true;
                 Ok(())

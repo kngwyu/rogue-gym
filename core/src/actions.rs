@@ -7,6 +7,7 @@ use crate::error::*;
 use crate::item::{itembox::Entry as ItemEntry, ItemHandler, ItemToken};
 use crate::ui::UiState;
 use crate::{GameInfo, GameMsg, Reaction};
+use anyhow::{bail, Context};
 use std::iter;
 use std::rc::Rc;
 
@@ -24,7 +25,7 @@ pub(crate) fn process_action(
         Action::DownStair => {
             if dungeon.is_downstair(&player.pos) {
                 new_level(info, dungeon, item, player, enemies, false)
-                    .chain_err(|| "action::process_action")?;
+                    .context("action::process_action")?;
                 out.extend_from_slice(&[Reaction::Redraw, Reaction::StatusUpdated]);
             } else {
                 out.push(Reaction::Notify(GameMsg::NoDownStair));
@@ -32,7 +33,7 @@ pub(crate) fn process_action(
             ui = after_turn(player, enemies, dungeon, &mut out)?;
         }
         Action::UpStair => {
-            return Err(ErrorId::Unimplemented.into_with(|| "UpStair Command is unimplemented"))
+            bail!(ErrorKind::Unimplemented("UpStair Command"));
         }
         Action::Move(d) => {
             out.append(&mut move_player(d, dungeon, player, enemies)?.0);
@@ -126,11 +127,11 @@ pub(crate) fn new_level(
     if !is_init {
         dungeon
             .new_level(info, item, enemies)
-            .chain_err(|| "action::new_level")?;
+            .context("action::new_level")?;
     }
-    player.pos = dungeon
-        .select_cell(true)
-        .ok_or_else(|| ErrorId::MaybeBug.into_with(|| "action::new_level No space for player!"))?;
+    player.pos = dungeon.select_cell(true).ok_or(ErrorKind::MaybeBug(
+        "action::new_level No space for player!",
+    ))?;
     dungeon.enter_room(&player.pos, enemies)
 }
 
@@ -178,12 +179,12 @@ fn move_player(
     }
     let new_pos = dungeon
         .move_player(&player.pos, direction, enemies)
-        .chain_err(|| "actions::move_player")?;
+        .context("actions::move_player")?;
     player.pos = new_pos;
     player.run(true);
     let mut done = false;
     let mut res = vec![Reaction::Redraw];
-    if let Some(msg) = get_item(dungeon, player).chain_err(|| "in actions::move_player")? {
+    if let Some(msg) = get_item(dungeon, player).context("in actions::move_player")? {
         res.push(Reaction::Notify(msg));
         res.push(Reaction::StatusUpdated);
         done = true;

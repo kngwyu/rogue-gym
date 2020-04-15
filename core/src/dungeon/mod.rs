@@ -7,6 +7,7 @@ pub use self::field::{Cell, CellAttr, Field};
 use crate::character::{player::Status as PlayerStatus, EnemyHandler};
 use crate::item::{ItemHandler, ItemToken};
 use crate::{error::*, tile::Tile, GameInfo, GameMsg, GlobalConfig};
+use anyhow::Context;
 use ndarray::Array2;
 use smallvec::SmallVec;
 
@@ -49,7 +50,7 @@ impl DungeonStyle {
                     enemies,
                     seed,
                 )
-                .chain_err(|| "DungeonStyle::build")?;
+                .context("DungeonStyle::build")?;
                 Ok(Box::new(dungeon))
             }
             _ => unimplemented!(),

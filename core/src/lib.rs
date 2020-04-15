@@ -6,25 +6,11 @@ extern crate derive_more;
 #[macro_use]
 extern crate enum_iterator;
 #[macro_use]
-extern crate failure;
-extern crate fixedbitset;
-extern crate ndarray;
-extern crate num_traits;
-#[macro_use]
 extern crate log;
-extern crate rand;
-extern crate rand_xorshift;
-extern crate rect_iter;
-extern crate regex;
 #[macro_use]
 extern crate serde;
-extern crate serde_json;
-extern crate smallvec;
-#[cfg(unix)]
-extern crate termion;
 #[cfg(feature = "bench")]
 extern crate test;
-extern crate tuple_map;
 
 mod actions;
 use std::fs::File;
@@ -41,8 +27,9 @@ pub mod symbol;
 pub mod tile;
 pub mod ui;
 
-use character::{enemies, player, EnemyHandler, Player};
-use dungeon::{Direction, Dungeon, DungeonStyle, Positioned, X, Y};
+use crate::character::{enemies, player, EnemyHandler, Player};
+use crate::dungeon::{Direction, Dungeon, DungeonStyle, Positioned, X, Y};
+use anyhow::{bail, Context};
 use error::*;
 use input::{InputCode, Key, KeyMap};
 use item::{ItemHandler, ItemKind};
@@ -156,10 +143,10 @@ pub const MIN_HEIGHT: i32 = 16;
 impl GameConfig {
     /// construct Game configuration from json string
     pub fn from_json(json: &str) -> GameResult<Self> {
-        serde_json::from_str(json).into_chained(|| "GameConfig::from_json")
+        serde_json::from_str(json).context("GameConfig::from_json")
     }
     pub fn to_json(&self) -> GameResult<String> {
-        serde_json::to_string_pretty(self).into_chained(|| "GameConfig::to_json")
+        serde_json::to_string_pretty(self).context("GameConfig::to_json")
     }
     pub fn symbol_max(&self) -> Option<symbol::Symbol> {
         match self.enemies.tile_max() {
@@ -179,16 +166,22 @@ impl GameConfig {
         };
         let (w, h) = (self.width, self.height);
         if w < MIN_WIDTH {
-            return Err(ErrorId::InvalidSetting.into_with(|| "screen width is too narrow"));
+            bail!(ErrorKind::InvalidSetting(
+                "screen width is too narrow".into()
+            ));
         }
         if w > MAX_WIDTH {
-            return Err(ErrorId::InvalidSetting.into_with(|| "screen width is too wide"));
+            bail!(ErrorKind::InvalidSetting("screen width is too wide".into()));
         }
         if h < MIN_HEIGHT {
-            return Err(ErrorId::InvalidSetting.into_with(|| "screen height is too narrow"));
+            bail!(ErrorKind::InvalidSetting(
+                "screen height is too narrow".into()
+            ));
         }
         if h > MAX_HEIGHT {
-            return Err(ErrorId::InvalidSetting.into_with(|| "screen height is too wide"));
+            bail!(ErrorKind::InvalidSetting(
+                "screen height is too wide".into()
+            ));
         }
         Ok(GlobalConfig {
             width: w.into(),
@@ -201,7 +194,7 @@ impl GameConfig {
     pub fn build(self) -> GameResult<RunTime> {
         const ERR_STR: &str = "GameConfig::build";
         let game_info = GameInfo::new();
-        let config = self.to_global().chain_err(|| ERR_STR)?;
+        let config = self.to_global().context(ERR_STR)?;
         debug!("Building dungeon with seed {}", config.seed);
         // TODO: invalid checking
         let mut item = ItemHandler::new(self.item.clone(), config.seed);
@@ -209,10 +202,10 @@ impl GameConfig {
         let mut dungeon = self
             .dungeon
             .build(&config, &mut item, &mut enemies, &game_info, config.seed)
-            .chain_err(|| ERR_STR)?;
+            .context(ERR_STR)?;
         // TODO: invalid checking
         let mut player = self.player.build();
-        player.init_items(&mut item).chain_err(|| ERR_STR)?;
+        player.init_items(&mut item).context(ERR_STR)?;
         actions::new_level(
             &game_info,
             &mut *dungeon,
@@ -221,7 +214,7 @@ impl GameConfig {
             &mut enemies,
             true,
         )
-        .chain_err(|| ERR_STR)?;
+        .context(ERR_STR)?;
         Ok(RunTime {
             game_info,
             config,
@@ -263,11 +256,9 @@ impl RunTime {
                 self.ui = ui.clone();
                 Ok(vec![Reaction::UiTransition(ui)])
             }
-            System::Save => Err(ErrorId::Unimplemented.into_with(|| {
-                "[rogue_gym_core::RunTime::check_interuppting] save command is unimplemented"
-            })),
-            _ => Err(ErrorId::IgnoredInput(InputCode::Sys(input))
-                .into_with(|| "rogue_gym_core::RunTime::check_interuppting")),
+            System::Save => bail!(ErrorKind::Unimplemented("Save command")),
+            _ => Err(ErrorKind::IgnoredInput(InputCode::Sys(input)))
+                .context("rogue_gym_core::RunTime::check_interuppting"),
         }
     }
     /// take draw function F and draw screen with it
@@ -296,36 +287,34 @@ impl RunTime {
     pub fn react_to_input(&mut self, input: InputCode) -> GameResult<Vec<Reaction>> {
         trace!("[react_to_input] input: {:?} ui: {:?}", input, self.ui);
         self.saved_inputs.push(input);
-        let (next_ui, res) =
-            match self.ui {
-                UiState::Dungeon => match input {
-                    InputCode::Sys(sys) => (None, self.check_interrupting(sys)?),
-                    InputCode::Act(act) | InputCode::Both { act, .. } => actions::process_action(
-                        act,
-                        &mut self.game_info,
-                        &mut *self.dungeon,
-                        &mut self.item,
-                        &mut self.player,
-                        &mut self.enemies,
-                    )?,
-                },
-                UiState::Mordal(ref mut kind) => match input {
-                    InputCode::Sys(sys) | InputCode::Both { sys, .. } => {
-                        let res = kind.process(sys);
-                        match res {
-                            MordalMsg::Cancel => (
-                                Some(UiState::Dungeon),
-                                vec![Reaction::UiTransition(UiState::Dungeon)],
-                            ),
-                            MordalMsg::Save => bail!(ErrorId::Unimplemented
-                                .into_with(|| "Save command is unimplemented")),
-                            MordalMsg::Quit => (None, vec![Reaction::Notify(GameMsg::Quit)]),
-                            MordalMsg::None => (None, vec![]),
-                        }
+        let (next_ui, res) = match self.ui {
+            UiState::Dungeon => match input {
+                InputCode::Sys(sys) => (None, self.check_interrupting(sys)?),
+                InputCode::Act(act) | InputCode::Both { act, .. } => actions::process_action(
+                    act,
+                    &mut self.game_info,
+                    &mut *self.dungeon,
+                    &mut self.item,
+                    &mut self.player,
+                    &mut self.enemies,
+                )?,
+            },
+            UiState::Mordal(ref mut kind) => match input {
+                InputCode::Sys(sys) | InputCode::Both { sys, .. } => {
+                    let res = kind.process(sys);
+                    match res {
+                        MordalMsg::Cancel => (
+                            Some(UiState::Dungeon),
+                            vec![Reaction::UiTransition(UiState::Dungeon)],
+                        ),
+                        MordalMsg::Save => bail!(ErrorKind::Unimplemented("Save command")),
+                        MordalMsg::Quit => (None, vec![Reaction::Notify(GameMsg::Quit)]),
+                        MordalMsg::None => (None, vec![]),
                     }
-                    InputCode::Act(_) => bail!(ErrorId::IgnoredInput(input)),
-                },
-            };
+                }
+                InputCode::Act(_) => bail!(ErrorKind::IgnoredInput(input)),
+            },
+        };
         if let Some(next_ui) = next_ui {
             self.ui = next_ui;
         }
@@ -334,7 +323,7 @@ impl RunTime {
     pub fn react_to_key(&mut self, key: Key) -> GameResult<Vec<Reaction>> {
         match self.keymap.get(key) {
             Some(i) => self.react_to_input(i),
-            None => Err(ErrorId::InvalidInput(key).into()),
+            None => Err(ErrorKind::InvalidInput(key).into()),
         }
     }
     pub fn is_cancel(&self, key: Key) -> GameResult<bool> {
@@ -348,7 +337,7 @@ impl RunTime {
                 },
                 _ => Ok(false),
             },
-            None => Err(ErrorId::InvalidInput(key).into()),
+            None => Err(ErrorKind::InvalidInput(key).into()),
         }
     }
     pub fn screen_size(&self) -> (X, Y) {
@@ -371,7 +360,7 @@ impl RunTime {
     }
     pub fn saved_inputs_as_json(&self) -> GameResult<String> {
         serde_json::to_string_pretty(&self.saved_inputs)
-            .into_chained(|| "Runtime::saved_inputs_json: Failed to serialize")
+            .context("Runtime::saved_inputs_json: Failed to serialize")
     }
     pub fn history(&self, player_stat: &player::Status) -> Option<Array2<bool>> {
         self.dungeon.get_history(&player_stat)
@@ -383,7 +372,7 @@ impl RunTime {
 }
 
 pub fn json_to_inputs(json: &str) -> GameResult<Vec<InputCode>> {
-    serde_json::from_str(json).into_chained(|| "json_to_inputs: Failed to deserialize")
+    serde_json::from_str(json).context("json_to_inputs: Failed to deserialize")
 }
 
 /// Reaction to user input
