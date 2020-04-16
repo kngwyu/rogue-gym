@@ -1,7 +1,7 @@
 [package]
-authors = ["kngwyu <yuji.kngw.80s.revive@gmail.com>"]
 name = "rogue-gym-core"
 version = "0.1.0"
+authors = ["kngwyu <yuji.kngw.80s.revive@gmail.com>"]
 edition = "2018"
 
 [dependencies]

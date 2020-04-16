@@ -1,20 +1,9 @@
-extern crate chrono;
-extern crate clap;
-#[macro_use]
-extern crate failure;
-extern crate fern;
 #[macro_use]
 extern crate log;
-extern crate rogue_gym_core;
-extern crate rogue_gym_uilib;
-extern crate termion;
-extern crate tuple_map;
 
-pub mod error;
 pub mod screen;
-use error::*;
-use rogue_gym_core::input::InputCode;
-use rogue_gym_core::{GameConfig, RunTime};
+use anyhow::{bail, Context};
+use rogue_gym_core::{error::GameResult, input::InputCode, GameConfig, RunTime};
 use rogue_gym_uilib::{process_reaction, Screen, Transition};
 use screen::{RawTerm, TermScreen};
 use std::io;
@@ -48,7 +37,7 @@ pub fn play_game(config: GameConfig, is_default: bool) -> GameResult<RunTime> {
     let mut pending = false;
     'outer: for keys in stdin.keys() {
         screen.clear_notification()?;
-        let key = keys.into_chained(|| "in play_game")?;
+        let key = keys.context("in play_game")?;
         if pending {
             if runtime.is_cancel(key.into())? {
                 pending = screen.display_msg()?;
@@ -65,8 +54,8 @@ pub fn play_game(config: GameConfig, is_default: bool) -> GameResult<RunTime> {
             }
         };
         for reaction in res {
-            let result = process_reaction(&mut screen, &mut runtime, reaction)
-                .chain_err(|| "in play_game")?;
+            let result =
+                process_reaction(&mut screen, &mut runtime, reaction).context("in play_game")?;
             match result {
                 Transition::Exit => break 'outer,
                 Transition::None => {}
@@ -89,7 +78,7 @@ pub fn show_replay(config: GameConfig, replay: Vec<InputCode>, interval_ms: u64)
     });
     let stdin = io::stdin();
     for key in stdin.keys() {
-        let key = key.into_chained(|| "in show_replay")?;
+        let key = key.context("in show_replay")?;
         let mut end = false;
         let res = match key {
             Key::Char('E') | Key::Char('Q') | Key::Char('e') | Key::Char('q') | Key::Esc => {
@@ -158,8 +147,8 @@ fn show_replay_(
             screen.message(format!("{} turns left", replay.len()))?;
         }
         for reaction in res {
-            let result = process_reaction(&mut screen, &mut runtime, reaction)
-                .chain_err(|| "in show_replay")?;
+            let result =
+                process_reaction(&mut screen, &mut runtime, reaction).context("in show_replay")?;
             match result {
                 Transition::Exit => return Ok(()),
                 Transition::None => {}

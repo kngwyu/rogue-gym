@@ -1,18 +1,9 @@
-#[macro_use]
-extern crate failure;
-extern crate ndarray;
-extern crate numpy;
-extern crate pyo3;
-extern crate rect_iter;
-extern crate rogue_gym_core;
-#[cfg(unix)]
-extern crate rogue_gym_devui;
-
-mod fearures;
+mod flags;
 mod state_impls;
 mod thread_impls;
 
-use fearures::{MessageFlagInner, StatusFlagInner};
+use anyhow::Context;
+use flags::{MessageFlagInner, StatusFlagInner};
 use ndarray::{Array2, Axis, Zip};
 use numpy::PyArray3;
 use pyo3::{
@@ -75,7 +66,7 @@ impl PlayerState {
             *self
                 .map
                 .try_get_mut_p(cd)
-                .into_chained(|| "in python::GameState::react")? = tile.to_byte();
+                .context("in python::GameState::react")? = tile.to_byte();
             Ok(())
         })
     }
@@ -243,15 +234,14 @@ struct GameState {
 #[pymethods]
 impl GameState {
     #[new]
-    fn __new__(obj: &PyRawObject, max_steps: usize, config_str: Option<String>) -> PyResult<()> {
+    fn __new__(max_steps: usize, config_str: Option<String>) -> PyResult<Self> {
         let config = if let Some(cfg) = config_str {
             pyresult_with(GameConfig::from_json(&cfg), "Failed to parse config")?
         } else {
             GameConfig::default()
         };
         let inner = pyresult(GameStateImpl::new(config.clone(), max_steps))?;
-        obj.init(GameState { inner, config });
-        Ok(())
+        Ok(GameState { inner, config })
     }
     fn screen_size(&self) -> (i32, i32) {
         (self.config.height, self.config.width)
@@ -297,12 +287,7 @@ struct ParallelGameState {
 #[pymethods]
 impl ParallelGameState {
     #[new]
-    fn __new__(
-        obj: &PyRawObject,
-        py: Python,
-        max_steps: usize,
-        configs: Vec<String>,
-    ) -> PyResult<()> {
+    fn new(py: Python, max_steps: usize, configs: Vec<String>) -> PyResult<Self> {
         let configs = {
             let mut res = vec![];
             for cfg in configs {
@@ -321,12 +306,11 @@ impl ParallelGameState {
         let cloned = configs.clone();
         let conductor = py.allow_threads(move || ThreadConductor::new(cloned, max_steps));
         let conductor = pyresult(conductor)?;
-        obj.init(ParallelGameState {
+        Ok(Self {
             conductor,
             configs,
             symbols,
-        });
-        Ok(())
+        })
     }
     fn screen_size(&self) -> (i32, i32) {
         (self.configs[0].height, self.configs[0].width)
