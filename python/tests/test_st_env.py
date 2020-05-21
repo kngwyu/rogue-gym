@@ -1,5 +1,11 @@
 """test for StairRewardEnv"""
-from rogue_gym.envs import DungeonType, ImageSetting, RogueEnv, StairRewardEnv, StatusFlag
+from rogue_gym.envs import (
+    DungeonType,
+    ImageSetting,
+    RogueEnv,
+    StairRewardEnv,
+    StatusFlag,
+)
 from data import CMD_STR3, CMD_STR4
 
 CONFIG = {
@@ -7,14 +13,8 @@ CONFIG = {
     "height": 16,
     "seed": 5,
     "hide_dungeon": False,
-    "dungeon": {
-        "style": "rogue",
-        "room_num_x": 2,
-        "room_num_y": 2,
-    },
-    "enemies": {
-        "enemies": [],
-    },
+    "dungeon": {"style": "rogue", "room_num_x": 2, "room_num_y": 2,},
+    "enemies": {"enemies": [],},
 }
 
 EXPAND = ImageSetting(

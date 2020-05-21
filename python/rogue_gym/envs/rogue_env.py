@@ -11,17 +11,17 @@ from rogue_gym_python._rogue_gym import GameState, PlayerState
 
 
 class StatusFlag(Flag):
-    EMPTY         = 0b000_000_000
+    EMPTY = 0b000_000_000
     DUNGEON_LEVEL = 0b000_000_001
-    HP_CURRENT    = 0b000_000_010
-    HP_MAX        = 0b000_000_100
-    STR_CURRENT   = 0b000_001_000
-    STR_MAX       = 0b000_010_000
-    DEFENSE       = 0b000_100_000
-    PLAYER_LEVEL  = 0b001_000_000
-    EXP           = 0b010_000_000
-    HUNGER        = 0b100_000_000
-    FULL          = 0b111_111_111
+    HP_CURRENT = 0b000_000_010
+    HP_MAX = 0b000_000_100
+    STR_CURRENT = 0b000_001_000
+    STR_MAX = 0b000_010_000
+    DEFENSE = 0b000_100_000
+    PLAYER_LEVEL = 0b001_000_000
+    EXP = 0b010_000_000
+    HUNGER = 0b100_000_000
+    FULL = 0b111_111_111
 
     def count_one(self) -> int:
         s, val = 0, self.value
@@ -56,7 +56,7 @@ class StatusFlag(Flag):
 
 
 class DungeonType(Enum):
-    GRAY   = 1
+    GRAY = 1
     SYMBOL = 2
 
 
@@ -73,10 +73,7 @@ class ImageSetting(NamedTuple):
 
     def detect_space(self, h: int, w: int, symbols: int) -> gym.Space:
         return spaces.box.Box(
-            low=0,
-            high=1,
-            shape=(self.dim(symbols), h, w),
-            dtype=np.float32,
+            low=0, high=1, shape=(self.dim(symbols), h, w), dtype=np.float32,
         )
 
     def expand(self, state: PlayerState) -> ndarray:
@@ -95,54 +92,97 @@ class ImageSetting(NamedTuple):
 
 
 class RogueEnv(gym.Env):
-    metadata = {'render.modes': ['human', 'ascii']}
+    metadata = {"render.modes": ["human", "ascii"]}
 
     # defined in core/src/tile.rs
     SYMBOLS = [
-        ' ', '@', '#', '.', '-',
-        '%', '+', '^', '!', '?',
-        ']', ')', '/', '*', ':',
-        '=', ',', 'A', 'B', 'C',
-        'D', 'E', 'F', 'G', 'H',
-        'I', 'J', 'K', 'L', 'M',
-        'N', 'O', 'P', 'Q', 'R',
-        'S', 'T', 'U', 'V', 'W',
-        'X', 'Y', 'Z',
+        " ",
+        "@",
+        "#",
+        ".",
+        "-",
+        "%",
+        "+",
+        "^",
+        "!",
+        "?",
+        "]",
+        ")",
+        "/",
+        "*",
+        ":",
+        "=",
+        ",",
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "I",
+        "J",
+        "K",
+        "L",
+        "M",
+        "N",
+        "O",
+        "P",
+        "Q",
+        "R",
+        "S",
+        "T",
+        "U",
+        "V",
+        "W",
+        "X",
+        "Y",
+        "Z",
     ]
 
     # Same as data/keymaps/ai.json
     ACTION_MEANINGS = {
-        '.': 'NO_OPERATION',
-        'h': 'MOVE_LEFT',
-        'j': 'MOVE_UP',
-        'k': 'MOVE_DOWN',
-        'l': 'MOVE_RIGHT',
-        'n': 'MOVE_RIGHTDOWN',
-        'b': 'MOVE_LEFTDOWN',
-        'u': 'MOVE_RIGHTUP',
-        'y': 'MOVE_LEFTUP',
-        '>': 'DOWNSTAIR',
-        's': 'SEARCH',
+        ".": "NO_OPERATION",
+        "h": "MOVE_LEFT",
+        "j": "MOVE_UP",
+        "k": "MOVE_DOWN",
+        "l": "MOVE_RIGHT",
+        "n": "MOVE_RIGHTDOWN",
+        "b": "MOVE_LEFTDOWN",
+        "u": "MOVE_RIGHTUP",
+        "y": "MOVE_LEFTUP",
+        ">": "DOWNSTAIR",
+        "s": "SEARCH",
     }
 
     ACTIONS = [
-        '.', 'h', 'j', 'k', 'l', 'n',
-        'b', 'u', 'y', '>', 's',
+        ".",
+        "h",
+        "j",
+        "k",
+        "l",
+        "n",
+        "b",
+        "u",
+        "y",
+        ">",
+        "s",
     ]
 
     ACTION_LEN = len(ACTIONS)
 
     def __init__(
-            self,
-            config_path: Optional[str] = None,
-            config_dict: dict = {},
-            max_steps: int = 1000,
-            image_setting: ImageSetting = ImageSetting(),
-            **kwargs,
+        self,
+        config_path: Optional[str] = None,
+        config_dict: dict = {},
+        max_steps: int = 1000,
+        image_setting: ImageSetting = ImageSetting(),
+        **kwargs,
     ) -> None:
         super().__init__()
         if config_path:
-            with open(config_path, 'r') as f:
+            with open(config_path, "r") as f:
                 config = f.read()
         else:
             config_dict.update(kwargs)
@@ -150,8 +190,9 @@ class RogueEnv(gym.Env):
         self.game = GameState(max_steps, config)
         self.result = None
         self.action_space = spaces.discrete.Discrete(self.ACTION_LEN)
-        self.observation_space = \
-            image_setting.detect_space(*self.game.screen_size(), self.game.symbols())
+        self.observation_space = image_setting.detect_space(
+            *self.game.screen_size(), self.game.symbols()
+        )
         self.image_setting = image_setting
         self.__cache()
 
@@ -175,29 +216,27 @@ class RogueEnv(gym.Env):
         return json.loads(config)
 
     def save_config(self, fname: str) -> None:
-        with open(fname, 'w') as f:
+        with open(fname, "w") as f:
             f.write(self.game.dump_config())
 
     def save_actions(self, fname: str) -> None:
-        with open(fname, 'w') as f:
+        with open(fname, "w") as f:
             f.write(self.game.dump_history())
 
     def replay(self, interval_ms: int = 100) -> None:
-        if not hasattr(rogue_gym_inner, 'replay'):
-            raise RuntimeError('Currently replay is only supported on UNIX')
+        if not hasattr(rogue_gym_inner, "replay"):
+            raise RuntimeError("Currently replay is only supported on UNIX")
         rogue_gym_inner.replay(self.game, interval_ms)
         print()
 
     def play_cli(self) -> None:
-        if not hasattr(rogue_gym_inner, 'play_cli'):
-            raise RuntimeError('CLI playing is only supported on UNIX')
+        if not hasattr(rogue_gym_inner, "play_cli"):
+            raise RuntimeError("CLI playing is only supported on UNIX")
         rogue_gym_inner.play_cli(self.game)
         print()
 
     def state_to_image(
-            self,
-            state: PlayerState,
-            setting: Optional[ImageSetting] = None
+        self, state: PlayerState, setting: Optional[ImageSetting] = None
     ) -> ndarray:
         """Convert PlayerState to 3d array, according to setting or self.expand_setting
         """
@@ -237,7 +276,7 @@ class RogueEnv(gym.Env):
         """
         self.game.set_seed(seed)
 
-    def render(self, mode: str = 'human', close: bool = False) -> None:
+    def render(self, mode: str = "human", close: bool = False) -> None:
         """
         STUB
         """
