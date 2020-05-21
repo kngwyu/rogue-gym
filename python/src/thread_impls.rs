@@ -1,11 +1,8 @@
-use rogue_gym_core::{
-    error::{GameResult, ResultExt2},
-    GameConfig,
-};
-use state_impls::GameStateImpl;
+use crate::state_impls::GameStateImpl;
+use crate::PlayerState;
+use rogue_gym_core::{error::GameResult, GameConfig};
 use std::sync::mpsc::{self, Receiver, SyncSender};
 use std::thread;
-use PlayerState;
 
 pub(crate) struct ThreadConductor {
     receivers: Vec<Receiver<GameResult<PlayerState>>>,
@@ -37,46 +34,46 @@ impl ThreadConductor {
     }
     pub fn reset(&mut self) -> GameResult<Vec<PlayerState>> {
         for sender in &mut self.senders {
-            sender.send(Instruction::Reset).compat()?;
+            sender.send(Instruction::Reset)?;
         }
         let mut result = vec![];
-        for res in self.receivers.iter_mut().map(|rx| rx.recv().compat()) {
+        for res in self.receivers.iter_mut().map(|rx| rx.recv()) {
             result.push(res??);
         }
         Ok(result)
     }
     pub fn seed(&mut self, seeds: Vec<u128>) -> GameResult<()> {
         for (sender, seed) in self.senders.iter_mut().zip(seeds) {
-            sender.send(Instruction::Seed(seed)).compat()?;
+            sender.send(Instruction::Seed(seed))?;
         }
         Ok(())
     }
     pub fn states(&mut self) -> GameResult<Vec<PlayerState>> {
         for sender in &mut self.senders {
-            sender.send(Instruction::State).compat()?;
+            sender.send(Instruction::State)?;
         }
         let mut result = vec![];
-        for res in self.receivers.iter_mut().map(|rx| rx.recv().compat()) {
+        for res in self.receivers.iter_mut().map(|rx| rx.recv()) {
             result.push(res??);
         }
         Ok(result)
     }
     pub fn step(&mut self, inputs: Vec<u8>) -> GameResult<Vec<PlayerState>> {
         for (sender, input) in self.senders.iter_mut().zip(inputs) {
-            sender.send(Instruction::Step(input)).compat()?;
+            sender.send(Instruction::Step(input))?;
         }
         let mut result = vec![];
-        for res in self.receivers.iter_mut().map(|rx| rx.recv().compat()) {
+        for res in self.receivers.iter_mut().map(|rx| rx.recv()) {
             result.push(res??);
         }
         for (i, res) in result.iter().enumerate() {
             if res.is_terminal {
-                self.senders[i].send(Instruction::Reset).compat()?;
+                self.senders[i].send(Instruction::Reset)?;
             }
         }
         for (i, res) in result.iter_mut().enumerate() {
             if res.is_terminal {
-                *res = self.receivers[i].recv().compat()??;
+                *res = self.receivers[i].recv()??;
                 res.is_terminal = true;
             }
         }
@@ -84,7 +81,7 @@ impl ThreadConductor {
     }
     pub fn close(&mut self) -> GameResult<()> {
         for sender in &mut self.senders {
-            sender.send(Instruction::Stop).compat()?;
+            sender.send(Instruction::Stop)?;
         }
         Ok(())
     }

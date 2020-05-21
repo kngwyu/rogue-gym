@@ -1,21 +1,22 @@
 """test for ParallelRogueEnv"""
 from rogue_gym.envs import StairRewardParallel, ParallelRogueEnv
-from data import CMD_STR, CMD_STR3, CMD_STR4, \
-    CMD_STR5, SEED1_DUNGEON, SEED1_DUNGEON2, SEED1_DUNGEON3
+from data import (
+    CMD_STR,
+    CMD_STR3,
+    CMD_STR4,
+    CMD_STR5,
+    SEED1_DUNGEON,
+    SEED1_DUNGEON2,
+    SEED1_DUNGEON3,
+)
 
 CONFIG_ST = {
     "width": 32,
     "height": 16,
     "seed": 5,
     "hide_dungeon": False,
-    "dungeon": {
-        "style": "rogue",
-        "room_num_x": 2,
-        "room_num_y": 2,
-    },
-    "enemies": {
-        "enemies": [],
-    },
+    "dungeon": {"style": "rogue", "room_num_x": 2, "room_num_y": 2,},
+    "enemies": {"enemies": [],},
 }
 CONFIG_NOENEM = {
     "seed": 1,
@@ -29,7 +30,7 @@ def test_configs() -> None:
         assert res.dungeon == SEED1_DUNGEON
     step = [CMD_STR, CMD_STR5]
     for i in range(len(CMD_STR)):
-        env.step(''.join([step[x % 2][i] for x in range(NUM_WOKRERS)]))
+        env.step("".join([step[x % 2][i] for x in range(NUM_WOKRERS)]))
     for i, res in enumerate(env.states):
         if i % 2 == 0:
             assert res.dungeon == SEED1_DUNGEON2

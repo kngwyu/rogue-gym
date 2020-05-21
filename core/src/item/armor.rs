@@ -1,8 +1,10 @@
 use super::handler::{Handler, ItemInner, ItemStat};
 use super::{InitItem, Item, ItemAttr, ItemKind, ItemNum};
-use character::Defense;
-use rng::{Parcent, RngHandle};
-use smallstr::SmallStr;
+use crate::{
+    character::Defense,
+    rng::{Parcent, RngHandle},
+    smallstr::SmallStr,
+};
 use std::fmt;
 
 /// Armor configuration

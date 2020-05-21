@@ -1,49 +1,27 @@
-extern crate chrono;
-extern crate clap;
-extern crate fern;
-extern crate log;
-extern crate rogue_gym_core;
-extern crate rogue_gym_devui;
-extern crate termion;
-extern crate tuple_map;
-
 use std::fs::{File, OpenOptions};
 use std::io::prelude::*;
 
+use anyhow::{bail, Context};
 use clap::ArgMatches;
-use rogue_gym_core::{json_to_inputs, read_file, GameConfig};
-use rogue_gym_devui::error::*;
+use rogue_gym_core::{error::GameResult, json_to_inputs, read_file, GameConfig};
 use rogue_gym_devui::{play_game, show_replay};
 
 const DEFAULT_INTERVAL_MS: u64 = 500;
 
-fn main() {
-    if let Err(err) = main_() {
-        eprintln!("Oops! Error occured in rogue-gym-devui:");
-        let errs: Vec<_> = err.iter_chain().map(|e| format!("  {}", e)).collect();
-        for e in errs.into_iter().rev() {
-            eprintln!("{}", e);
-        }
-        ::std::process::exit(1);
-    }
-}
-
-fn main_() -> GameResult<()> {
+fn main() -> GameResult<()> {
     let args = parse_args();
     let (mut config, is_default) = get_config(&args)?;
     if let Some(seed) = args.value_of("seed") {
-        config.seed = Some(seed.parse().into_chained(|| "Failed to parse seed!")?);
+        config.seed = Some(seed.parse().context("Failed to parse seed!")?);
     }
     setup_logger(&args)?;
     if let Some(replay_arg) = args.subcommand_matches("replay") {
         let fname = replay_arg.value_of("file").unwrap();
-        let replay = read_file(fname).into_chained(|| "Failed to read replay file!")?;
+        let replay = read_file(fname).context("Failed to read replay file!")?;
         let replay = json_to_inputs(&replay)?;
         let mut interval = DEFAULT_INTERVAL_MS;
         if let Some(inter) = replay_arg.value_of("interval") {
-            interval = inter
-                .parse()
-                .into_chained(|| "Failed to parse 'interval' arg!")?;
+            interval = inter.parse().context("Failed to parse 'interval' arg!")?;
         }
         show_replay(config, replay, interval)
     } else {
@@ -65,11 +43,9 @@ fn get_config(args: &ArgMatches) -> GameResult<(GameConfig, bool)> {
         }
     };
     if !file_name.ends_with(".json") {
-        return Err(
-            ErrorID::InvalidArg.into_with(|| "Only .json file is allowed as configuration file")
-        );
+        bail!("Only .json file is allowed as configuration file")
     }
-    let f = read_file(file_name).into_chained(|| "in get_config")?;
+    let f = read_file(file_name).context("in get_config")?;
     Ok((GameConfig::from_json(&f)?, false))
 }
 
@@ -163,10 +139,10 @@ fn setup_logger(args: &ArgMatches) -> GameResult<()> {
                     .create(true)
                     .truncate(true)
                     .open(file)
-                    .into_chained(|| "error in getting log file")?,
+                    .context("error in getting log file")?,
             )
             .apply()
-            .into_chained(|| "error in setup_log")?;
+            .context("error in setup_log")?;
     }
     Ok(())
 }

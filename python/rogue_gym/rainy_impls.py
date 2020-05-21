@@ -1,15 +1,17 @@
 from gym import Env
 import numpy as np
 from numpy import ndarray
+
 try:
     from rainy.envs import EnvExt, EnvSpec, ParallelEnv
     from rainy.prelude import Array
 except ImportError:
-    raise ImportError('To use rogue_gym.rainy_impls, install rainy first.')
+    raise ImportError("To use rogue_gym.rainy_impls, install rainy first.")
 from .envs.parallel import ParallelRogueEnv
 from .envs.rogue_env import PlayerState, RogueEnv
 from .envs.wrappers import check_rogue_env
 from typing import Iterable, Tuple
+
 ACTION_DIM = len(RogueEnv.ACTIONS)
 
 
@@ -45,8 +47,7 @@ class ParallelRogueEnvExt(ParallelEnv):
         return np.array(self._env.reset())
 
     def step(
-            self,
-            actions: Iterable[int]
+        self, actions: Iterable[int]
     ) -> Tuple[Array[PlayerState], Array[float], Array[bool], Array[dict]]:
         return tuple(map(np.array, self._env.step(actions)))
 

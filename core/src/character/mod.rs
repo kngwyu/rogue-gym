@@ -2,10 +2,10 @@ pub mod enemies;
 pub mod fight;
 pub mod player;
 pub use self::player::{Action, Hunger, Leveling, Player};
+use crate::rng::RngHandle;
 pub use enemies::{Enemy, EnemyHandler};
 use num_traits::PrimInt;
 use rand::distributions::uniform::SampleUniform;
-use rng::RngHandle;
 use std::ops::AddAssign;
 
 /// values compatible with Hit Point

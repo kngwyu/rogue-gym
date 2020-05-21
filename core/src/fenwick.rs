@@ -1,6 +1,6 @@
-use rng::Rng;
+use crate::rng::Rng;
 #[cfg(test)]
-use rng::RngHandle;
+use crate::rng::RngHandle;
 use std::ops::Range;
 
 /// a set implementation using Fenwick Tree

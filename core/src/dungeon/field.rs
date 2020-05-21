@@ -1,9 +1,9 @@
 //! General field representation
 use super::{X, Y};
+use crate::tile::{Drawable, Tile};
 use num_traits::ToPrimitive;
 use rect_iter::{Get2D, GetMut2D, IndexError, RectRange};
 use std::fmt;
-use tile::{Drawable, Tile};
 use tuple_map::TupleMap2;
 
 /// Generic representation of Cell

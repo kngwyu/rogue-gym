@@ -1,14 +1,11 @@
 """test for FirstFloorEnv and config string"""
-from rogue_gym.envs import ImageSetting, FirstFloorEnv, StatusFlag
-from rogue_gym.envs import FirstFloorEnv, ImageSetting, RogueEnv, StatusFlag
+from rogue_gym.envs import ImageSetting, FirstFloorEnv, StatusFlag, RogueEnv
 from data import CMD_STR2, SEED1_DUNGEON_CLEAR
 
 CONFIG = {
     "seed": 1,
     "hide_dungeon": False,
-    "enemies": {
-        "enemies": [],
-    },
+    "enemies": {"enemies": [],},
 }
 
 EXPAND = ImageSetting(status=StatusFlag.DUNGEON_LEVEL)

@@ -7,9 +7,7 @@ from rogue_gym.envs import StatusFlag, RogueEnv
 
 CONFIG_NOENEM = {
     "seed": 1,
-    "enemies": {
-        "enemies": [],
-    },
+    "enemies": {"enemies": [],},
 }
 
 
@@ -30,7 +28,7 @@ def test_action():
 def test_noaction():
     env = RogueEnv(seed=1)
     state = env.result
-    res, *_ = env.step('.')
+    res, *_ = env.step(".")
     assert res.dungeon == state.dungeon
     assert res.status == state.status
 
@@ -48,13 +46,13 @@ def test_kwargs_setting():
 
 def test_images():
     env = RogueEnv(config_dict=CONFIG_NOENEM)
-    state, *_ = env.step('H')
+    state, *_ = env.step("H")
     status = StatusFlag.EMPTY
     symbol_img_hist = status.symbol_image_with_hist(state)
     assert symbol_img_hist.shape == (18, 24, 80)
     hist = symbol_img_hist[-1]
     for cell in hist[20][2:15]:
-        assert cell, 1.
+        assert cell, 1.0
     gray_img = status.gray_image(state)
     assert gray_img.shape == (1, 24, 80)
     gray_img_hist = status.gray_image_with_hist(state)
@@ -65,5 +63,6 @@ def test_space():
     env = RogueEnv(config_dict=CONFIG_NOENEM)
     assert env.action_space == gym.spaces.discrete.Discrete(env.ACTION_LEN)
     # 26 = 17(symbols) + 9(all status)
-    assert env.observation_space == \
-        spaces.box.Box(low=0, high=1, shape=(26, 24, 80), dtype=np.float32)
+    assert env.observation_space == spaces.box.Box(
+        low=0, high=1, shape=(26, 24, 80), dtype=np.float32
+    )

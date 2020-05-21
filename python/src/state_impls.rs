@@ -1,10 +1,11 @@
+use crate::PlayerState;
+use anyhow::bail;
 use rogue_gym_core::{
     error::GameResult,
     input::{Key, KeyMap},
     ui::{MordalKind, UiState},
     GameConfig, Reaction, RunTime,
 };
-use PlayerState;
 
 pub(crate) struct GameStateImpl {
     pub(crate) runtime: RunTime,

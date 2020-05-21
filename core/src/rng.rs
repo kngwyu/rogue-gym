@@ -1,4 +1,4 @@
-use fenwick::FenwickSet;
+use crate::fenwick::FenwickSet;
 use num_traits::PrimInt;
 use rand::{
     distributions::uniform::SampleUniform, thread_rng, Error as RndError, RngCore, SeedableRng,
