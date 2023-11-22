@@ -1,4 +1,3 @@
-#![cfg_attr(test, feature(test))]
 #[macro_use]
 extern crate bitflags;
 #[macro_use]
@@ -31,7 +30,6 @@ use crate::character::{enemies, player, EnemyHandler, Player};
 use crate::dungeon::{Direction, Dungeon, DungeonStyle, Positioned, X, Y};
 use anyhow::{bail, Context};
 use error::*;
-use failure::bail;
 use input::{InputCode, Key, KeyMap};
 use item::{ItemHandler, ItemKind};
 use log::{debug, trace};

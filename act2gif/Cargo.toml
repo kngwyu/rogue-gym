@@ -6,6 +6,7 @@ edition = "2021"
 workspace = "../"
 
 [dependencies]
+anyhow = "1.0"
 failure = "0.1.5"
 rusttype = "0.7.5"
 tuple-map = "0.4.0"
