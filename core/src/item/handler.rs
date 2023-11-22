@@ -1,5 +1,5 @@
 use super::{Item, ItemAttr, ItemNum};
-use rng::{Parcent, RngHandle};
+use crate::rng::{Parcent, RngHandle};
 
 pub(super) trait ItemInner {
     fn get_cursed(&mut self, _rng: &mut RngHandle) {}

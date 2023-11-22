@@ -1,14 +1,16 @@
 use super::{DamageReaction, Defense, Dice, Exp, HitPoint, Level, Strength};
-use crate::{Drawable, SmallStr};
-use dungeon::{Dungeon, DungeonPath, MoveResult};
-use item::ItemNum;
-use rng::{Parcent, RngHandle};
+use crate::dungeon::{Dungeon, DungeonPath, MoveResult};
+use crate::{
+    item::ItemNum,
+    rng::{Parcent, RngHandle},
+    tile::Tile,
+    Drawable, SmallStr,
+};
 use smallvec::SmallVec;
 use std::cell::Cell;
 use std::collections::BTreeMap;
 use std::ops::Range;
 use std::rc::{Rc, Weak};
-use tile::Tile;
 
 pub type DiceVec<T> = SmallVec<[Dice<T>; 4]>;
 

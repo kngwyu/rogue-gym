@@ -1,13 +1,12 @@
 //! a module for handling user input
-use character::Action;
-use dungeon::Direction;
+use crate::character::Action;
+use crate::dungeon::Direction;
 use regex::Regex;
 use serde::de::{Deserialize, Deserializer, MapAccess, Visitor};
 use serde::ser::{Serialize, SerializeMap, Serializer};
+use std::borrow::Cow;
 use std::collections::HashMap;
-use std::fmt;
-use std::marker::PhantomData;
-use std::str;
+use std::{fmt, marker::PhantomData, str};
 
 /// Mapping from Keyboard input to InputCode
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -23,7 +22,7 @@ impl KeyMap {
 
 impl Default for KeyMap {
     fn default() -> Self {
-        use self::Direction::*;
+        use Direction::*;
         let map = vec![
             (Key::Char('l'), InputCode::Act(Action::Move(Right))),
             (Key::Char('k'), InputCode::Act(Action::Move(Up))),
@@ -181,6 +180,7 @@ pub enum System {
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, Hash, Eq, PartialEq)]
 pub enum Key {
     Backspace,
+    BackTab,
     Left,
     Right,
     Up,
@@ -200,26 +200,27 @@ pub enum Key {
 }
 
 impl Key {
-    fn to_str(&self) -> String {
+    fn to_str(&self) -> Cow<'static, str> {
         use self::Key::*;
         match self {
-            Backspace => "Backspace".to_owned(),
-            Left => "Left".to_owned(),
-            Right => "Right".to_owned(),
-            Up => "Up".to_owned(),
-            Down => "Down".to_owned(),
-            Home => "Home".to_owned(),
-            End => "End".to_owned(),
-            PageUp => "PageUp".to_owned(),
-            PageDown => "PageDown".to_owned(),
-            Delete => "Delete".to_owned(),
-            Insert => "Insert".to_owned(),
-            F(u) => format!("F{}", u),
-            Char(c) => format!("{}", c),
-            Alt(c) => format!("Alt+{}", c),
-            Ctrl(c) => format!("Ctrl+{}", c),
-            Null => "Null".to_owned(),
-            Esc => "Esc".to_owned(),
+            BackTab => "BackTab".into(),
+            Backspace => "Backspace".into(),
+            Left => "Left".into(),
+            Right => "Right".into(),
+            Up => "Up".into(),
+            Down => "Down".into(),
+            Home => "Home".into(),
+            End => "End".into(),
+            PageUp => "PageUp".into(),
+            PageDown => "PageDown".into(),
+            Delete => "Delete".into(),
+            Insert => "Insert".into(),
+            F(u) => format!("F{}", u).into(),
+            Char(c) => format!("{}", c).into(),
+            Alt(c) => format!("Alt+{}", c).into(),
+            Ctrl(c) => format!("Ctrl+{}", c).into(),
+            Null => "Null".into(),
+            Esc => "Esc".into(),
         }
     }
     fn from_str(s: &str) -> Option<Self> {
@@ -312,6 +313,7 @@ impl From<TermionKey> for Key {
         use self::TermionKey::*;
         match key {
             TermionKey::__IsNotComplete => panic!("Incomplete Input from termion"),
+            BackTab => Key::BackTab,
             Backspace => Key::Backspace,
             Left => Key::Left,
             Right => Key::Right,

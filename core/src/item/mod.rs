@@ -12,16 +12,13 @@ use self::handler::Handler;
 use self::handler::ItemStat;
 pub use self::itembox::ItemBox;
 use self::weapon::{Weapon, WeaponStatus};
-use character::{Dice, HitPoint, Level};
-use error::*;
-use rng::RngHandle;
-use smallstr::SmallStr;
-use std::cell::UnsafeCell;
-use std::collections::BTreeMap;
-use std::fmt;
+use crate::character::{Dice, HitPoint, Level};
+use crate::tile::{Drawable, Tile};
+use crate::{error::*, rng::RngHandle, smallstr::SmallStr};
+use anyhow::bail;
 use std::ops::{Deref, DerefMut};
 use std::rc::{Rc, Weak};
-use tile::{Drawable, Tile};
+use std::{cell::UnsafeCell, collections::BTreeMap, fmt};
 
 /// Item configuration
 #[derive(Clone, Debug, Default, Serialize, Deserialize, Eq, PartialEq)]
@@ -174,7 +171,7 @@ pub enum InitItem {
 }
 
 impl InitItem {
-    pub(crate) fn initialize(self, handle: &mut ItemHandler) -> GameResult<ItemToken> {
+    pub(crate) fn initialize(self, handle: &mut ItemHandler) -> Result<ItemToken, ErrorKind> {
         match self {
             InitItem::Noinit(item) => Ok(item),
             InitItem::Weapon {
@@ -210,8 +207,9 @@ impl InitItem {
         }
         .map(|item| handle.gen_item(item))
         .map_err(|name| {
-            ErrorId::InvalidSetting
-                .into_with(|| format!("Specified item {} is not registerd to WeaponHandler", name))
+            ErrorKind::InvalidSetting(
+                format!("Specified item {} is not registerd to WeaponHandler", name).into(),
+            )
         })
     }
 }
@@ -399,15 +397,15 @@ impl ItemHandler {
     }
     /// Sets up player items
     pub fn init_player_items(&mut self, pack: &mut ItemBox, items: &[InitItem]) -> GameResult<()> {
-        items.iter().try_for_each(|item| {
+        for item in items.iter() {
             let item = item.clone().initialize(self)?;
-            if pack.add(item) {
-                Ok(())
-            } else {
-                Err(ErrorId::InvalidSetting
-                    .into_with(|| format!("[init_player_items] Failed to add item")))
+            if !pack.add(item) {
+                bail!(ErrorKind::InvalidSetting(
+                    "[init_player_items] Failed to add item".into(),
+                ))
             }
-        })
+        }
+        Ok(())
     }
 }
 

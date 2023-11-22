@@ -1,5 +1,8 @@
-use error::*;
-use rogue_gym_core::dungeon::{Coord, X, Y};
+use anyhow::{bail, Context};
+use rogue_gym_core::{
+    dungeon::{Coord, X, Y},
+    error::GameResult,
+};
 use rogue_gym_uilib::Screen;
 use std::collections::VecDeque;
 use std::io::{self, Stdout, Write};
@@ -25,17 +28,15 @@ impl TermScreen<RawTerm> {
         let stdout = io::stdout();
         let term = stdout
             .into_raw_mode()
-            .into_chained(|| "[Screen::from_stdout] attempt to get raw mode terminal")?;
-        let (width, height) = terminal_size()
-            .into_chained(|| "[Screen::from_stdout] attempt to get terminal size")?;
+            .context("[Screen::from_stdout] attempt to get raw mode terminal")?;
+        let (width, height) =
+            terminal_size().context("[Screen::from_stdout] attempt to get terminal size")?;
         let (w, h) = (w, h).map(|i| i as u16);
         if width < w {
-            return Err(ErrorID::InvalidScreenSize(width, height)
-                .into_with(|| format!("Screen width must be larger than {} characters", w)));
+            bail!("Screen width must be larger than {} characters", w);
         }
         if height < h {
-            return Err(ErrorID::InvalidScreenSize(width, height)
-                .into_with(|| format!("Screen height must be larger than {} characters", h)));
+            bail!("Screen height must be larger than {} characters", h);
         }
         Ok(TermScreen {
             term,
@@ -51,16 +52,14 @@ impl TermScreen<Stdout> {
     /// raw terminal screen(for python API)
     pub fn from_stdout(w: i32, h: i32) -> GameResult<Self> {
         let stdout = io::stdout();
-        let (width, height) = terminal_size()
-            .into_chained(|| "[Screen::from_stdout] attempt to get terminal size")?;
+        let (width, height) =
+            terminal_size().context("[Screen::from_stdout] attempt to get terminal size")?;
         let (w, h) = (w, h).map(|i| i as u16);
         if width < w {
-            return Err(ErrorID::InvalidScreenSize(width, height)
-                .into_with(|| format!("Screen width must be larger than {} characters", w)));
+            bail!("Screen width must be larger than {} characters", w);
         }
         if height < h {
-            return Err(ErrorID::InvalidScreenSize(width, height)
-                .into_with(|| format!("Screen height must be larger than {} characters", h)));
+            bail!("Screen height must be larger than {} characters", h);
         }
         Ok(TermScreen {
             term: stdout,
@@ -87,7 +86,7 @@ impl<T: Write> Screen for TermScreen<T> {
     fn clear_line(&mut self, row: Y) -> GameResult<()> {
         let row = row.0 as u16;
         write!(self.term, "{}{}", cursor::Goto(1, row), clear::CurrentLine)
-            .into_chained(|| "in TermScreen::clear_line")
+            .context("in TermScreen::clear_line")
     }
     fn clear_notification(&mut self) -> GameResult<()> {
         if self.has_notification {
@@ -101,16 +100,16 @@ impl<T: Write> Screen for TermScreen<T> {
         } else {
             Ok(())
         }
-        .into_chained(|| "in TermScreen::clear_notification")
+        .context("in TermScreen::clear_notification")
     }
     fn cursor(&mut self, coord: Coord) -> GameResult<()> {
-        write!(self.term, "{}", coord.into_cursor()).into_chained(|| "in TermScreen::cursor")
+        write!(self.term, "{}", coord.into_cursor()).context("in TermScreen::cursor")
     }
     fn flush(&mut self) -> GameResult<()> {
-        self.term.flush().into_chained(|| "in TermScreen::flush")
+        self.term.flush().context("in TermScreen::flush")
     }
     fn write_char(&mut self, cd: Coord, c: char) -> GameResult<()> {
-        write!(self.term, "{}{}", cd.into_cursor(), c).into_chained(|| "in TermScreen::write_char")
+        write!(self.term, "{}{}", cd.into_cursor(), c).context("in TermScreen::write_char")
     }
     fn write_str<S: AsRef<str>>(&mut self, start: Coord, s: S) -> GameResult<()> {
         write!(
@@ -120,8 +119,8 @@ impl<T: Write> Screen for TermScreen<T> {
             clear::CurrentLine,
             s.as_ref()
         )
-        .into_chained(|| "in TermScreen::write_str")?;
-        self.flush().chain_err(|| "in TermScreen::write_str")
+        .context("in TermScreen::write_str")?;
+        self.flush().context("in TermScreen::write_str")
     }
     fn pend_message<S: AsRef<str>>(&mut self, msg: S) -> GameResult<()> {
         self.pending_messages.push_back(msg.as_ref().to_owned());
@@ -138,8 +137,8 @@ impl<T: Write> TermScreen<T> {
             cursor::Goto(1, 1),
             cursor::Goto(1, 2)
         )
-        .into_chained(|| "in Screen::welcome")?;
-        self.flush().chain_err(|| "in Screen::welcome")
+        .context("in Screen::welcome")?;
+        self.flush().context("in Screen::welcome")
     }
     pub fn default_config(&mut self) -> GameResult<()> {
         write!(
@@ -147,8 +146,8 @@ impl<T: Write> TermScreen<T> {
             "{} No config file is specified, use default settings",
             cursor::Goto(1, 3),
         )
-        .into_chained(|| "in Screen::default_config")?;
-        self.flush().chain_err(|| "in Screen::default_config")
+        .context("in Screen::default_config")?;
+        self.flush().context("in Screen::default_config")
     }
     pub fn display_msg(&mut self) -> GameResult<bool> {
         if let Some(msg) = self.pending_messages.pop_front() {

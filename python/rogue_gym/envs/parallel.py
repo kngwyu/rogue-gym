@@ -9,6 +9,7 @@ from .rogue_env import ImageSetting, RogueEnv
 class ParallelRogueEnv:
     """Special executor to exec rogue-gym parallely.
     """
+
     metadata = RogueEnv.metadata
     SYMBOLS = RogueEnv.SYMBOLS
     ACTION_MEANINGS = RogueEnv.ACTION_MEANINGS
@@ -16,18 +17,19 @@ class ParallelRogueEnv:
     ACTION_LEN = len(ACTIONS)
 
     def __init__(
-            self,
-            config_dicts: Iterable[dict],
-            max_steps: int = 1000,
-            image_setting: ImageSetting = ImageSetting(),
+        self,
+        config_dicts: Iterable[dict],
+        max_steps: int = 1000,
+        image_setting: ImageSetting = ImageSetting(),
     ) -> None:
         self.game = ParallelGameState(max_steps, [json.dumps(d) for d in config_dicts])
         self.result = None
         self.max_steps = max_steps
         self.steps = 0
         self.action_space = spaces.discrete.Discrete(self.ACTION_LEN)
-        self.observation_space = \
-            image_setting.detect_space(*self.game.screen_size(), self.game.symbols())
+        self.observation_space = image_setting.detect_space(
+            *self.game.screen_size(), self.game.symbols()
+        )
         self.image_setting = image_setting
         self.states = self.game.states()
         self.num_workers = len(config_dicts)
@@ -40,8 +42,7 @@ class ParallelRogueEnv:
         return json.loads(config)
 
     def step(
-            self,
-            action: Union[Iterable[int], str]
+        self, action: Union[Iterable[int], str]
     ) -> Tuple[List[PlayerState], List[float], List[bool], List[dict]]:
         """
         Do action.
@@ -56,7 +57,10 @@ class ParallelRogueEnv:
             except Exception:
                 raise ValueError("Invalid action: {}".format(action))
         states = self.game.step(action)
-        rewards = [max(0, after.gold - before.gold) for before, after in zip(self.states, states)]
+        rewards = [
+            max(0, after.gold - before.gold)
+            for before, after in zip(self.states, states)
+        ]
         done = [s.is_terminal for s in states]
         self.states = states
         return self.states, rewards, done, [{}] * self.num_workers

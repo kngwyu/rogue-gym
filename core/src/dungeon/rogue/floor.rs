@@ -1,16 +1,14 @@
 //! rogue floor
 use super::{passages, rooms, Address, Config, Room, Surface};
-use dungeon::{Cell, CellAttr, Coord, Direction, Field, Positioned, X, Y};
-use enemies::EnemyHandler;
+use crate::dungeon::{Cell, CellAttr, Coord, Direction, Field, Positioned, X, Y};
+use crate::enemies::EnemyHandler;
+use crate::item::{ItemHandler, ItemToken};
+use crate::{error::*, fenwick::FenwickSet, rng::RngHandle, GameMsg};
+use anyhow::{bail, Context};
 use enum_iterator::IntoEnumIterator;
-use error::*;
-use fenwick::FenwickSet;
-use item::{ItemHandler, ItemToken};
 use ndarray::Array2;
 use rect_iter::{Get2D, GetMut2D};
-use rng::RngHandle;
 use std::collections::{HashMap, HashSet, VecDeque};
-use GameMsg;
 
 /// representation of 'floor'
 #[derive(Clone, Debug, Default)]
@@ -56,8 +54,8 @@ impl Floor {
         height: Y,
         rng: &mut RngHandle,
     ) -> GameResult<Self> {
-        let rooms = rooms::gen_rooms(level, config, width, height, rng)
-            .chain_err(|| "Error in gen_floor")?;
+        let rooms =
+            rooms::gen_rooms(level, config, width, height, rng).context("Error in gen_floor")?;
         let mut field = Field::new(width, height, Cell::with_default_attr(Surface::None));
         // in this phase, we can draw surfaces 'as is'
         rooms.iter().try_for_each(|room| {
@@ -68,7 +66,7 @@ impl Floor {
                         mut_cell.surface = surface;
                         mut_cell.attr = gen_attr(surface, room.is_dark, rng, level, config);
                     })
-                    .into_chained(|| "Error in gen_floor")
+                    .context("Error in gen_floor")
             })
         })?;
         // sometimes door is hidden randomly so first we store positions to avoid borrow restriction
@@ -100,7 +98,7 @@ impl Floor {
                             cell.surface = surface;
                         }
                     })
-                    .into_chained(|| "Floor::new dig_passges returned invalid index")
+                    .context("Floor::new dig_passges returned invalid index")
             })?;
         Ok(Floor::new(rooms, doors, field))
     }
@@ -158,14 +156,12 @@ impl Floor {
     pub fn setup_stair(&mut self, rng: &mut RngHandle) -> GameResult<()> {
         let cd = self
             .select_cell(rng, false)
-            .ok_or_else(|| ErrorId::MaybeBug.into_with(|| "[setup stair] no empty cell!"))?;
-        {
-            let cell = self
-                .field
-                .try_get_mut_p(cd)
-                .into_chained(|| "[setup stair] select_cell returned invalid coord")?;
-            cell.surface = Surface::Stair;
-        }
+            .ok_or(ErrorKind::MaybeBug("[setup stair] no empty cell!"))?;
+        let cell = self
+            .field
+            .try_get_mut_p(cd)
+            .context("[setup stair] select_cell returned invalid coord")?;
+        cell.surface = Surface::Stair;
         self.set_obj(cd, false);
         Ok(())
     }
@@ -210,8 +206,9 @@ impl Floor {
         let room_id = match self.cd_to_room_id(cd) {
             Some(u) => u,
             None => {
-                return Err(ErrorId::MaybeBug
-                    .into_with(|| "[Floor::with_current_room] no room for given coord"))
+                bail!(ErrorKind::MaybeBug(
+                    "[Floor::with_current_room] no room for given coord"
+                ));
             }
         };
         if !select(&mut self.rooms[room_id]) {
@@ -226,7 +223,7 @@ impl Floor {
             self.field
                 .try_get_mut_p(cd)
                 .map(|mut_cell| mark(mut_cell, is_edge))
-                .into_chained(|| "in Floor::with_current_room")
+                .context("in Floor::with_current_room")
         })
     }
 
@@ -246,7 +243,7 @@ impl Floor {
                 cell.visible(true);
             },
         )
-        .chain_err(|| "Floor::enters_room")
+        .context("Floor::enters_room")
     }
 
     /// player enters room
@@ -260,7 +257,7 @@ impl Floor {
                 }
             },
         )
-        .chain_err(|| "Floor::leaves_room")
+        .context("Floor::leaves_room")
     }
 
     /// player walks in the cell
@@ -272,7 +269,7 @@ impl Floor {
     ) -> GameResult<()> {
         debug!("[Floor::player_in] cd: {:?}", cd);
         if init || self.doors.contains(&cd) {
-            self.enters_room(cd).chain_err(|| "Floor::player_in")?;
+            self.enters_room(cd).context("Floor::player_in")?;
             if let Some(room_id) = self.cd_to_room_id(cd) {
                 let room = &self.rooms[room_id];
                 enemies.activate_area(|p| {
@@ -283,7 +280,7 @@ impl Floor {
         }
         self.field
             .try_get_mut_p(cd)
-            .into_chained(|| "Floor::player_in Cannot move")?
+            .context("Floor::player_in Cannot move")?
             .visit();
         self.set_obj(cd, true);
         Direction::into_enum_iter().take(9).for_each(|d| {
@@ -300,7 +297,7 @@ impl Floor {
     /// player leaves the cell
     pub(super) fn player_out(&mut self, cd: Coord) -> GameResult<()> {
         if self.doors.contains(&cd) {
-            self.leaves_room(cd).chain_err(|| "Floor::player_out")?;
+            self.leaves_room(cd).context("Floor::player_out")?;
         }
         self.remove_obj(cd, true);
         Direction::into_enum_iter().take(9).for_each(|d| {
