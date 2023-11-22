@@ -254,6 +254,12 @@ impl Drawable for Player {
     fn tile(&self) -> Tile {
         b'@'.into()
     }
+
+    const NONE: Tile = Tile(b' ');
+
+    fn color(&self) -> crate::tile::Color {
+        crate::tile::Color(0)
+    }
 }
 
 /// statuses only for internal

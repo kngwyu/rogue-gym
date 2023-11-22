@@ -1,4 +1,6 @@
 //! utility for managing character's items
+use log::debug;
+
 use super::{Item, ItemToken};
 use crate::fenwick::FenwickSet;
 use std::collections::BTreeMap;

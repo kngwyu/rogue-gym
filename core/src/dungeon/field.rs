@@ -3,6 +3,7 @@ use super::{X, Y};
 use crate::tile::{Drawable, Tile};
 use num_traits::ToPrimitive;
 use rect_iter::{Get2D, GetMut2D, IndexError, RectRange};
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use tuple_map::TupleMap2;
 
@@ -94,6 +95,12 @@ impl<S: Drawable> Drawable for Cell<S> {
         } else {
             Self::NONE
         }
+    }
+
+    const NONE: Tile = Tile(b' ');
+
+    fn color(&self) -> crate::tile::Color {
+        crate::tile::Color(0)
     }
 }
 

@@ -5,6 +5,7 @@ use rand::{
 };
 pub(crate) use rand::{seq::SliceRandom, Rng};
 use rand_xorshift::XorShiftRng;
+use serde::{Deserialize, Serialize};
 use std::cmp;
 use std::mem;
 use std::ops::{Bound, Range, RangeBounds};

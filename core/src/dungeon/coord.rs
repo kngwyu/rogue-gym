@@ -1,5 +1,10 @@
+use derive_more::{
+    Add, AddAssign, Div, DivAssign, From, Into, Mul, MulAssign, Neg, Sub, SubAssign,
+};
+use enum_iterator::IntoEnumIterator;
 use rect_iter::{FromTuple2, IntoTuple2};
-use std::fmt;
+use serde::{Deserialize, Serialize};
+use std::{convert::TryInto, fmt};
 use tuple_map::TupleMap2;
 
 #[derive(
@@ -163,6 +168,15 @@ impl Into<(i32, i32)> for Coord {
 impl From<(i32, i32)> for Coord {
     fn from(t: (i32, i32)) -> Coord {
         Coord::new(t.0, t.1)
+    }
+}
+
+impl Into<(usize, usize)> for Coord {
+    fn into(self) -> (usize, usize) {
+        (
+            self.x.0.try_into().expect("convert i32 to usize"),
+            self.y.0.try_into().expect("convert i32 to usize"),
+        )
     }
 }
 
