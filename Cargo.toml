@@ -6,4 +6,3 @@ lto = false
 
 [workspace]
 members = ["act2gif", "core", "devui", "python", "uilib"]
-resolver = "2"
