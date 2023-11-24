@@ -11,7 +11,7 @@ use rogue_gym_core::{error::*, input::InputCode, json_to_inputs, read_file, Game
 const UBUNTU_MONO: &[u8; 205748] = include_bytes!("../../data/fonts/UbuntuMono-R.ttf");
 use self::font::FontHandle;
 use self::theme::Theme;
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Context};
 
 fn parse_args<'a>() -> ArgMatches<'a> {
     clap::App::new("rogue-gym-act2gif")

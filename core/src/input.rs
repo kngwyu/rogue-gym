@@ -331,7 +331,6 @@ impl From<TermionKey> for Key {
             Ctrl(x) => Key::Ctrl(x),
             Null => Key::Null,
             Esc => Key::Esc,
-            _ => Key::Null,
         }
     }
 }
