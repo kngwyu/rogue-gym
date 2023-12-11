@@ -1,4 +1,6 @@
 //! module for handling actions and do some operations related to multiple modules
+use log::warn;
+
 use crate::character::{
     fight, player::PlayerEvent, Action, DamageReaction, Enemy, EnemyHandler, Player,
 };

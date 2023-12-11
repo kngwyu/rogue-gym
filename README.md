@@ -14,7 +14,7 @@ used for the paper.
 
 ```
 git clone https://github.com/kngwyu/rogue-gym.git
-cd rogue-gym/rogue-gym-devui
+cd rogue-gym/devui
 cargo run --release
 ```
 

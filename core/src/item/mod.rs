@@ -70,6 +70,12 @@ impl Drawable for ItemKind {
         }
         .into()
     }
+
+    const NONE: Tile = Tile(b' ');
+
+    fn color(&self) -> crate::tile::Color {
+        crate::tile::Color(0)
+    }
 }
 
 #[derive(
@@ -110,6 +116,7 @@ pub struct ItemNum(pub u32);
     PartialEq,
     Serialize,
 )]
+
 pub struct ItemAttr(u8);
 
 impl ItemAttr {
@@ -286,6 +293,12 @@ impl Item {
 impl Drawable for Item {
     fn tile(&self) -> Tile {
         self.kind.tile()
+    }
+
+    const NONE: Tile = Tile(b' ');
+
+    fn color(&self) -> crate::tile::Color {
+        crate::tile::Color(0)
     }
 }
 

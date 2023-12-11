@@ -1,7 +1,11 @@
 /// Tile id
 use std::fmt;
+
+use derive_more::From;
+use serde::{Deserialize, Serialize};
+
 #[derive(Clone, Copy, Debug, Hash, Eq, PartialEq, From, Serialize, Deserialize)]
-pub struct Tile(u8);
+pub struct Tile(pub u8);
 
 impl Tile {
     pub fn to_char(self) -> char {

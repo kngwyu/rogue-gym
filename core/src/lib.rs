@@ -1,10 +1,7 @@
-#![cfg_attr(test, feature(test))]
 #[macro_use]
 extern crate bitflags;
 #[macro_use]
 extern crate derive_more;
-#[macro_use]
-extern crate enum_iterator;
 #[macro_use]
 extern crate log;
 #[macro_use]
@@ -33,7 +30,9 @@ use anyhow::{bail, Context};
 use error::*;
 use input::{InputCode, Key, KeyMap};
 use item::{ItemHandler, ItemKind};
+use log::{debug, trace};
 use ndarray::Array2;
+use serde::{Deserialize, Serialize};
 pub use smallstr::SmallStr;
 use tile::{Drawable, Tile};
 use ui::{MordalKind, MordalMsg, UiState};

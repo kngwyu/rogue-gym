@@ -159,6 +159,12 @@ impl Drawable for Surface {
         }
         .into()
     }
+
+    const NONE: Tile = Tile(b' ');
+
+    fn color(&self) -> crate::tile::Color {
+        crate::tile::Color(0)
+    }
 }
 
 impl Default for Surface {

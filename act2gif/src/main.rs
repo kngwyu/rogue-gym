@@ -11,6 +11,7 @@ use rogue_gym_core::{error::*, input::InputCode, json_to_inputs, read_file, Game
 const UBUNTU_MONO: &[u8; 205748] = include_bytes!("../../data/fonts/UbuntuMono-R.ttf");
 use self::font::FontHandle;
 use self::theme::Theme;
+use anyhow::{bail, Context};
 
 fn parse_args<'a>() -> ArgMatches<'a> {
     clap::App::new("rogue-gym-act2gif")
@@ -94,13 +95,13 @@ fn get_config(args: &ArgMatches) -> GameResult<GameConfig> {
             return Ok(GameConfig::default());
         }
     };
-    let f = read_file(file_name).into_chained(|| "in get_config")?;
+    let f = read_file(file_name).with_context(|| "in get_config")?;
     GameConfig::from_json(&f)
 }
 
 fn get_replay(args: &ArgMatches) -> GameResult<Vec<InputCode>> {
     let fname = args.value_of("actions").unwrap();
-    let replay = read_file(fname).into_chained(|| "Failed to read replay file!")?;
+    let replay = read_file(fname).with_context(|| "Failed to read replay file!")?;
     json_to_inputs(&replay)
 }
 

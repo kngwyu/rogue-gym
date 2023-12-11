@@ -1,9 +1,10 @@
 use crate::font::{DrawInst, FontHandle};
 use image::{gif::Frame, Pixel, Rgb, Rgba, RgbaImage};
-use rect_iter::GetMut2D;
+
+use anyhow::Context;
 use rect_iter::RectRange;
 use rogue_gym_core::dungeon::{Coord, X, Y};
-use rogue_gym_core::error::{GameResult, ResultExt1};
+use rogue_gym_core::error::GameResult;
 use rogue_gym_uilib::Screen;
 use rusttype::point;
 use tuple_map::TupleMap2;
@@ -66,12 +67,10 @@ impl<'a, 'b> Screen for TermImage<'a, 'b> {
     }
     fn clear_line(&mut self, row: Y) -> GameResult<()> {
         let ystart = row.0 as u32 * self.fontsize;
-        let range = RectRange::from_ranges(0..self.buffer.width(), ystart..ystart + self.fontsize);
-        let range = range
-            .ok_or(EncodeError)
-            .chain_err(|| "TermImage::clear_line Invalid range")?;
+        let range = RectRange::from_ranges(0..self.buffer.width(), ystart..ystart + self.fontsize)
+            .with_context(|| "TermImage::clear_line Invalid range")?;
         for (x, y) in range {
-            *self.buffer.get_mut_xy(x, y) = self.background;
+            *self.buffer.get_pixel_mut(x, y) = self.background;
         }
         Ok(())
     }
@@ -86,10 +85,9 @@ impl<'a, 'b> Screen for TermImage<'a, 'b> {
         } = self;
         font.draw(c, point(x / 2, y), |DrawInst { x, y, alpha }| {
             rgba.channels_mut()[3] = alpha;
-            if let Ok(cell) = buffer.try_get_mut_xy(x, y) {
-                *cell = *background;
-                cell.blend(&rgba);
-            }
+            let cell = buffer.get_pixel_mut(x, y);
+            *cell = *background;
+            cell.blend(&rgba);
         });
         Ok(())
     }

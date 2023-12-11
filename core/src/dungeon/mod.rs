@@ -1,7 +1,8 @@
-//! module for making and managing dangeon
+//! module for making and managing dungeon
 mod coord;
 mod field;
 mod rogue;
+
 pub use self::coord::{Coord, Direction, Positioned, X, Y};
 pub use self::field::{Cell, CellAttr, Field};
 use crate::character::{player::Status as PlayerStatus, EnemyHandler};
@@ -9,6 +10,7 @@ use crate::item::{ItemHandler, ItemToken};
 use crate::{error::*, tile::Tile, GameInfo, GameMsg, GlobalConfig};
 use anyhow::Context;
 use ndarray::Array2;
+use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]

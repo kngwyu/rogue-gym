@@ -2,7 +2,7 @@
 name = "rogue-gym-devui"
 version = "0.1.0"
 authors = ["kngwyu <yuji.kngw.80s.revive@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 [lib]
 name = "rogue_gym_devui"

@@ -3,6 +3,7 @@ use crate::dungeon::{Coord, Positioned, X, Y};
 use crate::{error::*, fenwick::FenwickSet, rng::RngHandle};
 use anyhow::{bail, Context};
 use fixedbitset::FixedBitSet;
+use log::warn;
 use rect_iter::{IntoTuple2, RectRange};
 use tuple_map::TupleMap2;
 
